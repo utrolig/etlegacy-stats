@@ -1,8 +1,13 @@
+import defaultTheme from "tailwindcss/defaultTheme";
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ["./src/**/*.{astro,html,js,jsx,md,mdx,svelte,ts,tsx,vue}"],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["Rubik Variable", ...defaultTheme.fontFamily.sans],
+      },
       colors: {
         bush: {
           50: "#f9f5f3",

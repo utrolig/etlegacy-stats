@@ -1,10 +1,22 @@
+---
+import "@fontsource-variable/rubik/wght.css";
+import rubikWoff2 from "@fontsource-variable/rubik/files/rubik-latin-wght-normal.woff2?url";
+---
+
 <!doctype html>
-<html class="h-full w-full m-0 bg-mud-800 text-bush-50" lang="en">
+<html class="h-full w-full m-0 bg-mud-800 text-bush-50 antialiased" lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="generator" content={Astro.generator} />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href={rubikWoff2}
+      crossorigin="anonymous"
+    />
     <title>Astro Basics</title>
   </head>
   <body class="h-full w-full m-0">
