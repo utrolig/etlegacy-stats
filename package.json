@@ -6,9 +6,15 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "test": "vitest"
   },
   "dependencies": {
-    "astro": "^5.0.3"
+    "astro": "^5.0.3",
+    "deep-equal": "^2.2.3"
+  },
+  "devDependencies": {
+    "@types/deep-equal": "^1.0.4",
+    "vitest": "^2.1.8"
   }
 }
