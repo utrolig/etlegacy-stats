@@ -1,14 +1,25 @@
 ---
 import "@fontsource-variable/rubik/wght.css";
 import rubikWoff2 from "@fontsource-variable/rubik/files/rubik-latin-wght-normal.woff2?url";
+import Head from "../components/Head.astro";
+
+interface Props {
+  frontmatter: {
+    title: string;
+    description: string;
+  };
+}
+
+const { frontmatter } = Astro.props;
 ---
 
 <!doctype html>
 <html class="h-full w-full m-0 bg-mud-800 text-bush-50 antialiased" lang="en">
   <head>
+    <Head {...frontmatter} />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href="/etl.svg" />
     <meta name="generator" content={Astro.generator} />
     <link
       rel="preload"

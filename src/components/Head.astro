@@ -1,0 +1,25 @@
+---
+interface Props {
+  title: string;
+  description: string;
+}
+
+const { title, description } = Astro.props;
+---
+
+<title>{title}</title>
+<meta name="description" content={description} />
+
+<!-- Open Graph Meta Tags -->
+<meta name="og:type" content="website" />
+<meta name="og:site_name" content="etlstats" />
+<meta name="og:url" content={Astro.url} />
+<meta name="og:title" content={title} />
+<meta name="og:description" content={description} />
+
+<!-- Twitter Meta Tags -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:domain" content="etlstats" />
+<meta name="twitter:url" content={Astro.url} />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />

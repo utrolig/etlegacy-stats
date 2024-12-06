@@ -1,11 +1,17 @@
 ---
 import Layout from "../../layouts/Layout.astro";
+import { statsApi } from "../../util/stats-api";
+import { StatsTable } from "../../components/StatsTable";
 
 const { match } = Astro.params;
+const matchDetails = await statsApi.fetchGroupDetails(+match!);
 ---
 
-<Layout>
-  <div>
-    <h1>Hello from {match}</h1>
-  </div>
+<Layout
+  frontmatter={{
+    title: `ETLStats ${match}`,
+    description: `Stats for match ${match}`,
+  }}
+>
+  <StatsTable match={matchDetails} />
 </Layout>

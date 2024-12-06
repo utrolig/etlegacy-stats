@@ -6,7 +6,12 @@ import { statsApi } from "../util/stats-api";
 const matches = await statsApi.fetchGroups();
 ---
 
-<Layout>
+<Layout
+  frontmatter={{
+    title: "ETL Stats",
+    description: "Stats page for ETLegacy games",
+  }}
+>
   <div class="flex flex-col">
     <ul class="list-none">
       {matches.map((match) => <MatchListItem match={match} />)}

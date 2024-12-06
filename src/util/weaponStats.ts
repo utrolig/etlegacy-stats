@@ -154,7 +154,82 @@ export type WeaponStats = {
   acc: number | null;
 };
 
-export function convertWeaponStats(raw: string[]) {
+export type PlayerStats = {
+  damageGiven: number;
+  damageReceived: number;
+  teamDamageGiven: number;
+  teamDamageReceived: number;
+  gibs: number;
+  selfKills: number;
+  teamKills: number;
+  teamGibs: number;
+  playtime: number;
+  xp: number;
+};
+
+export function convertFirstRoundPlayerStats(rawStats: string[]): PlayerStats {
+  const nums = rawStats.map(Number);
+  const numLength = nums.length;
+
+  const damageGiven = nums[numLength - 10] ?? 0;
+  const damageReceived = nums[numLength - 9] ?? 0;
+  const teamDamageGiven = nums[numLength - 8] ?? 0;
+  const teamDamageReceived = nums[numLength - 7] ?? 0;
+  const gibs = nums[numLength - 6] ?? 0;
+  const selfKills = nums[numLength - 5] ?? 0;
+  const teamKills = nums[numLength - 4] ?? 0;
+  const teamGibs = nums[numLength - 3] ?? 0;
+  const playtime = nums[numLength - 2] ?? 0;
+  const xp = nums[numLength - 1] ?? 0;
+
+  return {
+    damageGiven,
+    damageReceived,
+    teamDamageGiven,
+    teamDamageReceived,
+    gibs,
+    selfKills,
+    teamKills,
+    teamGibs,
+    playtime,
+    xp,
+  };
+}
+
+export function convertSecondRoundPlayerStats(
+  first: string[],
+  second: string[],
+): PlayerStats {
+  const firstRound = convertFirstRoundPlayerStats(first);
+  const aggregate = convertFirstRoundPlayerStats(second);
+
+  return {
+    xp: aggregate.xp - firstRound.xp,
+    gibs: aggregate.gibs - firstRound.gibs,
+    playtime: aggregate.playtime - firstRound.playtime,
+    teamGibs: aggregate.teamGibs - firstRound.teamGibs,
+    selfKills: aggregate.selfKills - firstRound.selfKills,
+    teamKills: aggregate.teamKills - firstRound.teamKills,
+    damageGiven: aggregate.damageGiven - firstRound.damageGiven,
+    damageReceived: aggregate.damageReceived - firstRound.damageReceived,
+    teamDamageGiven: aggregate.teamDamageGiven - firstRound.teamDamageGiven,
+    teamDamageReceived:
+      aggregate.teamDamageReceived - firstRound.teamDamageReceived,
+  };
+}
+
+export function convertPlayerStats(
+  firstRoundRaw: string[],
+  secondRoundRaw?: string[],
+) {
+  if (!secondRoundRaw) {
+    return convertFirstRoundPlayerStats(firstRoundRaw);
+  }
+
+  return convertSecondRoundPlayerStats(firstRoundRaw, secondRoundRaw);
+}
+
+export function convertFirstRoundWeaponStats(raw: string[]): WeaponStats[] {
   const nums = raw.map(Number);
 
   if (nums.some((num) => isNaN(num))) {
@@ -232,8 +307,8 @@ export function convertSecondRoundWeaponStats(
   first: string[],
   second: string[],
 ) {
-  const firstRoundStats = convertWeaponStats(first);
-  const aggregate = convertWeaponStats(second);
+  const firstRoundStats = convertFirstRoundWeaponStats(first);
+  const aggregate = convertFirstRoundWeaponStats(second);
 
   const secondRoundStats: WeaponStats[] = [];
 
@@ -257,6 +332,17 @@ export function convertSecondRoundWeaponStats(
   }
 
   return secondRoundStats;
+}
+
+export function convertWeaponStats(
+  firstRoundRaw: string[],
+  secondRoundRaw?: string[],
+) {
+  if (!secondRoundRaw) {
+    return convertFirstRoundWeaponStats(firstRoundRaw);
+  }
+
+  return convertSecondRoundWeaponStats(firstRoundRaw, secondRoundRaw);
 }
 
 export function aggregateWeaponStats(stats: Array<WeaponStats[]>) {
@@ -305,7 +391,64 @@ export function aggregateWeaponStats(stats: Array<WeaponStats[]>) {
   return aggregatedStats.toSorted(byWeaponIds);
 }
 
-export type StatsAggregate = {
+export function convertTimeToMinutes(time: string): number {
+  const [minutes, seconds] = time.split(":").map(Number);
+
+  const mins = minutes as number;
+  const secs = seconds as number;
+
+  return mins + secs / 60;
+}
+
+export function getSecondRoundPlaytime(
+  firstRoundPlaytimePercentage: number,
+  totalPlaytimePercentage: number,
+  firstRoundDuration: string,
+  secondRoundDuration: string,
+) {
+  const r1Percentage = firstRoundPlaytimePercentage;
+  const r1Duration = convertTimeToMinutes(firstRoundDuration);
+  const r2Duration = convertTimeToMinutes(secondRoundDuration);
+  const totalDuration = r1Duration + r2Duration;
+  const totalPercentage = totalPlaytimePercentage;
+
+  const round2Percentage =
+    (totalPercentage * totalDuration - r1Percentage * r1Duration) / r2Duration;
+
+  return Math.round(round2Percentage * 100) / 100;
+}
+
+export function getPlayerStatsAggregate(stats: PlayerStats[]) {
+  return stats.reduce(
+    (acc, entry) => {
+      acc.teamDamageReceived += entry.teamDamageReceived;
+      acc.teamDamageGiven += entry.teamDamageGiven;
+      acc.damageReceived += entry.damageReceived;
+      acc.damageGiven += entry.damageGiven;
+      acc.teamKills += entry.teamKills;
+      acc.selfKills += entry.selfKills;
+      acc.teamGibs += entry.teamGibs;
+      acc.playtime += entry.playtime;
+      acc.gibs += entry.gibs;
+      acc.xp += entry.xp;
+      return acc;
+    },
+    {
+      teamDamageReceived: 0,
+      teamDamageGiven: 0,
+      damageReceived: 0,
+      damageGiven: 0,
+      teamKills: 0,
+      selfKills: 0,
+      teamGibs: 0,
+      playtime: 0,
+      gibs: 0,
+      xp: 0,
+    } satisfies PlayerStats,
+  );
+}
+
+export type WeaponStatsAggregate = {
   kills: number;
   deaths: number;
   acc: number;
@@ -314,7 +457,9 @@ export type StatsAggregate = {
   hits: number;
 };
 
-export function getStatsAggregate(stats: WeaponStats[] | WeaponStats[][]) {
+export function getWeaponStatsAggregate(
+  stats: WeaponStats[] | WeaponStats[][],
+): WeaponStatsAggregate {
   return stats
     .flatMap((k) => k)
     .reduce(
@@ -343,6 +488,10 @@ export function getStatsAggregate(stats: WeaponStats[] | WeaponStats[][]) {
         headshots: 0,
         shots: 0,
         hits: 0,
-      } satisfies StatsAggregate,
+      } satisfies WeaponStatsAggregate,
     );
+}
+
+export function getKdr(stats: WeaponStatsAggregate) {
+  return stats.kills / stats.deaths;
 }

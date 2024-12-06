@@ -3,9 +3,9 @@ import {
   aggregateWeaponStats,
   byWeaponIds,
   convertSecondRoundWeaponStats,
-  convertWeaponStats,
-  getStatsAggregate,
-  StatsAggregate,
+  convertFirstRoundWeaponStats,
+  getWeaponStatsAggregate,
+  WeaponStatsAggregate,
   WEAPON_IDS,
   WEAPON_NAMES,
 } from "./weaponStats";
@@ -151,7 +151,7 @@ describe("weaponStats", () => {
       },
     ]);
 
-    const stats = convertWeaponStats(input);
+    const stats = convertFirstRoundWeaponStats(input);
     assert.deepEqual(stats, testData);
   });
 
@@ -303,7 +303,7 @@ describe("weaponStats", () => {
       },
     ]);
 
-    const stats = convertWeaponStats(input);
+    const stats = convertFirstRoundWeaponStats(input);
     assert.deepEqual(stats, testData);
   });
 
@@ -578,7 +578,7 @@ describe("weaponStats", () => {
       "18",
     ];
 
-    const roundOneStats = convertWeaponStats(roundOneInput);
+    const roundOneStats = convertFirstRoundWeaponStats(roundOneInput);
     const roundTwoStats = convertSecondRoundWeaponStats(
       roundOneInput,
       roundTwoInput,
@@ -763,8 +763,8 @@ describe("weaponStats", () => {
       deaths: 10,
       headshots: 1,
       shots: 140,
-    } satisfies StatsAggregate;
+    } satisfies WeaponStatsAggregate;
 
-    assert.deepEqual(getStatsAggregate(testData), expected);
+    assert.deepEqual(getWeaponStatsAggregate(testData), expected);
   });
 });
