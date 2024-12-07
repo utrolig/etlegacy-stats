@@ -8,7 +8,6 @@ import { getMapStats, getMatchStats } from "../../../util/stats";
 const { match } = Astro.params;
 const matchDetails = await statsApi.fetchGroupDetails(+match!);
 const matchStats = getMatchStats(matchDetails);
-const allStats = getMapStats("all", [], matchStats);
 ---
 
 <Layout
@@ -18,5 +17,5 @@ const allStats = getMapStats("all", [], matchStats);
   }}
 >
   <MatchHeader match={matchStats} />
-  <StatsTable stats={allStats} />
+  <StatsTable matchDetails={matchDetails} stats={matchStats} />
 </Layout>
