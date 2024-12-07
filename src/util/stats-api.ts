@@ -13,12 +13,12 @@ export const statsApi = {
     return data;
   },
   async fetchGroupDetails(groupId: number) {
-    if (import.meta.env.DEV) {
-      const { default: group } = await import(
-        /* @vite-ignore */ `./${groupId}.json`
-      );
-      return group as GroupDetails;
-    }
+    // if (import.meta.env.DEV) {
+    //   const { default: group } = await import(
+    //     /* @vite-ignore */ `./${groupId}.json`
+    //   );
+    //   return group as GroupDetails;
+    // }
     const url = urlJoin(BASE_URL, "/matches/groups", groupId.toString());
     const data = await getJson<GroupDetails>(url);
     return data;

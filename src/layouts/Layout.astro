@@ -1,7 +1,9 @@
 ---
 import "@fontsource-variable/rubik/wght.css";
 import rubikWoff2 from "@fontsource-variable/rubik/files/rubik-latin-wght-normal.woff2?url";
+import "@fontsource/geist-mono";
 import Head from "../components/Head.astro";
+import "../assets/global.css";
 
 interface Props {
   frontmatter: {
@@ -28,10 +30,17 @@ const { frontmatter } = Astro.props;
       href={rubikWoff2}
       crossorigin="anonymous"
     />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href="/fonts/MonaspaceNeon-Regular-v1.101.woff2"
+      crossorigin="anonymous"
+    />
     <title>Astro Basics</title>
   </head>
   <body class="h-full w-full m-0">
-    <main class="max-w-screen-xl mx-auto">
+    <main class="max-w-screen-lg mx-auto">
       <slot />
     </main>
   </body>

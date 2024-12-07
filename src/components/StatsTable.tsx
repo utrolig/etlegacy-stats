@@ -1,10 +1,10 @@
-import { createSignal, type Component } from "solid-js";
-import type { GroupDetails } from "../util/stats-api";
+import { createMemo, createSignal, type Component } from "solid-js";
 import type { SortDirection, SortKey } from "../util/sorting";
 import { TeamTable } from "./TeamTable";
+import { type Stats } from "../util/stats";
 
 export type StatsTableProps = {
-  match: GroupDetails;
+  stats: Stats[];
 };
 
 export const StatsTable: Component<StatsTableProps> = (props) => {
@@ -12,15 +12,15 @@ export const StatsTable: Component<StatsTableProps> = (props) => {
   const [sortKey, setSortKey] = createSignal<SortKey>("name");
 
   return (
-    <div class="flex flex-col">
+    <div class="flex flex-col gap-8 py-8">
       <TeamTable
-        match={props.match}
+        stats={props.stats}
         team="alpha"
         sortKey={sortKey()}
         sortDir={sortDir()}
       />
       <TeamTable
-        match={props.match}
+        stats={props.stats}
         team="beta"
         sortKey={sortKey()}
         sortDir={sortDir()}

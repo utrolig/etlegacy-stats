@@ -1,0 +1,22 @@
+---
+import Layout from "../../../layouts/Layout.astro";
+import { MatchHeader } from "../../../components/MatchHeader";
+import { statsApi } from "../../../util/stats-api";
+import { StatsTable } from "../../../components/StatsTable";
+import { getMapStats, getMatchStats } from "../../../util/stats";
+
+const { match } = Astro.params;
+const matchDetails = await statsApi.fetchGroupDetails(+match!);
+const matchStats = getMatchStats(matchDetails);
+const allStats = getMapStats("all", [], matchStats);
+---
+
+<Layout
+  frontmatter={{
+    title: `ETLStats ${match}`,
+    description: `Stats for match ${match}`,
+  }}
+>
+  <MatchHeader match={matchStats} />
+  <StatsTable stats={allStats} />
+</Layout>

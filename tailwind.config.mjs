@@ -1,12 +1,63 @@
 import defaultTheme from "tailwindcss/defaultTheme";
 
+const statsColumns = [
+  {
+    name: "Name",
+    value: "minmax(16rem, 1fr)",
+  },
+  {
+    name: "Efficiency",
+    value: "2.25rem",
+  },
+  {
+    name: "KDR",
+    value: "3rem",
+  },
+  {
+    name: "Kills",
+    value: "2.25rem",
+  },
+  {
+    name: "Deaths",
+    value: "3.5rem",
+  },
+  {
+    name: "Damage given",
+    value: "5rem",
+  },
+  {
+    name: "Damage received",
+    value: "5rem",
+  },
+  {
+    name: "HS",
+    value: "5rem",
+  },
+  {
+    name: "Gibs",
+    value: "2.25rem",
+  },
+  {
+    name: "Selfkills",
+    value: "3.5rem",
+  },
+  {
+    name: "Revives",
+    value: "3.5rem",
+  },
+];
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ["./src/**/*.{astro,html,js,jsx,md,mdx,svelte,ts,tsx,vue}"],
   theme: {
     extend: {
+      gridTemplateColumns: {
+        stats: statsColumns.map(({ value }) => value).join(" "),
+      },
       fontFamily: {
         sans: ["Rubik Variable", ...defaultTheme.fontFamily.sans],
+        mono: ["Mona Space", "Times New Roman"],
       },
       colors: {
         bush: {
