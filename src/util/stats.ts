@@ -83,7 +83,10 @@ export function getMapStats(
   const playersMap = filteredRounds.reduce(
     (acc, roundStats) => {
       roundStats.stats.forEach((roundStat) => {
-        const prevEntry = acc[roundStat.id];
+        const prevEntry = {
+          ...acc[roundStat.id],
+        };
+
         if (prevEntry?.id) {
           prevEntry.playerStats = addPlayerStats(prevEntry, roundStat);
           prevEntry.weaponStats = addWeaponStats(prevEntry, roundStat);
@@ -127,16 +130,27 @@ function addWeaponStats(
       const wpn = acc[entry.name];
 
       if (wpn) {
-        wpn.hits += entry.hits;
-        wpn.shots += entry.shots;
-        wpn.kills += entry.kills;
-        wpn.deaths += entry.deaths;
+        const hits = wpn.hits + entry.hits;
+        const shots = wpn.shots + entry.shots;
+        const kills = wpn.kills + entry.kills;
+        const deaths = wpn.deaths + entry.deaths;
+        const headshots =
+          wpn.headshots !== null && entry.headshots !== null
+            ? wpn.headshots + entry.headshots
+            : null;
+        const accuracy = hits / shots;
 
-        if (wpn.headshots !== null && entry.headshots !== null) {
-          wpn.headshots += entry.headshots;
-        }
+        const weaponStats = {
+          name: entry.name,
+          hits,
+          shots,
+          kills,
+          deaths,
+          headshots,
+          acc: accuracy,
+        } satisfies WeaponStats;
 
-        wpn.acc = wpn.hits / wpn.shots;
+        acc[entry.name] = weaponStats;
       } else {
         acc[entry.name] = entry;
       }
