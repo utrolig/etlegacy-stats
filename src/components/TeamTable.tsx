@@ -19,7 +19,7 @@ export const TeamTable: Component<TeamTableProps> = (props) => {
 
   return (
     <div class="flex flex-col">
-      <h1 class="text-2xl mb-4 capitalize">{props.team}</h1>
+      <h1 class="text-2xl mb-4 ml-4 capitalize">{props.team}</h1>
       <TableHeader />
       <For each={teamStats()}>{(stats) => <PlayerRow stats={stats} />}</For>
     </div>
