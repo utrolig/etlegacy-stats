@@ -11,6 +11,7 @@ import {
 import { getColoredNameParts } from "../util/colors";
 import clsx from "clsx";
 import { PlayerDetailedStats } from "./PlayerDetailedStats";
+import { Collapsible } from "@kobalte/core/collapsible";
 
 export type PlayerRowProps = {
   stats: Stats;
@@ -22,9 +23,9 @@ export const PlayerRow: Component<PlayerRowProps> = (props) => {
   });
 
   return (
-    <div class="flex flex-col odd:bg-white/5">
-      <div class="grid grid-cols-stats items-center gap-4  p-2 px-4">
-        <div>
+    <Collapsible class="flex flex-col odd:bg-white/5">
+      <Collapsible.Trigger class="grid grid-cols-stats items-center gap-4  p-2 px-4">
+        <div class="flex justify-start pl-5">
           <For each={getColoredNameParts(props.stats.name)}>
             {({ color, text }) => <span style={{ color }}>{text}</span>}
           </For>
@@ -65,8 +66,10 @@ export const PlayerRow: Component<PlayerRowProps> = (props) => {
         <div class="text-right font-mono">
           {props.stats.playerStats.playtime.toFixed(0)}
         </div>
-      </div>
-      <PlayerDetailedStats stats={props.stats} />
-    </div>
+      </Collapsible.Trigger>
+      <Collapsible.Content>
+        <PlayerDetailedStats stats={props.stats} />
+      </Collapsible.Content>
+    </Collapsible>
   );
 };
