@@ -85,13 +85,14 @@ export function getMapStats(
   const playersMap = filteredRounds.reduce(
     (acc, roundStats) => {
       roundStats.stats.forEach((roundStat) => {
-        const prevEntry = {
-          ...acc[roundStat.id],
-        };
+        const prevEntry = acc[roundStat.id];
 
         if (prevEntry?.id) {
-          prevEntry.playerStats = addPlayerStats(prevEntry, roundStat);
-          prevEntry.weaponStats = addWeaponStats(prevEntry, roundStat);
+          acc[roundStat.id] = {
+            ...prevEntry,
+            playerStats: addPlayerStats(prevEntry, roundStat),
+            weaponStats: addWeaponStats(prevEntry, roundStat),
+          };
         } else {
           acc[roundStat.id] = roundStat;
         }
