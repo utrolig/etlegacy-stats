@@ -10,7 +10,7 @@ export type TableHeaderProps = {
 
 export const TableHeader: Component<TableHeaderProps> = (props) => {
   return (
-    <div class="grid grid-cols-stats items-center gap-4 text-xs font-semibold p-2 px-4">
+    <div class="grid grid-cols-stats items-center gap-4 text-xs font-semibold py-4 px-4">
       <TableHeaderColumn
         alignStart
         columnKey={SortKey.Name}

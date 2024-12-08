@@ -1,13 +1,18 @@
 import { createMemo, For, type Component } from "solid-js";
 import { getMapImageUrl } from "../util/mapImages";
+import clsx from "clsx";
 
 export type MapsBackgroundProps = {
+  activeMap?: string;
   maps: string[];
 };
 
 export const MapsBackground: Component<MapsBackgroundProps> = (props) => {
   const mapImages = createMemo(() => {
-    return props.maps.map(getMapImageUrl);
+    return props.maps.map((map) => ({
+      name: map,
+      image: getMapImageUrl(map),
+    }));
   });
 
   const width = createMemo(() => {
@@ -33,10 +38,13 @@ export const MapsBackground: Component<MapsBackgroundProps> = (props) => {
   return (
     <div class="absolute inset-0 z-[2] overflow-hidden">
       <For each={mapImages()}>
-        {(image, idx) => (
+        {({ image, name }, idx) => (
           <img
             alt="Map image"
-            class="absolute h-full object-cover object-center"
+            class={clsx(
+              "absolute h-full object-cover object-center",
+              props.activeMap && props.activeMap !== name && "grayscale",
+            )}
             src={image.src}
             style={getImageStyle(idx())}
           />

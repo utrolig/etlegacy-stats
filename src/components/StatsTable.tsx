@@ -24,7 +24,7 @@ export const StatsTable: Component<StatsTableProps> = (props) => {
   };
 
   return (
-    <div class="flex flex-col gap-8 py-8">
+    <div class="flex flex-col gap-8">
       <TeamTable
         stats={props.stats}
         team="alpha"

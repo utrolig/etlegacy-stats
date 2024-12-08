@@ -1,6 +1,7 @@
 ---
 import Layout from "../../../layouts/Layout.astro";
 import { MatchHeader } from "../../../components/MatchHeader";
+import { MapsMenu } from "../../../components/MapsMenu";
 import { statsApi } from "../../../util/stats-api";
 import { StatsTable } from "../../../components/StatsTable";
 import { getMapStats, getMatchStats } from "../../../util/stats";
@@ -18,5 +19,6 @@ const allStats = getMapStats("all", [], matchStats);
   }}
 >
   <MatchHeader match={matchStats} />
+  <MapsMenu matchId={match!} match={matchStats} />
   <StatsTable client:load stats={allStats} />
 </Layout>
