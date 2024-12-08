@@ -93,3 +93,54 @@ export const playersByKeyAndDir =
       }
     }
   };
+
+export function getColumnDescription(key: SortKey) {
+  switch (key) {
+    case SortKey.Kdr: {
+      return "Kills / Deaths";
+    }
+
+    case SortKey.Effiency: {
+      return "Efficiency (kills / (deaths + selfKills)) * 100";
+    }
+
+    case SortKey.DamageGiven: {
+      return "Damage given";
+    }
+
+    case SortKey.DamageReceived: {
+      return "Damage received";
+    }
+
+    case SortKey.Selfkills: {
+      return "Selfkills";
+    }
+
+    case SortKey.Revives: {
+      return "Revives";
+    }
+
+    case SortKey.TimePlayed: {
+      return "Time played";
+    }
+
+    case SortKey.Gibs: {
+      return "Gibs";
+    }
+
+    case SortKey.Headshots: {
+      return "Headshots";
+    }
+
+    case SortKey.Kills: {
+      return "Kills";
+    }
+
+    case SortKey.Deaths: {
+      return "Deaths";
+    }
+
+    default:
+      return null;
+  }
+}
