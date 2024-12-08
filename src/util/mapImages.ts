@@ -1,4 +1,7 @@
 import etl_ice from "../assets/maps/etl_ice.jpg";
+import bremen_b3 from "../assets/maps/bremen_b3.jpg";
+import supply from "../assets/maps/supply.jpg";
+import radar from "../assets/maps/radar.jpg";
 import decay_sw from "../assets/maps/decay_sw.jpg";
 import adlernest from "../assets/maps/adlernest.jpg";
 import frostbite from "../assets/maps/frostbite.jpg";
@@ -33,6 +36,9 @@ const mapUrls: Record<string, ImageMetadata> = {
   etl_frostbite,
   sw_goldrush_te,
   etl_sp_delivery,
+  radar,
+  bremen_b3,
+  supply,
 };
 
 export function getMapImageUrl(map: string) {
