@@ -13,6 +13,7 @@ import etl_adlernest from "../assets/maps/etl_adlernest.jpg";
 import etl_frostbite from "../assets/maps/etl_frostbite.jpg";
 import sw_goldrush_te from "../assets/maps/sw_goldrush_te.jpg";
 import etl_sp_delivery from "../assets/maps/etl_sp_delivery.jpg";
+import placeholder from "../assets/maps/placeholder.png";
 
 import type { ImageMetadata } from "astro";
 
@@ -38,7 +39,7 @@ export function getMapImageUrl(map: string) {
   const mapUrl = mapUrls[map];
 
   if (!mapUrl) {
-    return mapUrls["operation_b7"];
+    return placeholder;
   }
 
   return mapUrl;
