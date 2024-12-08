@@ -5,6 +5,7 @@ import Layout from "../layouts/Layout.astro";
 import { statsApi } from "../util/stats-api";
 
 const matches = await statsApi.fetchGroups();
+const filteredMatches = matches.filter((match) => match.size === 12);
 ---
 
 <Layout
@@ -15,9 +16,9 @@ const matches = await statsApi.fetchGroups();
 >
   <div class="flex flex-col">
     <h1 class="text-4xl my-6 text-center">ETLegacy Stats</h1>
-    <MatchTypeMenu currentType="/" />
+    <MatchTypeMenu currentType="/6v6" />
     <ul class="list-none">
-      {matches.map((match) => <MatchListItem match={match} />)}
+      {filteredMatches.map((match) => <MatchListItem match={match} />)}
     </ul>
   </div>
 </Layout>

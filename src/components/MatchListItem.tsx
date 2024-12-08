@@ -15,7 +15,7 @@ export const MatchListItem: Component<MatchListItemProps> = (props) => {
         href={`/matches/${props.match.match_id}`}
       >
         <div class="flex flex-col items-center gap-1 w-24">
-          <p class="text-2xl text-mud-400 font-bold">
+          <p class="text-2xl text-orange-200 font-bold">
             {getMatchSize(props.match)}
           </p>
           <Show when={props.match.ranks_average}>
