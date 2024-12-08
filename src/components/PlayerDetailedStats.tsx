@@ -42,7 +42,7 @@ export const PlayerDetailedStats: Component<PlayerDetailedStatsProps> = (
                 </p>
                 <p class="text-right">{weapon.kills}</p>
                 <p class="text-right">{weapon.deaths}</p>
-                <p class="text-right">{weapon.headshots}</p>
+                <p class="text-right">{formatHeadshots(weapon.headshots)}</p>
                 <p class="text-right">
                   {formatHeadshotPercentage(weapon.hits, weapon.headshots)}
                 </p>
@@ -196,4 +196,12 @@ function formatHeadshotPercentage(hits: number, headshots: number | null) {
       <span class="text-mud-300">%</span>
     </>
   );
+}
+
+function formatHeadshots(headshots: number | null) {
+  if (!headshots) {
+    return null;
+  }
+
+  return headshots;
 }
