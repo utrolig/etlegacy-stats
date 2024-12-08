@@ -1,6 +1,6 @@
 export const TableHeader = () => {
   return (
-    <div class="grid grid-cols-stats items-center gap-4 text-xs font-semibold p-2">
+    <div class="grid grid-cols-stats items-center gap-4 text-xs font-semibold p-2 px-4">
       <div>Name</div>
       <div class="text-right">Eff</div>
       <div class="text-right">KDR</div>
@@ -12,6 +12,7 @@ export const TableHeader = () => {
       <div class="text-right">GIBS</div>
       <div class="text-right">SK</div>
       <div class="text-right">REV</div>
+      <div class="text-right">TMP</div>
     </div>
   );
 };

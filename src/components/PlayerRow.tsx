@@ -21,7 +21,7 @@ export const PlayerRow: Component<PlayerRowProps> = (props) => {
   });
 
   return (
-    <div class="grid grid-cols-stats items-center gap-4 odd:bg-white/5 p-2">
+    <div class="grid grid-cols-stats items-center gap-4 odd:bg-white/5 p-2 px-4">
       <div>
         <For each={getColoredNameParts(props.stats.name)}>
           {({ color, text }) => <span style={{ color }}>{text}</span>}
@@ -60,6 +60,9 @@ export const PlayerRow: Component<PlayerRowProps> = (props) => {
         {props.stats.playerStats.selfKills}
       </div>
       <div class="text-right font-mono">{getRevives(props.stats)}</div>
+      <div class="text-right font-mono">
+        {props.stats.playerStats.playtime.toFixed(0)}
+      </div>
     </div>
   );
 };

@@ -78,8 +78,6 @@ export function getMapStats(
           return round.map === map;
         });
 
-  console.log({ filteredRounds, map, rounds });
-
   const playersMap = filteredRounds.reduce(
     (acc, roundStats) => {
       roundStats.stats.forEach((roundStat) => {
@@ -201,7 +199,12 @@ export function getMatchStats(info: GroupDetails): MatchStats {
               );
             }
 
-            playerStats = convertPlayerStats(prevRoundRawStats, ps.weaponStats);
+            playerStats = convertPlayerStats(
+              prevRoundRawStats,
+              ps.weaponStats,
+              prevRound,
+              round,
+            );
             weaponStats = convertWeaponStats(prevRoundRawStats, ps.weaponStats);
           }
 
@@ -302,37 +305,87 @@ function convertFirstRoundPlayerStats(rawStats: string[]): PlayerStats {
   };
 }
 
+function convertTimeToMinutes(time: string): number {
+  const [minutes, seconds] = time.split(":").map(Number);
+
+  const mins = minutes as number;
+  const secs = seconds as number;
+
+  return mins + secs / 60;
+}
+
+function getSecondRoundPlaytime(
+  firstRoundPlaytimePercentage: number,
+  totalPlaytimePercentage: number,
+  firstRoundDuration: string,
+  secondRoundDuration: string,
+) {
+  const r1Percentage = firstRoundPlaytimePercentage;
+  const r1Duration = convertTimeToMinutes(firstRoundDuration);
+  const r2Duration = convertTimeToMinutes(secondRoundDuration);
+  const totalDuration = r1Duration + r2Duration;
+  const totalPercentage = totalPlaytimePercentage;
+
+  const round2Percentage =
+    (totalPercentage * totalDuration - r1Percentage * r1Duration) / r2Duration;
+
+  return Math.round(round2Percentage * 100) / 100;
+}
+
 function convertSecondRoundPlayerStats(
   first: string[],
   second: string[],
+  firstRound: GroupRound,
+  secondRound: GroupRound,
 ): PlayerStats {
-  const firstRound = convertFirstRoundPlayerStats(first);
+  const firstRoundStats = convertFirstRoundPlayerStats(first);
   const aggregate = convertFirstRoundPlayerStats(second);
+
+  const playtime = getSecondRoundPlaytime(
+    firstRoundStats.playtime,
+    aggregate.playtime,
+    firstRound.round_data.round_info.nextTimeLimit,
+    secondRound.round_data.round_info.nextTimeLimit,
+  );
 
   return {
     xp: aggregate.xp,
-    gibs: aggregate.gibs - firstRound.gibs,
-    playtime: aggregate.playtime - firstRound.playtime,
-    teamGibs: aggregate.teamGibs - firstRound.teamGibs,
-    selfKills: aggregate.selfKills - firstRound.selfKills,
-    teamKills: aggregate.teamKills - firstRound.teamKills,
-    damageGiven: aggregate.damageGiven - firstRound.damageGiven,
-    damageReceived: aggregate.damageReceived - firstRound.damageReceived,
-    teamDamageGiven: aggregate.teamDamageGiven - firstRound.teamDamageGiven,
+    gibs: aggregate.gibs - firstRoundStats.gibs,
+    playtime,
+    teamGibs: aggregate.teamGibs - firstRoundStats.teamGibs,
+    selfKills: aggregate.selfKills - firstRoundStats.selfKills,
+    teamKills: aggregate.teamKills - firstRoundStats.teamKills,
+    damageGiven: aggregate.damageGiven - firstRoundStats.damageGiven,
+    damageReceived: aggregate.damageReceived - firstRoundStats.damageReceived,
+    teamDamageGiven:
+      aggregate.teamDamageGiven - firstRoundStats.teamDamageGiven,
     teamDamageReceived:
-      aggregate.teamDamageReceived - firstRound.teamDamageReceived,
+      aggregate.teamDamageReceived - firstRoundStats.teamDamageReceived,
   };
 }
 
 function convertPlayerStats(
   firstRoundRaw: string[],
   secondRoundRaw?: string[],
+  firstRound?: GroupRound,
+  secondRound?: GroupRound,
 ) {
   if (!secondRoundRaw) {
     return convertFirstRoundPlayerStats(firstRoundRaw);
   }
 
-  return convertSecondRoundPlayerStats(firstRoundRaw, secondRoundRaw);
+  if (!firstRound || !secondRound) {
+    throw new Error(
+      "You have to pass the rounds when converting second round PlayerStats",
+    );
+  }
+
+  return convertSecondRoundPlayerStats(
+    firstRoundRaw,
+    secondRoundRaw,
+    firstRound,
+    secondRound,
+  );
 }
 
 function convertFirstRoundWeaponStats(raw: string[]): WeaponStats[] {

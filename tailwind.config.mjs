@@ -45,6 +45,10 @@ const statsColumns = [
     name: "Revives",
     value: "3.5rem",
   },
+  {
+    name: "Time Played",
+    value: "3.5rem",
+  },
 ];
 
 /** @type {import('tailwindcss').Config} */
