@@ -27,7 +27,7 @@ export type PlayerStats = {
 export type Stats = {
   id: string;
   name: string;
-  team: Team;
+  team: Team | null;
   playerStats: PlayerStats;
   weaponStats: WeaponStats[];
 };
@@ -40,7 +40,7 @@ export type MapStats = {
   stats: PlayerStats[];
 };
 
-function getPlayerTeam(guid: string, teams: TeamList): Team {
+function getPlayerTeam(guid: string, teams: TeamList): Team | null {
   if (teams.alpha.find((alphaGuid) => alphaGuid.id === guid)) {
     return "alpha";
   }
@@ -49,12 +49,16 @@ function getPlayerTeam(guid: string, teams: TeamList): Team {
     return "beta";
   }
 
-  throw new Error(`Unable to find team for guid ${guid} in teams`);
+  return null;
 }
 
 export type MatchStats = {
   maps: string[];
   teams: TeamList;
+  score: {
+    alpha: number;
+    beta: number;
+  };
   rounds: {
     map: string;
     roundNumber: number;
@@ -165,6 +169,35 @@ export function getMatchStats(info: GroupDetails): MatchStats {
   const { match } = info;
 
   const teams = getTeams(match.rounds);
+  const score = match.rounds.reduce(
+    (scoreAcc, round) => {
+      const { winnerteam } = round.round_data.round_info;
+      const players = Object.values(round.round_data.player_stats);
+
+      for (const player of players) {
+        if (Number(player.team) === winnerteam) {
+          const isAlphaWinner = teams.alpha.some((p) => p.id === player.guid);
+          const isBetaWinner = teams.beta.some((p) => p.id === player.guid);
+
+          if (isAlphaWinner) {
+            scoreAcc.alpha += 1;
+          }
+
+          if (isBetaWinner) {
+            scoreAcc.beta += 1;
+          }
+
+          break;
+        }
+      }
+
+      return scoreAcc;
+    },
+    {
+      beta: 0,
+      alpha: 0,
+    } satisfies MatchStats["score"],
+  );
 
   const rounds = match.rounds.reduce(
     (acc, round, idx, allRounds) => {
@@ -228,6 +261,7 @@ export function getMatchStats(info: GroupDetails): MatchStats {
   );
 
   return {
+    score,
     maps: match.maps,
     teams,
     rounds,
