@@ -61,8 +61,7 @@ export default {
         weaponStats: "120px, 80px, 120px, 60px, 60px, 90px, 120px",
       },
       fontFamily: {
-        sans: ["Rubik Variable", ...defaultTheme.fontFamily.sans],
-        mono: ["Mona Space", "Times New Roman"],
+        sans: ["Nunito Sans", ...defaultTheme.fontFamily.sans],
       },
       colors: {
         bush: {

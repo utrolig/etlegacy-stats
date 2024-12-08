@@ -31,7 +31,7 @@ export const PlayerRow: Component<PlayerRowProps> = (props) => {
       open={open()}
       class="flex flex-col odd:bg-white/5 hover:bg-white/10"
     >
-      <Collapsible.Trigger class="grid grid-cols-stats items-center gap-4  p-2 px-4">
+      <Collapsible.Trigger class="grid grid-cols-stats items-center gap-4 py-1 px-4">
         <div class="flex items-center gap-1 justify-start pl-[2px]">
           <BsCaretRightFill
             class={clsx(
@@ -44,22 +44,20 @@ export const PlayerRow: Component<PlayerRowProps> = (props) => {
             {({ color, text }) => <span style={{ color }}>{text}</span>}
           </For>
         </div>
-        <div class="text-right font-mono">
-          {getEfficiency(props.stats).toFixed(0)}
-        </div>
+        <div class="text-right">{getEfficiency(props.stats).toFixed(0)}</div>
         <div
           class={clsx(
-            "text-right font-mono",
+            "text-right",
             kdr() > 1 ? "text-green-700" : "text-red-700",
           )}
         >
           {kdr().toFixed(2)}
         </div>
-        <div class="text-right font-mono">{getKills(props.stats)}</div>
-        <div class="text-right font-mono">{getDeaths(props.stats)}</div>
+        <div class="text-right">{getKills(props.stats)}</div>
+        <div class="text-right">{getDeaths(props.stats)}</div>
         <div
           class={clsx(
-            "text-right font-mono",
+            "text-right",
             props.stats.playerStats.damageGiven >
               props.stats.playerStats.damageReceived
               ? "text-green-700"
@@ -68,16 +66,12 @@ export const PlayerRow: Component<PlayerRowProps> = (props) => {
         >
           {props.stats.playerStats.damageGiven}
         </div>
-        <div class="text-right font-mono">
-          {props.stats.playerStats.damageReceived}
-        </div>
-        <div class="text-right font-mono">{getHeadshots(props.stats)}</div>
-        <div class="text-right font-mono">{props.stats.playerStats.gibs}</div>
-        <div class="text-right font-mono">
-          {props.stats.playerStats.selfKills}
-        </div>
-        <div class="text-right font-mono">{getRevives(props.stats)}</div>
-        <div class="text-right font-mono">
+        <div class="text-right">{props.stats.playerStats.damageReceived}</div>
+        <div class="text-right">{getHeadshots(props.stats)}</div>
+        <div class="text-right">{props.stats.playerStats.gibs}</div>
+        <div class="text-right">{props.stats.playerStats.selfKills}</div>
+        <div class="text-right">{getRevives(props.stats)}</div>
+        <div class="text-right">
           {props.stats.playerStats.playtime.toFixed(0)}
         </div>
       </Collapsible.Trigger>

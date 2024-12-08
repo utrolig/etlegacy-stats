@@ -46,7 +46,7 @@ export const TableHeaderColumn: Component<TableHeaderColumnProps> = (props) => {
     >
       <div
         class={clsx(
-          "uppercase flex items-center gap-1 select-none cursor-pointer",
+          "flex items-center gap-1 select-none cursor-pointer",
           !props.alignStart && "justify-end",
         )}
         onClick={() => props.onClick(props.columnKey)}
@@ -62,7 +62,10 @@ export const TableHeaderColumn: Component<TableHeaderColumnProps> = (props) => {
             <TiArrowSortedDown class="size-4 text-white" />
           </Show>
         </Show>
-        <span ref={setAnchorRef} class="uppercase text-xs font-semibold">
+        <span
+          ref={setAnchorRef}
+          class="uppercase text-xs font-semibold text-mud-300"
+        >
           {props.columnKey}
         </span>
       </div>
