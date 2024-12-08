@@ -166,9 +166,20 @@ function addWeaponStats(
   return Object.values(stats);
 }
 
+function getMaps(rounds: GroupRound[]) {
+  const set = new Set<string>();
+
+  for (const round of rounds) {
+    set.add(round.round_data.round_info.mapname);
+  }
+
+  return [...set.values()];
+}
+
 export function getMatchStats(info: GroupDetails): MatchStats {
   const { match } = info;
 
+  const maps = getMaps(match.rounds);
   const teams = getTeams(match.rounds);
   const score = match.rounds.reduce(
     (scoreAcc, round) => {
@@ -263,7 +274,7 @@ export function getMatchStats(info: GroupDetails): MatchStats {
 
   return {
     score,
-    maps: match.maps,
+    maps,
     teams,
     rounds,
   };
