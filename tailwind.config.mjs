@@ -58,6 +58,7 @@ export default {
     extend: {
       gridTemplateColumns: {
         stats: statsColumns.map(({ value }) => value).join(" "),
+        weaponStats: "120px, 80px, 120px, 60px, 60px, 90px, 120px",
       },
       fontFamily: {
         sans: ["Rubik Variable", ...defaultTheme.fontFamily.sans],

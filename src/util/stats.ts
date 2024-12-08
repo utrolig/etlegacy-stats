@@ -760,3 +760,9 @@ export function getEfficiency(stats: Stats) {
   const { selfKills } = stats.playerStats;
   return (kills / (deaths + selfKills)) * 100;
 }
+
+export function getHeadshotPercentage(stats: Stats) {
+  const hits = stats.weaponStats.reduce((hits, wpn) => wpn.hits + hits, 0);
+  const headshots = getHeadshots(stats);
+  return headshots / hits;
+}
