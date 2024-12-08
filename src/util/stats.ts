@@ -191,12 +191,25 @@ export function getMatchStats(info: GroupDetails): MatchStats {
           const isAlphaWinner = teams.alpha.some((p) => p.id === player.guid);
           const isBetaWinner = teams.beta.some((p) => p.id === player.guid);
 
-          if (isAlphaWinner) {
-            scoreAcc.alpha += 1;
-          }
+          const isFullhold =
+            round.round_data.round_info.timelimit ===
+            round.round_data.round_info.nextTimeLimit;
 
-          if (isBetaWinner) {
-            scoreAcc.beta += 1;
+          const secondRound = round.round_data.round_info.round === 2;
+
+          if (secondRound) {
+            if (isFullhold) {
+              scoreAcc.alpha += 1;
+              scoreAcc.beta += 1;
+            } else {
+              if (isAlphaWinner) {
+                scoreAcc.alpha += 2;
+              }
+
+              if (isBetaWinner) {
+                scoreAcc.beta += 2;
+              }
+            }
           }
 
           break;
