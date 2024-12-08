@@ -113,7 +113,7 @@ function addPlayerStats(
   return {
     xp: prev.xp + toAdd.xp,
     gibs: prev.gibs + toAdd.gibs,
-    playtime: prev.playtime + toAdd.playtime,
+    playtime: (prev.playtime + toAdd.playtime) / 2,
     teamGibs: prev.teamGibs + toAdd.teamGibs,
     selfKills: prev.selfKills + toAdd.selfKills,
     teamKills: prev.teamKills + toAdd.teamKills,

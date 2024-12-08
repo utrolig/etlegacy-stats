@@ -3,23 +3,23 @@ import defaultTheme from "tailwindcss/defaultTheme";
 const statsColumns = [
   {
     name: "Name",
-    value: "minmax(16rem, 1fr)",
+    value: "minmax(14rem, 1fr)",
   },
   {
     name: "Efficiency",
-    value: "2.25rem",
+    value: "3.5rem",
   },
   {
     name: "KDR",
-    value: "3rem",
+    value: "3.5rem",
   },
   {
     name: "Kills",
-    value: "2.25rem",
+    value: "4.5rem",
   },
   {
     name: "Deaths",
-    value: "3.5rem",
+    value: "4.5rem",
   },
   {
     name: "Damage given",
@@ -31,19 +31,19 @@ const statsColumns = [
   },
   {
     name: "HS",
-    value: "5rem",
+    value: "3rem",
   },
   {
     name: "Gibs",
-    value: "2.25rem",
+    value: "3.5rem",
   },
   {
     name: "Selfkills",
-    value: "3.5rem",
+    value: "2.5rem",
   },
   {
     name: "Revives",
-    value: "3.5rem",
+    value: "2.5rem",
   },
   {
     name: "Time Played",

@@ -1,84 +1,95 @@
-import { getKdr, type Stats } from "./stats";
+import { getColoredNameParts } from "./colors";
+import {
+  getDeaths,
+  getEfficiency,
+  getHeadshots,
+  getKdr,
+  getKills,
+  getRevives,
+  type Stats,
+} from "./stats";
 
 export const SortKey = {
-  name: "name",
-  kdr: "kdr",
+  Name: "name",
+  Effiency: "eff",
+  Kdr: "kdr",
+  Kills: "kills",
+  Deaths: "deaths",
+  DamageGiven: "dmg g",
+  DamageReceived: "dmg r",
+  Headshots: "hs",
+  Gibs: "gibs",
+  Selfkills: "sk",
+  Revives: "rev",
+  TimePlayed: "tmp",
 } as const;
 
 export const SortDirection = {
-  asc: "asc",
-  desc: "desc",
-};
+  Asc: "asc",
+  Desc: "desc",
+} as const;
 
-export type SortDirection = keyof typeof SortDirection;
-export type SortKey = keyof typeof SortKey;
+export type SortDirection = (typeof SortDirection)[keyof typeof SortDirection];
+export type SortKey = (typeof SortKey)[keyof typeof SortKey];
 
 export const playersByKeyAndDir =
   (sortKey: SortKey, dir: SortDirection) => (a: Stats, b: Stats) => {
+    const dirVal = dir === SortDirection.Asc ? 1 : -1;
     switch (sortKey) {
-      case SortKey.kdr: {
-        return (getKdr(a) - getKdr(b)) * (dir === SortDirection.asc ? 1 : -1);
+      case SortKey.Kdr: {
+        return (getKdr(a) - getKdr(b)) * dirVal;
       }
-      // case TableRowSortKey.Accuracy: {
-      //   return (getAccuracy(a) - getAccuracy(b)) * (dir === "asc" ? 1 : -1);
-      // }
-      //
-      // case TableRowSortKey.Add: {
-      //   return (getAdd(a) - getAdd(b)) * (dir === "asc" ? 1 : -1);
-      // }
-      //
-      // case TableRowSortKey.DamageDone: {
-      //   return (
-      //     (a.categories.damagegiven - b.categories.damagegiven) *
-      //     (dir === "asc" ? 1 : -1)
-      //   );
-      // }
-      //
-      // case TableRowSortKey.DamageReceived: {
-      //   return (
-      //     (a.categories.damagereceived - b.categories.damagereceived) *
-      //     (dir === "asc" ? 1 : -1)
-      //   );
-      // }
-      //
-      // case TableRowSortKey.Deaths: {
-      //   return (
-      //     (a.categories.deaths - b.categories.deaths) * (dir === "asc" ? 1 : -1)
-      //   );
-      // }
-      //
-      // case TableRowSortKey.Gibs: {
-      //   return (
-      //     (a.categories.gibs - b.categories.gibs) * (dir === "asc" ? 1 : -1)
-      //   );
-      // }
-      //
-      // case TableRowSortKey.Headshots: {
-      //   return (
-      //     (a.categories.headshots - b.categories.headshots) *
-      //     (dir === "asc" ? 1 : -1)
-      //   );
-      // }
-      //
-      // case TableRowSortKey.Kills: {
-      //   return (
-      //     (a.categories.kills - b.categories.kills) * (dir === "asc" ? 1 : -1)
-      //   );
-      // }
-      //
-      // case TableRowSortKey.Kdr: {
-      //   return (getKdr(a) - getKdr(b)) * (dir === "asc" ? 1 : -1);
-      // }
-      //
-      // case TableRowSortKey.Revives: {
-      //   return (
-      //     (a.categories.revives - b.categories.revives) *
-      //     (dir === "asc" ? 1 : -1)
-      //   );
-      // }
-      //
-      // case TableRowSortKey.Name: {
-      //   return a.alias.localeCompare(b.alias) * (dir === "asc" ? 1 : -1);
-      // }
+
+      case SortKey.Name: {
+        const aName = getColoredNameParts(a.name)
+          .map((s) => s.text)
+          .join("");
+        const bName = getColoredNameParts(b.name)
+          .map((s) => s.text)
+          .join("");
+        return aName.localeCompare(bName) * dirVal;
+      }
+
+      case SortKey.Gibs: {
+        return (a.playerStats.gibs - b.playerStats.gibs) * dirVal;
+      }
+
+      case SortKey.Kills: {
+        return (getKills(a) - getKills(b)) * dirVal;
+      }
+
+      case SortKey.Deaths: {
+        return (getDeaths(a) - getDeaths(b)) * dirVal;
+      }
+
+      case SortKey.Revives: {
+        return (getRevives(a) - getRevives(b)) * dirVal;
+      }
+
+      case SortKey.Effiency: {
+        return (getEfficiency(a) - getEfficiency(b)) * dirVal;
+      }
+
+      case SortKey.Headshots: {
+        return (getHeadshots(a) - getHeadshots(b)) * dirVal;
+      }
+
+      case SortKey.Selfkills: {
+        return (a.playerStats.selfKills - b.playerStats.selfKills) * dirVal;
+      }
+
+      case SortKey.TimePlayed: {
+        return (a.playerStats.playtime - b.playerStats.playtime) * dirVal;
+      }
+
+      case SortKey.DamageGiven: {
+        return (a.playerStats.damageGiven - b.playerStats.damageGiven) * dirVal;
+      }
+
+      case SortKey.DamageReceived: {
+        return (
+          (a.playerStats.damageReceived - b.playerStats.damageReceived) * dirVal
+        );
+      }
     }
   };

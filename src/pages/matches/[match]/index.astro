@@ -18,5 +18,5 @@ const allStats = getMapStats("all", [], matchStats);
   }}
 >
   <MatchHeader match={matchStats} />
-  <StatsTable stats={allStats} />
+  <StatsTable client:load stats={allStats} />
 </Layout>

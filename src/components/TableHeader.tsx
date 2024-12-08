@@ -1,18 +1,100 @@
-export const TableHeader = () => {
+import type { Component } from "solid-js";
+import { SortDirection, SortKey } from "../util/sorting";
+import { TableHeaderColumn } from "./TableHeaderColumn";
+
+export type TableHeaderProps = {
+  onSortClicked: (key: SortKey) => void;
+  sortDirection: SortDirection;
+  sortKey: SortKey;
+};
+
+export const TableHeader: Component<TableHeaderProps> = (props) => {
   return (
     <div class="grid grid-cols-stats items-center gap-4 text-xs font-semibold p-2 px-4">
-      <div>Name</div>
-      <div class="text-right">Eff</div>
-      <div class="text-right">KDR</div>
-      <div class="text-right">KILLS</div>
-      <div class="text-right">DEATHS</div>
-      <div class="text-right">DMG G</div>
-      <div class="text-right">DMG R</div>
-      <div class="text-right">HS</div>
-      <div class="text-right">GIBS</div>
-      <div class="text-right">SK</div>
-      <div class="text-right">REV</div>
-      <div class="text-right">TMP</div>
+      <TableHeaderColumn
+        alignStart
+        columnKey={SortKey.Name}
+        onClick={props.onSortClicked}
+        sortDirection={props.sortDirection}
+        sortKey={props.sortKey}
+      />
+
+      <TableHeaderColumn
+        columnKey={SortKey.Effiency}
+        onClick={props.onSortClicked}
+        sortDirection={props.sortDirection}
+        sortKey={props.sortKey}
+      />
+
+      <TableHeaderColumn
+        columnKey={SortKey.Kdr}
+        onClick={props.onSortClicked}
+        sortDirection={props.sortDirection}
+        sortKey={props.sortKey}
+      />
+
+      <TableHeaderColumn
+        columnKey={SortKey.Kills}
+        onClick={props.onSortClicked}
+        sortDirection={props.sortDirection}
+        sortKey={props.sortKey}
+      />
+
+      <TableHeaderColumn
+        columnKey={SortKey.Deaths}
+        onClick={props.onSortClicked}
+        sortDirection={props.sortDirection}
+        sortKey={props.sortKey}
+      />
+
+      <TableHeaderColumn
+        columnKey={SortKey.DamageGiven}
+        onClick={props.onSortClicked}
+        sortDirection={props.sortDirection}
+        sortKey={props.sortKey}
+      />
+
+      <TableHeaderColumn
+        columnKey={SortKey.DamageReceived}
+        onClick={props.onSortClicked}
+        sortDirection={props.sortDirection}
+        sortKey={props.sortKey}
+      />
+
+      <TableHeaderColumn
+        columnKey={SortKey.Headshots}
+        onClick={props.onSortClicked}
+        sortDirection={props.sortDirection}
+        sortKey={props.sortKey}
+      />
+
+      <TableHeaderColumn
+        columnKey={SortKey.Gibs}
+        onClick={props.onSortClicked}
+        sortDirection={props.sortDirection}
+        sortKey={props.sortKey}
+      />
+
+      <TableHeaderColumn
+        columnKey={SortKey.Selfkills}
+        onClick={props.onSortClicked}
+        sortDirection={props.sortDirection}
+        sortKey={props.sortKey}
+      />
+
+      <TableHeaderColumn
+        columnKey={SortKey.Revives}
+        onClick={props.onSortClicked}
+        sortDirection={props.sortDirection}
+        sortKey={props.sortKey}
+      />
+
+      <TableHeaderColumn
+        columnKey={SortKey.TimePlayed}
+        onClick={props.onSortClicked}
+        sortDirection={props.sortDirection}
+        sortKey={props.sortKey}
+      />
     </div>
   );
 };
