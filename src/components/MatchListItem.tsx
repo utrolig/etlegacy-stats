@@ -1,7 +1,7 @@
 import { Show, type Component } from "solid-js";
 import type { Group } from "../util/stats-api";
-import { getMatchSize } from "../util/match";
 import { DateTime } from "luxon";
+import { getMatchSize } from "../util/stats";
 
 export type MatchListItemProps = {
   match: Group;

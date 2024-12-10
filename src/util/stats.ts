@@ -1,5 +1,5 @@
 import deepEqual from "deep-equal";
-import type { GroupDetails, GroupRound } from "./stats-api";
+import type { Group, GroupDetails, GroupRound } from "./stats-api";
 
 export type WeaponStats = {
   hits: number;
@@ -788,4 +788,9 @@ export function byWeaponIds(a: WeaponStats, b: WeaponStats) {
     WEAPON_NAMES[a.name as keyof typeof WEAPON_NAMES] -
     WEAPON_NAMES[b.name as keyof typeof WEAPON_NAMES]
   );
+}
+
+export function getMatchSize(match: Group) {
+  const teamPlayerCount = match.size / 2;
+  return teamPlayerCount + "vs" + teamPlayerCount;
 }
