@@ -63,6 +63,7 @@ export type MatchStats = {
     map: string;
     roundNumber: number;
     stats: Stats[];
+    roundTime: string;
   }[];
 };
 
@@ -239,6 +240,7 @@ export function getMatchStats(info: GroupDetails): MatchStats {
       const roundNumber = round.round_data.round_info.round + roundsToAdd;
 
       acc.push({
+        roundTime: round.round_data.round_info.nextTimeLimit,
         map: round.round_data.round_info.mapname,
         roundNumber,
         stats: Object.values(round.round_data.player_stats).map((ps) => {
@@ -278,11 +280,7 @@ export function getMatchStats(info: GroupDetails): MatchStats {
 
       return acc;
     },
-    [] as {
-      map: string;
-      roundNumber: number;
-      stats: Stats[];
-    }[],
+    [] as MatchStats["rounds"],
   );
 
   return {
@@ -765,4 +763,22 @@ export function getHeadshotPercentage(stats: Stats) {
   const hits = stats.weaponStats.reduce((hits, wpn) => wpn.hits + hits, 0);
   const headshots = getHeadshots(stats);
   return headshots / hits;
+}
+
+export function getMapTimes(match: MatchStats, map: string) {
+  function formatTime(time: string) {
+    if (time.length === 4) {
+      return "0" + time;
+    }
+
+    return time;
+  }
+
+  return match.rounds.reduce((acc, round) => {
+    if (round.map === map) {
+      acc.push(formatTime(round.roundTime));
+    }
+
+    return acc;
+  }, [] as string[]);
 }
