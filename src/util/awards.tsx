@@ -1,5 +1,12 @@
+import { getColoredNameParts } from "./colors";
 import { getRandomBetween } from "./random";
-import { getHeadshots, getSpamKills, WEAPON_NAMES, type Stats } from "./stats";
+import {
+  getDeaths,
+  getHeadshots,
+  getSpamKills,
+  WEAPON_NAMES,
+  type Stats,
+} from "./stats";
 
 export type Award = {
   name: string;
@@ -61,8 +68,17 @@ export function getBaiterAward(stats: Stats[]): Award | null {
   const baiters = stats.reduce(
     (acc, player) => {
       const kazimRegex = new RegExp(/.*k[a]+[z]+[iy]+[mn][em]?.*/gi);
+      const ipodRegex = new RegExp(/(littyj|litoriousj|the adjuster)/gi);
 
-      if (kazimRegex.test(player.name)) {
+      const playerName = getColoredNameParts(player.name)
+        .map((s) => s.text)
+        .join("");
+
+      if (
+        kazimRegex.test(playerName) ||
+        ipodRegex.test(playerName) ||
+        playerName.includes("pod")
+      ) {
         acc.push([getRandomBetween(85, 97), player.name]);
       }
 
@@ -273,6 +289,35 @@ export function getMostRevivesAward(stats: Stats[]): Award | null {
   };
 }
 
+export function getIpodAward(stats: Stats[]): Award | null {
+  const deaths = stats
+    .reduce(
+      (acc, player) => {
+        const deaths = getDeaths(player);
+
+        acc.push([deaths, player.name]);
+
+        return acc;
+      },
+      [] as Award["values"],
+    )
+    .sort(([a], [b]) => a - b);
+
+  if (!deaths.length) {
+    return null;
+  }
+
+  return {
+    reason: "for fewest deaths",
+    valueName: "Deaths",
+    valueDecimals: 0,
+    type: "silly",
+    name: "iPod",
+    winner: deaths[0],
+    values: deaths,
+  };
+}
+
 export function getSpammerAward(stats: Stats[]): Award | null {
   const spamKills = stats
     .reduce(
@@ -314,6 +359,7 @@ export function getAllSillyAwards(stats: Stats[]): Award[] {
     getSpectatorAward(stats),
     getHeadshotsAward(stats),
     getSpammerAward(stats),
+    getIpodAward(stats),
   ].filter(Boolean) as Award[];
   return awards;
 }
