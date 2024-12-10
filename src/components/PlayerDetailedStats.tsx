@@ -20,7 +20,7 @@ export const PlayerDetailedStats: Component<PlayerDetailedStatsProps> = (
   });
 
   return (
-    <div class="flex flex-col p-4 gap-8">
+    <div class="flex flex-col pt-4 px-9 pb-6 gap-8">
       <div class="flex flex-col">
         <div class="grid grid-cols-weaponStats items-center gap-2 text-xs font-semibold text-mud-300 py-1">
           <p>Weapon</p>

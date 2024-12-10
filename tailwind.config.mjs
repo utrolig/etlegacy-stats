@@ -58,7 +58,7 @@ export default {
     extend: {
       gridTemplateColumns: {
         stats: statsColumns.map(({ value }) => value).join(" "),
-        weaponStats: "120px, 80px, 120px, 60px, 60px, 90px, 120px",
+        weaponStats: "210px, 80px, 120px, 60px, 60px, 90px, 120px",
       },
       fontFamily: {
         sans: ["Nunito Sans", ...defaultTheme.fontFamily.sans],
