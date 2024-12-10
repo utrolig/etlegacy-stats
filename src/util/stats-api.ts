@@ -4,21 +4,11 @@ const BASE_URL = "https://api.oksii.lol/api/v2/stats/etl";
 
 export const statsApi = {
   async fetchGroups() {
-    // if (import.meta.env.DEV) {
-    //   const { default: groups } = await import("./groups.json");
-    //   return groups as Group[];
-    // }
     const url = urlJoin(BASE_URL, "/matches/groups");
     const data = await getJson<Group[]>(url);
     return data;
   },
   async fetchGroupDetails(groupId: number) {
-    // if (import.meta.env.DEV) {
-    //   const { default: group } = await import(
-    //     /* @vite-ignore */ `./${groupId}.json`
-    //   );
-    //   return group as GroupDetails;
-    // }
     const url = urlJoin(BASE_URL, "/matches/groups", groupId.toString());
     const data = await getJson<GroupDetails>(url);
     return data;
