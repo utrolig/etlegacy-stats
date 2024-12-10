@@ -24,4 +24,4 @@ pnpm-debug.log*
 .idea/
 
 # api cache
-api-cache
+api-cache/*.json
