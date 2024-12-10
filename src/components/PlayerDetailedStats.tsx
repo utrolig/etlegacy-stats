@@ -1,12 +1,12 @@
 import { createMemo, For, type Component } from "solid-js";
 import {
+  byWeaponIds,
   getAccuracy,
   getDeaths,
   getHeadshotPercentage,
   getKills,
   type Stats,
 } from "../util/stats";
-import { byWeaponIds } from "../util/weaponStats";
 
 export type PlayerDetailedStatsProps = {
   stats: Stats;

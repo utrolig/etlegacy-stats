@@ -4,8 +4,7 @@ import {
   type SortDirection,
   type SortKey,
 } from "../util/sorting";
-import { type Team } from "../util/match";
-import type { Stats } from "../util/stats";
+import type { Stats, Team } from "../util/stats";
 import { PlayerRow } from "./PlayerRow";
 import { TableHeader } from "./TableHeader";
 
@@ -26,7 +25,7 @@ export const TeamTable: Component<TeamTableProps> = (props) => {
 
   return (
     <div class="flex flex-col">
-      <h1 class="text-xl mb-4 ml-8 capitalize font-semibold text-orange-200">
+      <h1 class="text-xl mb-4 ml-8 capitalize font-semibold text-orange-50">
         {props.team}
       </h1>
       <TableHeader

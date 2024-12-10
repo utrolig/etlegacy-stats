@@ -782,3 +782,10 @@ export function getMapTimes(match: MatchStats, map: string) {
     return acc;
   }, [] as string[]);
 }
+
+export function byWeaponIds(a: WeaponStats, b: WeaponStats) {
+  return (
+    WEAPON_NAMES[a.name as keyof typeof WEAPON_NAMES] -
+    WEAPON_NAMES[b.name as keyof typeof WEAPON_NAMES]
+  );
+}

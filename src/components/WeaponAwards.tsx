@@ -8,7 +8,7 @@ export type WeaponAwardsProps = {
 export const WeaponAwards: Component<WeaponAwardsProps> = (props) => {
   return (
     <div class="p-8">
-      <h1 class="text-xl font-semibold text-orange-200">Weapon awards</h1>
+      <h1 class="text-xl font-semibold text-orange-50">Weapon awards</h1>
     </div>
   );
 };
