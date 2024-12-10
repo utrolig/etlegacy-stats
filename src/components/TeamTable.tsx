@@ -26,7 +26,9 @@ export const TeamTable: Component<TeamTableProps> = (props) => {
 
   return (
     <div class="flex flex-col">
-      <h1 class="text-xl mb-4 ml-8 capitalize">{props.team}</h1>
+      <h1 class="text-xl mb-4 ml-8 capitalize font-semibold text-orange-200">
+        {props.team}
+      </h1>
       <TableHeader
         sortKey={props.sortKey}
         sortDirection={props.sortDir}

@@ -15,7 +15,9 @@ export const MapsMenu: Component<MapsMenuProps> = (props) => {
         <p
           class={clsx(
             "border-b-2 border-b-transparent py-1",
-            !props.activeMap && "border-b-orange-400",
+            !props.activeMap
+              ? "border-b-orange-400 text-orange-50"
+              : "text-mud-500",
           )}
         >
           Total
@@ -30,7 +32,9 @@ export const MapsMenu: Component<MapsMenuProps> = (props) => {
             <p
               class={clsx(
                 "border-b-2 border-b-transparent py-1",
-                props.activeMap === map && "border-b-orange-400",
+                props.activeMap === map
+                  ? "border-b-orange-400 text-orange-50"
+                  : "text-mud-500",
               )}
             >
               {map}

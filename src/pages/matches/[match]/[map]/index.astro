@@ -5,6 +5,7 @@ import { statsApi } from "../../../../util/stats-api";
 import { StatsTable } from "../../../../components/StatsTable";
 import { getMapStats, getMatchStats } from "../../../../util/stats";
 import { MapsMenu } from "../../../../components/MapsMenu";
+import { WeaponAwards } from "../../../../components/WeaponAwards";
 
 const { match, map } = Astro.params;
 const roundsQuery = Astro.url.searchParams.get("rounds");
@@ -26,6 +27,7 @@ const allStats = getMapStats(map ?? "all", rounds, matchStats);
   }}
 >
   <MatchHeader activeMap={map} match={matchStats} />
-  <MapsMenu activeMap={map} matchId={match} match={matchStats} />
+  <MapsMenu activeMap={map} matchId={match!} match={matchStats} />
   <StatsTable client:load stats={allStats} />
+  <WeaponAwards match={matchStats} />
 </Layout>
