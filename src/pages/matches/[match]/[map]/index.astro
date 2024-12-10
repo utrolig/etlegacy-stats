@@ -5,7 +5,8 @@ import { statsApi } from "../../../../util/stats-api";
 import { StatsTable } from "../../../../components/StatsTable";
 import { getMapStats, getMatchStats } from "../../../../util/stats";
 import { MapsMenu } from "../../../../components/MapsMenu";
-import { WeaponAwards } from "../../../../components/WeaponAwards";
+import { AwardsList } from "../../../../components/AwardsList";
+import { getAllWeaponAwards, getAllSillyAwards } from "../../../../util/awards";
 
 const { match, map } = Astro.params;
 const roundsQuery = Astro.url.searchParams.get("rounds");
@@ -18,6 +19,8 @@ const parseRoundsQuery = (roundsQuery: string) => {
 
 const rounds = roundsQuery ? parseRoundsQuery(roundsQuery) : [];
 const allStats = getMapStats(map ?? "all", rounds, matchStats);
+const sillyAwards = getAllSillyAwards(allStats);
+const weaponAwards = getAllWeaponAwards(allStats);
 ---
 
 <Layout
@@ -29,5 +32,6 @@ const allStats = getMapStats(map ?? "all", rounds, matchStats);
   <MatchHeader activeMap={map} match={matchStats} />
   <MapsMenu activeMap={map} matchId={match!} match={matchStats} />
   <StatsTable client:load stats={allStats} />
-  <WeaponAwards match={matchStats} />
+  <AwardsList client:load awards={sillyAwards} title="Match awards" />
+  <AwardsList client:load awards={weaponAwards} title="Weapon awards" />
 </Layout>

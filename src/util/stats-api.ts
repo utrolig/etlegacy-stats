@@ -3,13 +3,36 @@ import urlJoin from "url-join";
 const BASE_URL = "https://api.oksii.lol/api/v2/stats/etl";
 
 export const statsApi = {
-  async fetchGroups() {
+  async fetchGroups(): Promise<Group[]> {
     const url = urlJoin(BASE_URL, "/matches/groups");
     const data = await getJson<Group[]>(url);
     return data;
   },
-  async fetchGroupDetails(groupId: number) {
+  async fetchGroupDetails(groupId: number): Promise<GroupDetails> {
     const url = urlJoin(BASE_URL, "/matches/groups", groupId.toString());
+
+    if (import.meta.env.DEV) {
+      const { default: fs } = await import("fs");
+      const { default: path } = await import("path");
+
+      const filePath = path.join(
+        process.cwd(),
+        "/api-cache",
+        `${groupId}.json`,
+      );
+      const cachedExists = fs.existsSync(filePath);
+
+      if (cachedExists) {
+        console.log(`Fetched ${groupId} from cache.`);
+        return JSON.parse(fs.readFileSync(filePath).toString()) as GroupDetails;
+      } else {
+        console.log(`Fetched ${groupId} from api, and saved to cache.`);
+        const data = await getJson<GroupDetails>(url);
+        fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+        return data;
+      }
+    }
+
     const data = await getJson<GroupDetails>(url);
     return data;
   },

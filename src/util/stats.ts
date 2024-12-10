@@ -562,8 +562,8 @@ function convertWeaponStats(
 
 export function sortByWeaponIds(a: WeaponStats, b: WeaponStats) {
   return (
-    WEAPON_NAMES[a.name as keyof typeof WEAPON_NAMES] -
-    WEAPON_NAMES[b.name as keyof typeof WEAPON_NAMES]
+    WEAPON_NAMES_IDS[a.name as keyof typeof WEAPON_NAMES_IDS] -
+    WEAPON_NAMES_IDS[b.name as keyof typeof WEAPON_NAMES_IDS]
   );
 }
 
@@ -673,7 +673,7 @@ export const WEAPON_IDS: Record<
   27: { name: "Syringe", hasHeadshots: false },
 } as const;
 
-export const WEAPON_NAMES = {
+export const WEAPON_NAMES_IDS = {
   Knife: 0,
   "Ka-Bar": 1,
   Luger: 2,
@@ -702,6 +702,37 @@ export const WEAPON_NAMES = {
   "Scp.K43": 25,
   "MP 34": 26,
   Syringe: 27,
+} as const;
+
+export const WEAPON_NAMES = {
+  Knife: "Knife",
+  "Ka-Bar": "Ka-Bar",
+  Luger: "Luger",
+  Colt: "Colt",
+  "MP 40": "MP 40",
+  Thompson: "Thompson",
+  Sten: "Sten",
+  "FG 42": "FG 42",
+  Panzer: "Panzer",
+  Bazooka: "Bazooka",
+  "F.Thrower": "F.Thrower",
+  Grenade: "Grenade",
+  Mortar: "Mortar",
+  Granatwerf: "Granatwerf",
+  Dynamite: "Dynamite",
+  Airstrike: "Airstrike",
+  Artillery: "Artillery",
+  Satchel: "Satchel",
+  "G.Launchr": "G.Launchr",
+  Landmine: "Landmine",
+  "MG 42 Gun": "MG 42 Gun",
+  Browning: "Browning",
+  Garand: "Garand",
+  "K43 Rifle": "K43 Rifle",
+  "Scp.Garand": "Scp.Garand",
+  "Scp.K43": "Scp.K43",
+  "MP 34": "MP 34",
+  Syringe: "Syringe",
 } as const;
 
 export function getKills(stats: Stats) {
@@ -765,6 +796,24 @@ export function getHeadshotPercentage(stats: Stats) {
   return headshots / hits;
 }
 
+export function getSpamKills(stats: Stats) {
+  const spamWeapons: string[] = [
+    WEAPON_NAMES.Grenade,
+    WEAPON_NAMES.Panzer,
+    WEAPON_NAMES.Bazooka,
+    WEAPON_NAMES["G.Launchr"],
+    WEAPON_NAMES.Artillery,
+    WEAPON_NAMES.Airstrike,
+    WEAPON_NAMES.Landmine,
+  ];
+
+  const spamKills = stats.weaponStats
+    .filter((wpn) => spamWeapons.includes(wpn.name))
+    .reduce((total, wpn) => total + wpn.kills, 0);
+
+  return spamKills;
+}
+
 export function getMapTimes(match: MatchStats, map: string) {
   function formatTime(time: string) {
     if (time.length === 4) {
@@ -785,8 +834,8 @@ export function getMapTimes(match: MatchStats, map: string) {
 
 export function byWeaponIds(a: WeaponStats, b: WeaponStats) {
   return (
-    WEAPON_NAMES[a.name as keyof typeof WEAPON_NAMES] -
-    WEAPON_NAMES[b.name as keyof typeof WEAPON_NAMES]
+    WEAPON_NAMES_IDS[a.name as keyof typeof WEAPON_NAMES_IDS] -
+    WEAPON_NAMES_IDS[b.name as keyof typeof WEAPON_NAMES_IDS]
   );
 }
 
