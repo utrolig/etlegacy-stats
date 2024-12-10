@@ -61,6 +61,7 @@ export function getBaiterAward(stats: Stats[]): Award | null {
   const baiters = stats.reduce(
     (acc, player) => {
       const kazimRegex = new RegExp(/.*k[a]+[z]+[iy]+[mn][em]?.*/gi);
+
       if (kazimRegex.test(player.name)) {
         acc.push([getRandomBetween(85, 97), player.name]);
       }
@@ -112,7 +113,7 @@ export function getMayanAward(stats: Stats[]): Award | null {
   }
 
   return {
-    reason: "for being shit with rifle",
+    reason: "for having below 50% accuracy with rifle nade",
     valueName: "Riflenade accuracy",
     valueDecimals: 1,
     isPercentage: true,
