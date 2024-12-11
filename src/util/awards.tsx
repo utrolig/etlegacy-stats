@@ -1,5 +1,5 @@
 import { getColoredNameParts } from "./colors";
-import { getRandomBetween } from "./random";
+import { createSeededRandom, getRandomBetween } from "./random";
 import {
   getDeaths,
   getHeadshots,
@@ -64,7 +64,8 @@ export function getAllWeaponAwards(stats: Stats[]): Award[] {
     .filter(Boolean);
 }
 
-export function getBaiterAward(stats: Stats[]): Award | null {
+export function getBaiterAward(stats: Stats[], roundId: number): Award | null {
+  const random = createSeededRandom(roundId);
   const baiters = stats.reduce(
     (acc, player) => {
       const kazimRegex = new RegExp(/.*k[a]+[z]+[iy]+[mn][em]?.*/gi);
@@ -74,7 +75,7 @@ export function getBaiterAward(stats: Stats[]): Award | null {
         .map((s) => s.text)
         .join("");
 
-      const shouldShowBaiter = Math.random() > 0.35;
+      const shouldShowBaiter = random() > 0.35;
 
       if (!shouldShowBaiter) {
         return acc;
@@ -85,7 +86,7 @@ export function getBaiterAward(stats: Stats[]): Award | null {
         ipodRegex.test(playerName) ||
         playerName.includes("pod")
       ) {
-        acc.push([getRandomBetween(85, 97), player.name]);
+        acc.push([getRandomBetween(85, 97, random), player.name]);
       }
 
       return acc;
@@ -355,13 +356,13 @@ export function getSpammerAward(stats: Stats[]): Award | null {
   };
 }
 
-export function getAllSillyAwards(stats: Stats[]): Award[] {
+export function getAllSillyAwards(stats: Stats[], roundId: number): Award[] {
   const awards = [
     getHighestPlaytimeAward(stats),
     getMostRevivesAward(stats),
     getGibsAward(stats),
     getMayanAward(stats),
-    getBaiterAward(stats),
+    getBaiterAward(stats, roundId),
     getSpectatorAward(stats),
     getHeadshotsAward(stats),
     getSpammerAward(stats),

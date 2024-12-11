@@ -12,7 +12,7 @@ const { match } = Astro.params;
 const matchDetails = await statsApi.fetchGroupDetails(+match!);
 const matchStats = getMatchStats(matchDetails);
 const allStats = getMapStats("all", [], matchStats);
-const sillyAwards = getAllSillyAwards(allStats);
+const sillyAwards = getAllSillyAwards(allStats, matchDetails.match.match_id);
 const weaponAwards = getAllWeaponAwards(allStats);
 ---
 

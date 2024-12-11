@@ -19,7 +19,7 @@ const parseRoundsQuery = (roundsQuery: string) => {
 
 const rounds = roundsQuery ? parseRoundsQuery(roundsQuery) : [];
 const allStats = getMapStats(map ?? "all", rounds, matchStats);
-const sillyAwards = getAllSillyAwards(allStats);
+const sillyAwards = getAllSillyAwards(allStats, matchDetails.match.match_id);
 const weaponAwards = getAllWeaponAwards(allStats);
 ---
 
