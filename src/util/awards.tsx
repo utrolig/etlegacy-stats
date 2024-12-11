@@ -74,6 +74,12 @@ export function getBaiterAward(stats: Stats[]): Award | null {
         .map((s) => s.text)
         .join("");
 
+      const shouldShowBaiter = Math.random() > 0.35;
+
+      if (!shouldShowBaiter) {
+        return acc;
+      }
+
       if (
         kazimRegex.test(playerName) ||
         ipodRegex.test(playerName) ||
