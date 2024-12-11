@@ -5,8 +5,10 @@ import {
   getDeaths,
   getHeadshotPercentage,
   getKills,
+  WEAPON_NAMES,
   type Stats,
 } from "../util/stats";
+import { getWeaponIcons } from "../util/weaponIcons";
 
 export type PlayerDetailedStatsProps = {
   stats: Stats;
@@ -23,7 +25,7 @@ export const PlayerDetailedStats: Component<PlayerDetailedStatsProps> = (
     <div class="flex flex-col pt-4 px-9 pb-6 gap-8">
       <div class="flex flex-col">
         <div class="grid grid-cols-weaponStats items-center gap-2 text-xs font-semibold text-mud-300 py-1">
-          <p>Weapon</p>
+          <p class="pl-10">Weapon</p>
           <p class="text-right">Accuracy</p>
           <p class="text-right">Hits / Shots</p>
           <p class="text-right">Kills</p>
@@ -35,7 +37,16 @@ export const PlayerDetailedStats: Component<PlayerDetailedStatsProps> = (
           <For each={sortedWeaponStats()}>
             {(weapon) => (
               <div class="grid grid-cols-weaponStats items-center gap-2 text-sm py-[2px]">
-                <p>{weapon.name}</p>
+                <div class="flex items-center gap-4">
+                  <img
+                    class="w-8 h-4"
+                    src={
+                      getWeaponIcons(weapon.name as keyof typeof WEAPON_NAMES)
+                        .src
+                    }
+                  />
+                  {weapon.name}
+                </div>
                 <p class="text-right">{formatAccuracy(weapon.acc)}</p>
                 <p class="text-right">
                   {formatHitsShots(weapon.hits, weapon.shots)}

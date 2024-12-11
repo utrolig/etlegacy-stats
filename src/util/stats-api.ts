@@ -9,6 +9,7 @@ export const statsApi = {
     return data;
   },
   async fetchGroupDetails(groupId: number): Promise<GroupDetails> {
+    console.log("groupId", groupId);
     const url = urlJoin(BASE_URL, "/matches/groups", groupId.toString());
 
     if (import.meta.env.DEV) {
