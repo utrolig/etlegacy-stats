@@ -183,7 +183,7 @@ export function getMatchStats(info: GroupDetails): MatchStats {
   const maps = getMaps(match.rounds);
   const teams = getTeams(match.rounds);
   const score = match.rounds.reduce(
-    (scoreAcc, round) => {
+    (scoreAcc, round, roundIdx, rounds) => {
       const { winnerteam } = round.round_data.round_info;
       const players = Object.values(round.round_data.player_stats);
 
@@ -192,9 +192,13 @@ export function getMatchStats(info: GroupDetails): MatchStats {
           const isAlphaWinner = teams.alpha.some((p) => p.id === player.guid);
           const isBetaWinner = teams.beta.some((p) => p.id === player.guid);
 
+          const previousRound = rounds[roundIdx - 1];
+
           const isFullhold =
             round.round_data.round_info.timelimit ===
-            round.round_data.round_info.nextTimeLimit;
+              round.round_data.round_info.nextTimeLimit &&
+            round.round_data.round_info.timelimit ===
+              previousRound?.round_data.round_info.timelimit;
 
           const secondRound = round.round_data.round_info.round === 2;
 
