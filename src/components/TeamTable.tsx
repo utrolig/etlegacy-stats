@@ -7,6 +7,7 @@ import {
 import type { Stats, Team } from "../util/stats";
 import { PlayerRow } from "./PlayerRow";
 import { TableHeader } from "./TableHeader";
+import { TotalRow } from "./TotalRow";
 
 export type TeamTableProps = {
   sortDir: SortDirection;
@@ -34,6 +35,7 @@ export const TeamTable: Component<TeamTableProps> = (props) => {
         onSortClicked={props.onSortClicked}
       />
       <For each={teamStats()}>{(stats) => <PlayerRow stats={stats} />}</For>
+      <TotalRow stats={teamStats()} />
     </div>
   );
 };
