@@ -40,9 +40,18 @@ export const PlayerRow: Component<PlayerRowProps> = (props) => {
             )}
             size={12}
           />
-          <For each={getColoredNameParts(props.stats.name)}>
-            {({ color, text }) => <span style={{ color }}>{text}</span>}
-          </For>
+          <div class="flex items-center overflow-hidden text-ellipsis whitespace-nowrap">
+            <For each={getColoredNameParts(props.stats.name)}>
+              {({ color, text }) => (
+                <span
+                  class="overflow-hidden whitespace-nowrap text-ellipsis"
+                  style={{ color }}
+                >
+                  {text}
+                </span>
+              )}
+            </For>
+          </div>
         </div>
         <div class="text-right">{getEfficiency(props.stats).toFixed(0)}</div>
         <div
