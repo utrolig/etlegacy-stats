@@ -43,8 +43,8 @@ export const AwardsList: Component<AwardsListProps> = (props) => {
                         </div>
                         <For each={award().values}>
                           {(line) => (
-                            <div class="grid grid-cols-[200px,auto]">
-                              <div>
+                            <div class="grid grid-cols-[200px,auto] overflow-hidden">
+                              <div class="text-ellipsis overflow-hidden whitespace-nowrap">
                                 <For each={getColoredNameParts(line[1])}>
                                   {(part) => (
                                     <span style={{ color: part.color }}>
@@ -56,7 +56,9 @@ export const AwardsList: Component<AwardsListProps> = (props) => {
                               <span>
                                 {line[0].toFixed(award().valueDecimals)}
                                 <Show when={award().isPercentage}>
-                                  <span class="text-mud-300">%</span>
+                                  <span class="text-mud-300 text-ellipsis overflow-hidden whitespace-nowrap">
+                                    %
+                                  </span>
                                 </Show>
                               </span>
                             </div>
