@@ -32,8 +32,8 @@ export const TeamTable: Component<TeamTableProps> = (props) => {
 
   return (
     <div class="flex flex-col">
-      <div class="flex items-center justify-between">
-        <h1 class="text-xl mb-4 ml-8 capitalize font-semibold text-orange-50">
+      <div class="flex items-center justify-between pl-5 pb-4">
+        <h1 class="text-xl capitalize font-semibold text-orange-50">
           {props.team}
         </h1>
         <Show when={props.showPreferDiscordNamesButton}>
