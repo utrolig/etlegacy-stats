@@ -216,6 +216,8 @@ export function getMatchStats(info: GroupDetails): MatchStats {
                 scoreAcc.beta += 2;
               }
             }
+
+            break;
           }
 
           const nextRound = rounds[roundIdx + 1];
