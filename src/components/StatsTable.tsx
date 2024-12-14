@@ -35,7 +35,7 @@ export const StatsTable: Component<StatsTableProps> = (props) => {
         sortDir={sortDir()}
         onSortClicked={onSortClicked}
         playerInfoDict={props.playerInfoDict}
-        showPreferDiscordNamesButton
+        showExtraMenu
         onPreferDiscordNamesChanged={setPreferDiscordNames}
         preferDiscordNames={preferDiscordNames()}
       />

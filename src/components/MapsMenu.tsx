@@ -4,7 +4,7 @@ import clsx from "clsx";
 
 export type MapsMenuProps = {
   activeMap?: string;
-  activeRound: number;
+  activeRound?: number;
   match: MatchStats;
   matchId: string;
 };
@@ -80,6 +80,6 @@ function isCurrentMap(map: string, activeMap?: string) {
   return map === activeMap;
 }
 
-function isCurrentRound(round: number, currentRound: number) {
+function isCurrentRound(round: number, currentRound?: number) {
   return round === currentRound;
 }
