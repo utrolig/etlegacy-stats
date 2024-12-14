@@ -20,6 +20,7 @@ import { Tooltip } from "./Tooltip";
 export type PlayerRowProps = {
   stats: Stats;
   playerInfo: PlayerInfo;
+  preferDiscordNames: boolean;
 };
 
 export const PlayerRow: Component<PlayerRowProps> = (props) => {
@@ -45,17 +46,24 @@ export const PlayerRow: Component<PlayerRowProps> = (props) => {
             size={12}
           />
           <div class="flex items-center overflow-hidden text-ellipsis whitespace-nowrap">
-            <For each={getColoredNameParts(props.stats.name)}>
-              {({ color, text }) => (
-                <span
-                  class="overflow-hidden whitespace-nowrap text-ellipsis"
-                  style={{ color }}
-                >
-                  {text}
-                </span>
-              )}
-            </For>
-            <Show when={props.playerInfo}>
+            <Show
+              when={props.preferDiscordNames && props.playerInfo}
+              fallback={
+                <For each={getColoredNameParts(props.stats.name)}>
+                  {({ color, text }) => (
+                    <span
+                      class="overflow-hidden whitespace-nowrap text-ellipsis"
+                      style={{ color }}
+                    >
+                      {text}
+                    </span>
+                  )}
+                </For>
+              }
+            >
+              {props.playerInfo.discord_nick}
+            </Show>
+            <Show when={props.playerInfo && !props.preferDiscordNames}>
               <Tooltip
                 placement="right"
                 content={props.playerInfo.discord_nick}

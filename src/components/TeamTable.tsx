@@ -1,4 +1,4 @@
-import { createMemo, For, type Component } from "solid-js";
+import { createMemo, For, Show, type Component } from "solid-js";
 import {
   playersByKeyAndDir,
   type SortDirection,
@@ -9,6 +9,7 @@ import { PlayerRow } from "./PlayerRow";
 import { TableHeader } from "./TableHeader";
 import { TotalRow } from "./TotalRow";
 import type { PlayerInfoDict } from "../util/stats-api";
+import { PreferDiscordNamesToggle } from "./PreferDiscordNamesToggle";
 
 export type TeamTableProps = {
   sortDir: SortDirection;
@@ -17,6 +18,9 @@ export type TeamTableProps = {
   team: Team;
   stats: Stats[];
   playerInfoDict: PlayerInfoDict;
+  showPreferDiscordNamesButton?: boolean;
+  preferDiscordNames: boolean;
+  onPreferDiscordNamesChanged: (value: boolean) => void;
 };
 
 export const TeamTable: Component<TeamTableProps> = (props) => {
@@ -28,9 +32,17 @@ export const TeamTable: Component<TeamTableProps> = (props) => {
 
   return (
     <div class="flex flex-col">
-      <h1 class="text-xl mb-4 ml-8 capitalize font-semibold text-orange-50">
-        {props.team}
-      </h1>
+      <div class="flex items-center justify-between">
+        <h1 class="text-xl mb-4 ml-8 capitalize font-semibold text-orange-50">
+          {props.team}
+        </h1>
+        <Show when={props.showPreferDiscordNamesButton}>
+          <PreferDiscordNamesToggle
+            value={props.preferDiscordNames}
+            onChange={props.onPreferDiscordNamesChanged}
+          />
+        </Show>
+      </div>
       <TableHeader
         sortKey={props.sortKey}
         sortDirection={props.sortDir}
@@ -39,6 +51,7 @@ export const TeamTable: Component<TeamTableProps> = (props) => {
       <For each={teamStats()}>
         {(stats) => (
           <PlayerRow
+            preferDiscordNames={props.preferDiscordNames}
             playerInfo={props.playerInfoDict[stats.longId]}
             stats={stats}
           />

@@ -12,6 +12,7 @@ export type StatsTableProps = {
 export const StatsTable: Component<StatsTableProps> = (props) => {
   const [sortDir, setSortDir] = createSignal<SortDirection>("desc");
   const [sortKey, setSortKey] = createSignal<SortKey>("kdr");
+  const [preferDiscordNames, setPreferDiscordNames] = createSignal(false);
 
   const onSortClicked = (key: SortKey) => {
     const currKey = sortKey();
@@ -34,6 +35,9 @@ export const StatsTable: Component<StatsTableProps> = (props) => {
         sortDir={sortDir()}
         onSortClicked={onSortClicked}
         playerInfoDict={props.playerInfoDict}
+        showPreferDiscordNamesButton
+        onPreferDiscordNamesChanged={setPreferDiscordNames}
+        preferDiscordNames={preferDiscordNames()}
       />
       <TeamTable
         stats={props.stats}
@@ -42,6 +46,8 @@ export const StatsTable: Component<StatsTableProps> = (props) => {
         sortDir={sortDir()}
         onSortClicked={onSortClicked}
         playerInfoDict={props.playerInfoDict}
+        onPreferDiscordNamesChanged={setPreferDiscordNames}
+        preferDiscordNames={preferDiscordNames()}
       />
     </div>
   );
