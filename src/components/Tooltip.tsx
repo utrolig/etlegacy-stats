@@ -17,7 +17,7 @@ export const Tooltip: Component<TooltipProps> = (props) => {
       <KobalteTooltip
         getAnchorRect={props.getAnchorRect}
         closeDelay={0}
-        openDelay={0}
+        openDelay={300}
         placement={props.placement ?? "top"}
       >
         <KobalteTooltip.Trigger
