@@ -1,7 +1,7 @@
 ---
 import Layout from "../../../../layouts/Layout.astro";
 import { MatchHeader } from "../../../../components/MatchHeader";
-import { statsApi } from "../../../../util/stats-api";
+import { statsApi, type PlayerInfoDict } from "../../../../util/stats-api";
 import { StatsTable } from "../../../../components/StatsTable";
 import { getMapStats, getMatchStats } from "../../../../util/stats";
 import { MapsMenu } from "../../../../components/MapsMenu";
@@ -21,6 +21,18 @@ const rounds = roundsQuery ? parseRoundsQuery(roundsQuery) : [];
 const allStats = getMapStats(map ?? "all", rounds, matchStats);
 const sillyAwards = getAllSillyAwards(allStats, matchDetails.match.match_id);
 const weaponAwards = getAllWeaponAwards(allStats);
+const playerGuids = [...matchStats.teams.beta, ...matchStats.teams.alpha].map(
+  (s) => s.longId,
+);
+const playerDiscordNames = await statsApi.fetchUsersByGuid(
+  playerGuids,
+  import.meta.env.API_TOKEN,
+);
+
+const playerInfoDict = playerDiscordNames.reduce((acc, player) => {
+  acc[player.guid] = player;
+  return acc;
+}, {} as PlayerInfoDict);
 ---
 
 <Layout
@@ -31,7 +43,7 @@ const weaponAwards = getAllWeaponAwards(allStats);
 >
   <MatchHeader activeMap={map} match={matchStats} />
   <MapsMenu activeMap={map} matchId={match!} match={matchStats} />
-  <StatsTable client:load stats={allStats} />
+  <StatsTable playerInfoDict={playerInfoDict} client:load stats={allStats} />
   <AwardsList client:load awards={sillyAwards} title="Match awards" />
   <AwardsList client:load awards={weaponAwards} title="Weapon awards" />
 </Layout>
