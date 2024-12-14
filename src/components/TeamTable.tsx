@@ -10,6 +10,7 @@ import { TableHeader } from "./TableHeader";
 import { TotalRow } from "./TotalRow";
 import type { PlayerInfoDict } from "../util/stats-api";
 import { PreferDiscordNamesToggle } from "./PreferDiscordNamesToggle";
+import { PerformanceComparisonModal } from "./PerformanceComparisonModal";
 
 export type TeamTableProps = {
   sortDir: SortDirection;
@@ -18,7 +19,7 @@ export type TeamTableProps = {
   team: Team;
   stats: Stats[];
   playerInfoDict: PlayerInfoDict;
-  showPreferDiscordNamesButton?: boolean;
+  showExtraMenu?: boolean;
   preferDiscordNames: boolean;
   onPreferDiscordNamesChanged: (value: boolean) => void;
 };
@@ -36,11 +37,14 @@ export const TeamTable: Component<TeamTableProps> = (props) => {
         <h1 class="text-xl capitalize font-semibold text-orange-50">
           {props.team}
         </h1>
-        <Show when={props.showPreferDiscordNamesButton}>
-          <PreferDiscordNamesToggle
-            value={props.preferDiscordNames}
-            onChange={props.onPreferDiscordNamesChanged}
-          />
+        <Show when={props.showExtraMenu}>
+          <div class="flex items-center gap-4">
+            <PerformanceComparisonModal stats={props.stats} />
+            <PreferDiscordNamesToggle
+              value={props.preferDiscordNames}
+              onChange={props.onPreferDiscordNamesChanged}
+            />
+          </div>
         </Show>
       </div>
       <TableHeader
