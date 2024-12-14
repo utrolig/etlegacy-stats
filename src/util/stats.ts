@@ -217,6 +217,21 @@ export function getMatchStats(info: GroupDetails): MatchStats {
             }
           }
 
+          const nextRound = rounds[roundIdx + 1];
+          const fh =
+            round.round_data.round_info.timelimit ===
+            round.round_data.round_info.nextTimeLimit;
+
+          if (!nextRound && fh) {
+            if (isAlphaWinner) {
+              scoreAcc.alpha += 1;
+            }
+
+            if (isBetaWinner) {
+              scoreAcc.beta += 1;
+            }
+          }
+
           break;
         }
       }
