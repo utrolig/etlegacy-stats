@@ -9,15 +9,16 @@ import { AwardsList } from "../../../../components/AwardsList";
 import { getAllWeaponAwards, getAllSillyAwards } from "../../../../util/awards";
 
 const { match, map } = Astro.params;
-const roundsQuery = Astro.url.searchParams.get("rounds");
+const roundsQuery = Astro.url.searchParams.get("round");
 const matchDetails = await statsApi.fetchGroupDetails(+match!);
 const matchStats = getMatchStats(matchDetails);
 
 const parseRoundsQuery = (roundsQuery: string) => {
-  return roundsQuery.split(",").map(Number);
+  return Number(roundsQuery);
 };
 
-const rounds = roundsQuery ? parseRoundsQuery(roundsQuery) : [];
+const parsedQuery = roundsQuery ? parseRoundsQuery(roundsQuery) : 0;
+const rounds = parsedQuery ? [parsedQuery] : [];
 const allStats = getMapStats(map ?? "all", rounds, matchStats);
 const sillyAwards = getAllSillyAwards(allStats, matchDetails.match.match_id);
 const weaponAwards = getAllWeaponAwards(allStats);
@@ -42,7 +43,12 @@ const playerInfoDict = playerDiscordNames.reduce((acc, player) => {
   }}
 >
   <MatchHeader activeMap={map} match={matchStats} />
-  <MapsMenu activeMap={map} matchId={match!} match={matchStats} />
+  <MapsMenu
+    activeRound={parsedQuery}
+    activeMap={map}
+    matchId={match!}
+    match={matchStats}
+  />
   <StatsTable playerInfoDict={playerInfoDict} client:load stats={allStats} />
   <AwardsList client:load awards={sillyAwards} title="Match awards" />
   <AwardsList client:load awards={weaponAwards} title="Weapon awards" />
