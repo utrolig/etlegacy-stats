@@ -1,10 +1,12 @@
-import { createMemo, createSignal, type Component } from "solid-js";
+import { createSignal, type Component } from "solid-js";
 import { SortDirection, SortKey } from "../util/sorting";
 import { TeamTable } from "./TeamTable";
 import { type Stats } from "../util/stats";
+import type { PlayerInfoDict } from "../util/stats-api";
 
 export type StatsTableProps = {
   stats: Stats[];
+  playerInfoDict: PlayerInfoDict;
 };
 
 export const StatsTable: Component<StatsTableProps> = (props) => {
@@ -31,6 +33,7 @@ export const StatsTable: Component<StatsTableProps> = (props) => {
         sortKey={sortKey()}
         sortDir={sortDir()}
         onSortClicked={onSortClicked}
+        playerInfoDict={props.playerInfoDict}
       />
       <TeamTable
         stats={props.stats}
@@ -38,6 +41,7 @@ export const StatsTable: Component<StatsTableProps> = (props) => {
         sortKey={sortKey()}
         sortDir={sortDir()}
         onSortClicked={onSortClicked}
+        playerInfoDict={props.playerInfoDict}
       />
     </div>
   );

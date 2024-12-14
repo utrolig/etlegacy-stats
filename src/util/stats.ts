@@ -28,6 +28,7 @@ export type Stats = {
   id: string;
   name: string;
   team: Team | null;
+  longId: string;
   playerStats: PlayerStats;
   weaponStats: WeaponStats[];
 };
@@ -185,7 +186,7 @@ export function getMatchStats(info: GroupDetails): MatchStats {
   const score = match.rounds.reduce(
     (scoreAcc, round, roundIdx, rounds) => {
       const { winnerteam } = round.round_data.round_info;
-      const players = Object.values(round.round_data.player_stats);
+      const players = Object.entries(round.round_data.player_stats);
 
       for (const player of players) {
         if (Number(player.team) === winnerteam) {
@@ -262,39 +263,45 @@ export function getMatchStats(info: GroupDetails): MatchStats {
         roundTime: round.round_data.round_info.nextTimeLimit,
         map: round.round_data.round_info.mapname,
         roundNumber,
-        stats: Object.values(round.round_data.player_stats).map((ps) => {
-          let playerStats = convertPlayerStats(ps.weaponStats);
-          let weaponStats = convertWeaponStats(ps.weaponStats);
+        stats: Object.entries(round.round_data.player_stats).map(
+          ([longId, ps]) => {
+            let playerStats = convertPlayerStats(ps.weaponStats);
+            let weaponStats = convertWeaponStats(ps.weaponStats);
 
-          if (round.round_data.round_info.round === 2) {
-            const prevRound = allRounds[idx - 1];
-            const prevRoundRawStats = Object.values(
-              prevRound.round_data.player_stats,
-            ).find((p) => p.guid === ps.guid)?.weaponStats;
+            if (round.round_data.round_info.round === 2) {
+              const prevRound = allRounds[idx - 1];
+              const prevRoundRawStats = Object.values(
+                prevRound.round_data.player_stats,
+              ).find((p) => p.guid === ps.guid)?.weaponStats;
 
-            if (!prevRoundRawStats) {
-              throw new Error(
-                "Could not find previous round stats for player.",
+              if (!prevRoundRawStats) {
+                throw new Error(
+                  "Could not find previous round stats for player.",
+                );
+              }
+
+              playerStats = convertPlayerStats(
+                prevRoundRawStats,
+                ps.weaponStats,
+                prevRound,
+                round,
+              );
+              weaponStats = convertWeaponStats(
+                prevRoundRawStats,
+                ps.weaponStats,
               );
             }
 
-            playerStats = convertPlayerStats(
-              prevRoundRawStats,
-              ps.weaponStats,
-              prevRound,
-              round,
-            );
-            weaponStats = convertWeaponStats(prevRoundRawStats, ps.weaponStats);
-          }
-
-          return {
-            id: ps.guid,
-            name: ps.name,
-            team: getPlayerTeam(ps.guid, teams),
-            playerStats,
-            weaponStats,
-          };
-        }),
+            return {
+              id: ps.guid,
+              longId,
+              name: ps.name,
+              team: getPlayerTeam(ps.guid, teams),
+              playerStats,
+              weaponStats,
+            };
+          },
+        ),
       });
 
       return acc;
@@ -314,6 +321,7 @@ export type Team = "alpha" | "beta";
 export type TeamPlayer = {
   id: string;
   name: string;
+  longId: string;
 };
 export type TeamList = Record<Team, TeamPlayer[]>;
 
@@ -335,13 +343,17 @@ export function getTeam(team: string): Team {
 
 function getTeams(rounds: GroupRound[]): TeamList {
   const [firstRound] = rounds;
-  const teams = Object.values(firstRound.round_data.player_stats).reduce(
-    (acc, playerStats) => {
+  const teams = Object.entries(firstRound.round_data.player_stats).reduce(
+    (acc, [longId, playerStats]) => {
       const team = getTeam(playerStats.team);
       if (acc[team]) {
-        acc[team].push({ id: playerStats.guid, name: playerStats.name });
+        acc[team].push({
+          id: playerStats.guid,
+          name: playerStats.name,
+          longId,
+        });
       } else {
-        acc[team] = [{ id: playerStats.guid, name: playerStats.name }];
+        acc[team] = [{ id: playerStats.guid, name: playerStats.name, longId }];
       }
 
       return acc;

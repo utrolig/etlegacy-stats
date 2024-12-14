@@ -1,4 +1,4 @@
-import { createMemo, createSignal, For, type Component } from "solid-js";
+import { createMemo, createSignal, For, Show, type Component } from "solid-js";
 import {
   getDeaths,
   getEfficiency,
@@ -13,9 +13,13 @@ import clsx from "clsx";
 import { PlayerDetailedStats } from "./PlayerDetailedStats";
 import { Collapsible } from "@kobalte/core/collapsible";
 import { BsCaretRightFill } from "solid-icons/bs";
+import type { PlayerInfo } from "../util/stats-api";
+import { DiscordIcon } from "./DiscordIcon";
+import { Tooltip } from "./Tooltip";
 
 export type PlayerRowProps = {
   stats: Stats;
+  playerInfo: PlayerInfo;
 };
 
 export const PlayerRow: Component<PlayerRowProps> = (props) => {
@@ -51,6 +55,14 @@ export const PlayerRow: Component<PlayerRowProps> = (props) => {
                 </span>
               )}
             </For>
+            <Show when={props.playerInfo}>
+              <Tooltip
+                placement="right"
+                content={props.playerInfo.discord_nick}
+              >
+                <DiscordIcon class="size-4 fill-mud-500 ml-2" />
+              </Tooltip>
+            </Show>
           </div>
         </div>
         <div class="text-right">{getEfficiency(props.stats).toFixed(0)}</div>
