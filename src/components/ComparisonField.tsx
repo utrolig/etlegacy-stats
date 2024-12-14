@@ -32,23 +32,15 @@ export const ComparisonField: Component<ComparisonFieldProps> = (props) => {
   return (
     <div class="grid grid-cols-performanceComparison items-center gap-2">
       <span class="text-mud-100">{props.name}</span>
-      <div class="text-right">
-        {props.selectedValue.toFixed(props.decimals ?? 0)}
-      </div>
-
-      <span
+      <div
         class={clsx("text-right", {
           "text-green-700": isBetterDiff() && !props.isNeutral,
           "text-red-700": !isBetterDiff() && !props.isNeutral,
         })}
       >
-        <Show
-          when={diff().isPositive}
-          fallback={diff().diff.toFixed(props.decimals ?? 0)}
-        >
-          +{diff().diff.toFixed(props.decimals ?? 0)}
-        </Show>
-      </span>
+        {props.selectedValue.toFixed(props.decimals ?? 0)}
+      </div>
+
       <div
         class={clsx("text-right", {
           "text-green-700": !isBetterDiff() && !props.isNeutral,

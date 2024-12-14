@@ -12,6 +12,7 @@ import {
 import { ColoredName } from "./ColoredName";
 import { ColoredNameSelect } from "./ColoredNameSelect";
 import { ComparisonField } from "./ComparisonField";
+import { BsX } from "solid-icons/bs";
 
 export type PerformanceComparisonModalProps = {
   stats: Stats[];
@@ -63,9 +64,14 @@ export const PerformanceComparisonModal: Component<
       <Dialog.Portal>
         <Dialog.Overlay class="fixed inset-0 z-40 bg-black/70" />
         <div class="fixed z-50 inset-0 flex items-center justify-center">
-          <Dialog.Content class="z-50 w-full max-w-screen-md border border-mud-100 rounded-md p-4 bg-mud-800 shadow-2xl">
-            <div class="flex flex-col gap-4">
-              <h1 class="text-2xl font-semibold">Compare players</h1>
+          <Dialog.Content class="z-50 max-w-screen-md border border-mud-600 rounded-md p-4 bg-mud-800 shadow-2xl">
+            <div class="flex flex-col gap-8 relative">
+              <Dialog.CloseButton class="absolute top-1 right-1">
+                <BsX size={24} />
+              </Dialog.CloseButton>
+              <h1 class="text-2xl font-semibold text-center">
+                Compare players
+              </h1>
               <div class="grid grid-cols-performanceComparison gap-2">
                 <div />
                 <div class="text-right">
@@ -75,7 +81,6 @@ export const PerformanceComparisonModal: Component<
                     names={names()}
                   />
                 </div>
-                <div />
                 <div class="text-right">
                   <ColoredNameSelect
                     onChange={onComparisonChanged}
