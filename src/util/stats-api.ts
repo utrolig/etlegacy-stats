@@ -3,6 +3,18 @@ import urlJoin from "url-join";
 const BASE_URL = "https://api.oksii.lol/api/v2/stats/etl";
 
 export const statsApi = {
+  async fetchUsersByGuid(guids: string[], apiToken: string) {
+    const url = urlJoin(
+      BASE_URL,
+      `/players/by-guid?${guids.map((guid) => `guid=${guid}`).join("&")}`,
+    );
+    const data = await getJson<PlayerInfo[]>(url, {
+      headers: {
+        authorization: `Bearer ${apiToken}`,
+      },
+    });
+    return data;
+  },
   async fetchGroups(): Promise<Group[]> {
     const url = urlJoin(BASE_URL, "/matches/groups");
     const data = await getJson<Group[]>(url);
@@ -128,4 +140,13 @@ export type GroupDetails = {
     winner: Team | null;
     rounds: GroupRound[];
   };
+};
+
+export type PlayerInfoDict = Record<string, PlayerInfo>;
+
+export type PlayerInfo = {
+  guid: string;
+  discord_id: string;
+  discord_nick: string;
+  date_added: string;
 };

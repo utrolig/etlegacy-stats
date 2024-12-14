@@ -8,19 +8,25 @@ export type TooltipProps = {
   content: JSXElement;
   children: JSXElement;
   getAnchorRect?: () => AnchorRect;
+  placement?: "top" | "right";
 };
 
 export const Tooltip: Component<TooltipProps> = (props) => {
   return (
     <Show when={props.content} fallback={props.children}>
-      <KobalteTooltip getAnchorRect={props.getAnchorRect} placement="top">
+      <KobalteTooltip
+        getAnchorRect={props.getAnchorRect}
+        closeDelay={0}
+        openDelay={0}
+        placement={props.placement ?? "top"}
+      >
         <KobalteTooltip.Trigger
           class={clsx("flex items-center", props.triggerClass)}
           as="div"
         >
           {props.children}
         </KobalteTooltip.Trigger>
-        <KobalteTooltip.Content class="z-50 bgmud-900 p-2 px-4 bg-mud-900/50 rounded">
+        <KobalteTooltip.Content class="z-50 bgmud-900 p-2 px-4 bg-mud-900 rounded">
           <KobalteTooltip.Arrow />
           {props.content}
         </KobalteTooltip.Content>
