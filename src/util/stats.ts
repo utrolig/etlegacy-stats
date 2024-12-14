@@ -186,7 +186,7 @@ export function getMatchStats(info: GroupDetails): MatchStats {
   const score = match.rounds.reduce(
     (scoreAcc, round, roundIdx, rounds) => {
       const { winnerteam } = round.round_data.round_info;
-      const players = Object.entries(round.round_data.player_stats);
+      const players = Object.values(round.round_data.player_stats);
 
       for (const player of players) {
         if (Number(player.team) === winnerteam) {
