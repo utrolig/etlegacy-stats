@@ -63,25 +63,28 @@ export const PerformanceComparisonModal: Component<
       <Dialog.Portal>
         <Dialog.Overlay class="fixed inset-0 z-40 bg-black/70" />
         <div class="fixed z-50 inset-0 flex items-center justify-center">
-          <Dialog.Content class="z-50 w-full max-w-xl border border-mud-100 rounded-md p-4 bg-mud-800 shadow-2xl">
+          <Dialog.Content class="z-50 w-full max-w-screen-md border border-mud-100 rounded-md p-4 bg-mud-800 shadow-2xl">
             <div class="flex flex-col gap-4">
               <h1 class="text-2xl font-semibold">Compare players</h1>
-              <div class="text-mud-200 flex items-center gap-2">
-                How did{" "}
-                <ColoredNameSelect
-                  onChange={onSelectedPlayerChanged}
-                  selectedName={selectedPlayer().name}
-                  names={names()}
-                />{" "}
-                do against{" "}
-                <ColoredNameSelect
-                  onChange={onComparisonChanged}
-                  names={names()}
-                  selectedName={comparison().name}
-                />{" "}
-                ?
+              <div class="grid grid-cols-performanceComparison gap-2">
+                <div />
+                <div class="text-right">
+                  <ColoredNameSelect
+                    onChange={onSelectedPlayerChanged}
+                    selectedName={selectedPlayer().name}
+                    names={names()}
+                  />
+                </div>
+                <div />
+                <div class="text-right">
+                  <ColoredNameSelect
+                    onChange={onComparisonChanged}
+                    names={names()}
+                    selectedName={comparison().name}
+                  />
+                </div>
               </div>
-              <div class="flex flex-col">
+              <div class="flex flex-col mt-4">
                 <ComparisonField
                   selectedValue={getEfficiency(selectedPlayer())}
                   comparisonValue={getEfficiency(comparison())}

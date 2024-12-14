@@ -30,11 +30,14 @@ export const ComparisonField: Component<ComparisonFieldProps> = (props) => {
   });
 
   return (
-    <div class="grid grid-cols-[160px,50px,50px] items-center gap-2">
+    <div class="grid grid-cols-performanceComparison items-center gap-2">
       <span class="text-mud-100">{props.name}</span>
-      <div>{props.selectedValue.toFixed(props.decimals ?? 0)}</div>
-      <div
-        class={clsx({
+      <div class="text-right">
+        {props.selectedValue.toFixed(props.decimals ?? 0)}
+      </div>
+
+      <span
+        class={clsx("text-right", {
           "text-green-700": isBetterDiff() && !props.isNeutral,
           "text-red-700": !isBetterDiff() && !props.isNeutral,
         })}
@@ -45,6 +48,14 @@ export const ComparisonField: Component<ComparisonFieldProps> = (props) => {
         >
           +{diff().diff.toFixed(props.decimals ?? 0)}
         </Show>
+      </span>
+      <div
+        class={clsx("text-right", {
+          "text-green-700": !isBetterDiff() && !props.isNeutral,
+          "text-red-700": isBetterDiff() && !props.isNeutral,
+        })}
+      >
+        <span>{props.comparisonValue.toFixed(props.decimals ?? 0)}</span>
       </div>
     </div>
   );
