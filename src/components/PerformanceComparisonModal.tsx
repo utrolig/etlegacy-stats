@@ -107,7 +107,6 @@ export const PerformanceComparisonModal: Component<
                   selectedValue={getKills(selectedPlayer())}
                   comparisonValue={getKills(comparison())}
                   name="Kills"
-                  lowerIsBetter
                 />
 
                 <ComparisonField
