@@ -75,7 +75,8 @@ export function getBaiterAward(stats: Stats[], roundId: number): Award | null {
         .map((s) => s.text)
         .join("");
 
-      const shouldShowBaiter = random() > 0.35;
+      const randVal = random();
+      const shouldShowBaiter = randVal > 0.35;
 
       if (!shouldShowBaiter) {
         return acc;
