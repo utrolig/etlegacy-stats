@@ -91,19 +91,6 @@ export const PerformanceComparisonModal: Component<
               </div>
               <div class="flex flex-col mt-4">
                 <ComparisonField
-                  selectedValue={getEfficiency(selectedPlayer())}
-                  comparisonValue={getEfficiency(comparison())}
-                  name="Efficiency"
-                />
-
-                <ComparisonField
-                  selectedValue={getKdr(selectedPlayer())}
-                  comparisonValue={getKdr(comparison())}
-                  name="KDR"
-                  decimals={2}
-                />
-
-                <ComparisonField
                   selectedValue={getKills(selectedPlayer())}
                   comparisonValue={getKills(comparison())}
                   name="Kills"
@@ -127,6 +114,19 @@ export const PerformanceComparisonModal: Component<
                   comparisonValue={comparison().playerStats.damageReceived}
                   name="Damage received"
                   isNeutral
+                />
+
+                <ComparisonField
+                  selectedValue={getEfficiency(selectedPlayer())}
+                  comparisonValue={getEfficiency(comparison())}
+                  name="Efficiency"
+                />
+
+                <ComparisonField
+                  selectedValue={getKdr(selectedPlayer())}
+                  comparisonValue={getKdr(comparison())}
+                  name="KDR"
+                  decimals={2}
                 />
 
                 <ComparisonField
