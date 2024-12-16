@@ -10,7 +10,7 @@ import { getAllWeaponAwards, getAllSillyAwards } from "../../../../util/awards";
 
 const { match, map } = Astro.params;
 const roundsQuery = Astro.url.searchParams.get("round");
-const matchDetails = await statsApi.fetchGroupDetails(+match!);
+const matchDetails = await statsApi.fetchGroupDetails(match!);
 const matchStats = getMatchStats(matchDetails);
 
 const parseRoundsQuery = (roundsQuery: string) => {

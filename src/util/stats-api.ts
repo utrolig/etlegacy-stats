@@ -20,8 +20,7 @@ export const statsApi = {
     const data = await getJson<Group[]>(url);
     return data;
   },
-  async fetchGroupDetails(groupId: number): Promise<GroupDetails> {
-    console.log("groupId", groupId);
+  async fetchGroupDetails(groupId: string | number): Promise<GroupDetails> {
     const url = urlJoin(BASE_URL, "/matches/groups", groupId.toString());
 
     if (import.meta.env.DEV) {
