@@ -10,8 +10,8 @@ export type AwardsListProps = {
 
 export const AwardsList: Component<AwardsListProps> = (props) => {
   return (
-    <div class="p-8 flex flex-col gap-4 bg-black/10">
-      <h1 class="text-xl font-semibold text-orange-50">{props.title}</h1>
+    <div class="big:p-8 p-4 flex flex-col gap-4 bg-black/10">
+      <h1 class="big:text-xl font-semibold text-orange-50">{props.title}</h1>
       <div class="flex flex-col gap-1">
         <For each={props.awards}>
           {(award) => (
@@ -19,9 +19,9 @@ export const AwardsList: Component<AwardsListProps> = (props) => {
               {(award) => (
                 <Show when={getAwardDescription(award())}>
                   {(texts) => (
-                    <Collapsible>
+                    <Collapsible class="text-xs big:text-base">
                       <Collapsible.Trigger>
-                        <div>
+                        <div class="text-left">
                           <span class="text-mud-300">{texts()[0]}</span>
                           {texts()[1]}
                           <span class="text-mud-300">{texts()[2]}</span>

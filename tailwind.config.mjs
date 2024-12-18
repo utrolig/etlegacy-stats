@@ -1,6 +1,25 @@
 import defaultTheme from "tailwindcss/defaultTheme";
 import plugin from "tailwindcss/plugin";
 
+const statsSmallColumns = [
+  {
+    name: "Name",
+    value: "minmax(7rem, 1fr)",
+  },
+  {
+    name: "KDR",
+    value: "3.5rem",
+  },
+  {
+    name: "Kills",
+    value: "4.5rem",
+  },
+  {
+    name: "Deaths",
+    value: "4.5rem",
+  },
+];
+
 const statsColumns = [
   {
     name: "Name",
@@ -57,8 +76,12 @@ export default {
   content: ["./src/**/*.{astro,html,js,jsx,md,mdx,svelte,ts,tsx,vue}"],
   theme: {
     extend: {
+      screens: {
+        big: "1150px",
+      },
       gridTemplateColumns: {
         stats: statsColumns.map(({ value }) => value).join(" "),
+        statsSmall: statsSmallColumns.map(({ value }) => value).join(" "),
         weaponStats: "210px, 80px, 120px, 60px, 60px, 90px, 120px",
         performanceComparison: "160px, 150px, 150px",
       },

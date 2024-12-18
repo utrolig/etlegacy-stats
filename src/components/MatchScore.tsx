@@ -7,7 +7,7 @@ export type MatchScoreProps = {
 
 export const MatchScore: Component<MatchScoreProps> = (props) => {
   return (
-    <div class="flex items-center z-10 text-6xl gap-2">
+    <div class="flex items-center z-10 text-lg big:text-6xl gap-1 big:gap-2">
       <h1>{props.match.score.alpha}</h1>
       <p>:</p>
       <h1>{props.match.score.beta}</h1>

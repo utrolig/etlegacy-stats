@@ -14,19 +14,6 @@ export const MatchListItem: Component<MatchListItemProps> = (props) => {
         class="flex items-center border-b border-b-mud-700 p-4 gap-6"
         href={`/matches/${props.match.match_id}`}
       >
-        <div class="flex flex-col items-center gap-1 w-24">
-          <p class="text-2xl text-orange-200 font-bold">
-            {getMatchSize(props.match)}
-          </p>
-          <Show when={props.match.ranks_average}>
-            <div class="flex items-center gap-2">
-              <p class="text-xs text-mud-300">Avg rank</p>
-              <p class="text-xs text-mud-100">
-                {props.match.ranks_average.toFixed(0)}
-              </p>
-            </div>
-          </Show>
-        </div>
         <div class="flex flex-col gap-1">
           <div class="flex flex-col">
             <div class="flex items-center">
@@ -38,7 +25,10 @@ export const MatchListItem: Component<MatchListItemProps> = (props) => {
           </div>
           <div class="flex flex-col text-sm">
             <p class="text-mud-200">{props.match.maps.join(", ")}</p>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-1">
+              <p class="text-orange-100 font-semibold">
+                {getMatchSize(props.match)}
+              </p>
               <p class="text-mud-400">
                 {getDisplayTime(props.match)} {getChannelState(props.match)}
               </p>

@@ -10,7 +10,7 @@ export type TableHeaderProps = {
 
 export const TableHeader: Component<TableHeaderProps> = (props) => {
   return (
-    <div class="grid grid-cols-stats items-center gap-4 py-2 px-4">
+    <div class="grid grid-cols-statsSmall big:grid-cols-stats items-center gap-4 py-2 px-4">
       <TableHeaderColumn
         alignStart
         columnKey={SortKey.Name}
@@ -20,6 +20,7 @@ export const TableHeader: Component<TableHeaderProps> = (props) => {
       />
 
       <TableHeaderColumn
+        hiddenOnMobile
         columnKey={SortKey.Effiency}
         onClick={props.onSortClicked}
         sortDirection={props.sortDirection}
@@ -52,9 +53,11 @@ export const TableHeader: Component<TableHeaderProps> = (props) => {
         onClick={props.onSortClicked}
         sortDirection={props.sortDirection}
         sortKey={props.sortKey}
+        hiddenOnMobile
       />
 
       <TableHeaderColumn
+        hiddenOnMobile
         columnKey={SortKey.DamageReceived}
         onClick={props.onSortClicked}
         sortDirection={props.sortDirection}
@@ -62,6 +65,7 @@ export const TableHeader: Component<TableHeaderProps> = (props) => {
       />
 
       <TableHeaderColumn
+        hiddenOnMobile
         columnKey={SortKey.Headshots}
         onClick={props.onSortClicked}
         sortDirection={props.sortDirection}
@@ -69,6 +73,7 @@ export const TableHeader: Component<TableHeaderProps> = (props) => {
       />
 
       <TableHeaderColumn
+        hiddenOnMobile
         columnKey={SortKey.Gibs}
         onClick={props.onSortClicked}
         sortDirection={props.sortDirection}
@@ -76,6 +81,7 @@ export const TableHeader: Component<TableHeaderProps> = (props) => {
       />
 
       <TableHeaderColumn
+        hiddenOnMobile
         columnKey={SortKey.Selfkills}
         onClick={props.onSortClicked}
         sortDirection={props.sortDirection}
@@ -83,6 +89,7 @@ export const TableHeader: Component<TableHeaderProps> = (props) => {
       />
 
       <TableHeaderColumn
+        hiddenOnMobile
         columnKey={SortKey.Revives}
         onClick={props.onSortClicked}
         sortDirection={props.sortDirection}
@@ -90,6 +97,7 @@ export const TableHeader: Component<TableHeaderProps> = (props) => {
       />
 
       <TableHeaderColumn
+        hiddenOnMobile
         columnKey={SortKey.TimePlayed}
         onClick={props.onSortClicked}
         sortDirection={props.sortDirection}

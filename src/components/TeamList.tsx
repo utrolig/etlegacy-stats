@@ -18,7 +18,7 @@ export const TeamList: Component<TeamListProps> = (props) => {
       <div class="flex flex-col items-center">
         <For each={players()}>
           {(player) => (
-            <div class="text-sm lg:text-xl">
+            <div class="text-xs lg:text-xl">
               {getColoredNameParts(player.name).map((part) => (
                 <span
                   style={{

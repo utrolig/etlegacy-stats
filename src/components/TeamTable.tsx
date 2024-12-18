@@ -32,13 +32,13 @@ export const TeamTable: Component<TeamTableProps> = (props) => {
   });
 
   return (
-    <div class="flex flex-col px-6">
+    <div class="flex flex-col big:px-6">
       <div class="flex items-center justify-between pl-5 pb-4">
-        <h1 class="text-xl capitalize font-semibold text-orange-50">
+        <h1 class="big:text-xl capitalize font-semibold text-orange-50">
           {props.team}
         </h1>
         <Show when={props.showExtraMenu}>
-          <div class="flex items-center gap-4">
+          <div class="flex items-center gap-4 big:mr-0 mr-4">
             <PerformanceComparisonModal stats={props.stats} />
             <PreferDiscordNamesToggle
               value={props.preferDiscordNames}

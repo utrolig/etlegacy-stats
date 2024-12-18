@@ -874,5 +874,10 @@ export function byWeaponIds(a: WeaponStats, b: WeaponStats) {
 
 export function getMatchSize(match: Group) {
   const teamPlayerCount = match.size / 2;
+
+  if (teamPlayerCount < 1) {
+    return "Test";
+  }
+
   return teamPlayerCount + "vs" + teamPlayerCount;
 }

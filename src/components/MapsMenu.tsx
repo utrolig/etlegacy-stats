@@ -11,10 +11,10 @@ export type MapsMenuProps = {
 
 export const MapsMenu: Component<MapsMenuProps> = (props) => {
   return (
-    <div class="flex px-10 py-8 gap-8 bg-black/10">
+    <div class="flex px-6 big:px-10 py-8 gap-8 bg-black/10">
       <a
         data-active={!props.activeMap}
-        class="text-xl group font-semibold"
+        class="big:text-xl group font-semibold"
         href={`/matches/${props.matchId}`}
       >
         <p
@@ -31,7 +31,7 @@ export const MapsMenu: Component<MapsMenuProps> = (props) => {
           <div class="flex flex-col gap-1">
             <a
               data-active={props.activeMap === map}
-              class="text-xl flex flex-col gap-1 group font-semibold"
+              class="big:text-xl flex flex-col gap-1 group font-semibold"
               href={`/matches/${props.matchId}/${map}`}
             >
               <p

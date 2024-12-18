@@ -15,6 +15,7 @@ export type TableHeaderColumnProps = {
   sortDirection: SortDirection;
   columnKey: SortKey;
   onClick: (key: SortKey) => void;
+  hiddenOnMobile?: boolean;
 };
 
 export const TableHeaderColumn: Component<TableHeaderColumnProps> = (props) => {
@@ -36,7 +37,10 @@ export const TableHeaderColumn: Component<TableHeaderColumnProps> = (props) => {
 
   return (
     <Tooltip
-      triggerClass="justify-end"
+      triggerClass={clsx(
+        "justify-end",
+        props.hiddenOnMobile && "hidden big:block",
+      )}
       content={getColumnDescription(props.columnKey)}
       getAnchorRect={getAnchorRect}
     >
