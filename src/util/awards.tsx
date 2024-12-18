@@ -70,6 +70,7 @@ export function getBaiterAward(stats: Stats[], roundId: number): Award | null {
     (acc, player) => {
       const kazimRegex = new RegExp(/.*k[a]+[z]+[iy]+[mn][em]?.*/gi);
       const ipodRegex = new RegExp(/(littyj|litoriousj|the adjuster)/gi);
+      const bltzzRegex = new RegExp(/(bltzz)/gi);
 
       const playerName = getColoredNameParts(player.name)
         .map((s) => s.text)
@@ -85,9 +86,10 @@ export function getBaiterAward(stats: Stats[], roundId: number): Award | null {
       if (
         kazimRegex.test(playerName) ||
         ipodRegex.test(playerName) ||
+        bltzzRegex.test(playerName) ||
         playerName.includes("pod")
       ) {
-        acc.push([getRandomBetween(85, 97, random), player.name]);
+        acc.push([getRandomBetween(75, 97, random), player.name]);
       }
 
       return acc;
