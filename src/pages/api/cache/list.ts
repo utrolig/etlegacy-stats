@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 
 export const POST: APIRoute = async ({ request }) => {
+  console.log("incoming request");
   const { headers } = request;
 
   const expectedHeader = `Bearer ${import.meta.env.CACHE_NUKE_TOKEN}`;

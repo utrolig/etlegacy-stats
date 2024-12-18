@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 
 export const POST: APIRoute = async ({ request, params }) => {
+  console.log("incoming request");
   const { headers } = request;
 
   const { id } = params;
