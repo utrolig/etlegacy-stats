@@ -3,7 +3,7 @@ import { getMapTimes, type MatchStats } from "../util/stats";
 import clsx from "clsx";
 
 export type MapsMenuProps = {
-  activeMap?: string;
+  activeMap: string;
   activeRound?: number;
   match: MatchStats;
   matchId: string;
@@ -21,14 +21,14 @@ export const MapsMenu: Component<MapsMenuProps> = (props) => {
   return (
     <div class="flex px-6 big:px-10 py-8 gap-8 bg-black/10">
       <a
-        data-active={!props.activeMap}
+        data-active={props.activeMap === "all"}
         class="big:text-xl group font-semibold"
         href={`/matches/${props.matchId}`}
       >
         <p
           class={clsx(
             "group-data-[active=false]:group-hover:text-mud-200",
-            !props.activeMap ? "text-orange-50" : "text-mud-500",
+            props.activeMap === "all" ? "text-orange-50" : "text-mud-500",
           )}
         >
           Total

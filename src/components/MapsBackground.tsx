@@ -3,7 +3,7 @@ import { getMapImageUrl } from "../util/mapImages";
 import clsx from "clsx";
 
 export type MapsBackgroundProps = {
-  activeMap?: string;
+  activeMap: string;
   maps: string[];
 };
 
@@ -43,7 +43,9 @@ export const MapsBackground: Component<MapsBackgroundProps> = (props) => {
             alt="Map image"
             class={clsx(
               "absolute h-full object-cover object-center",
-              props.activeMap && props.activeMap !== name && "grayscale",
+              props.activeMap !== "all" &&
+                props.activeMap !== name &&
+                "grayscale",
             )}
             src={image.src}
             style={getImageStyle(idx())}
