@@ -6,6 +6,7 @@ export const POST: APIRoute = async ({ request }) => {
   const expectedHeader = `Bearer ${import.meta.env.CACHE_NUKE_TOKEN}`;
   const authHeader = headers.get("Authorization");
   console.log(`Expected: ${expectedHeader} --- Got: ${authHeader}`);
+  console.log(`TEST: ${import.meta.env.TEST_VARIABLE}`);
 
   if (authHeader !== expectedHeader) {
     return new Response(JSON.stringify({ error: true, msg: "Invalid token." }));
