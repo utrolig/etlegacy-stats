@@ -1,9 +1,5 @@
 import { createSignal, Show, type Component } from "solid-js";
-import {
-  getColumnDescription,
-  SortDirection,
-  type SortKey,
-} from "../util/sorting";
+import { getColumnDescription, SortDirection, SortKey } from "../util/sorting";
 import {
   TiArrowSortedUp,
   TiArrowSortedDown,
@@ -64,7 +60,9 @@ export const TableHeaderColumn: Component<TableHeaderColumnProps> = (props) => {
         </Show>
         <span
           ref={setAnchorRef}
-          class="uppercase text-xs font-semibold text-mud-300"
+          class={clsx("uppercase text-xs font-semibold text-mud-300", {
+            "ml-[6px]": props.columnKey === SortKey.Name,
+          })}
         >
           {props.columnKey}
         </span>

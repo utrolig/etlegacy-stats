@@ -13,6 +13,8 @@ import { ColoredName } from "./ColoredName";
 import { ColoredNameSelect } from "./ColoredNameSelect";
 import { ComparisonField } from "./ComparisonField";
 import { BsX } from "solid-icons/bs";
+import { OcGitcompare3 } from "solid-icons/oc";
+import { Tooltip } from "./Tooltip";
 
 export type PerformanceComparisonModalProps = {
   stats: Stats[];
@@ -58,9 +60,11 @@ export const PerformanceComparisonModal: Component<
 
   return (
     <Dialog>
-      <Dialog.Trigger class="text-sm p-2 rounded-md hover:bg-mud-700">
-        Compare players
-      </Dialog.Trigger>
+      <Tooltip content="Compare players">
+        <Dialog.Trigger class="text-sm p-2 rounded-md hover:bg-mud-700 bg-white/5">
+          <OcGitcompare3 size={24} />
+        </Dialog.Trigger>
+      </Tooltip>
       <Dialog.Portal>
         <Dialog.Overlay class="fixed inset-0 z-40 bg-black/70" />
         <div class="fixed z-50 inset-0 flex items-center justify-center">

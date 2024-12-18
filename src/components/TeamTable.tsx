@@ -32,7 +32,7 @@ export const TeamTable: Component<TeamTableProps> = (props) => {
   });
 
   return (
-    <div class="flex flex-col">
+    <div class="flex flex-col px-6">
       <div class="flex items-center justify-between pl-5 pb-4">
         <h1 class="text-xl capitalize font-semibold text-orange-50">
           {props.team}

@@ -1,5 +1,5 @@
 ---
-import Layout from "../../../../layouts/Layout.astro";
+import MatchDetailsLayout from "../../../layouts/MatchDetailsLayout.astro";
 import { MatchHeader } from "../../../../components/MatchHeader";
 import { statsApi, type PlayerInfoDict } from "../../../../util/stats-api";
 import { StatsTable } from "../../../../components/StatsTable";
@@ -36,7 +36,7 @@ const playerInfoDict = playerDiscordNames.reduce((acc, player) => {
 }, {} as PlayerInfoDict);
 ---
 
-<Layout
+<MatchDetailsLayout
   frontmatter={{
     title: `ETLStats ${match}`,
     description: `Stats for match ${match}`,
@@ -52,4 +52,4 @@ const playerInfoDict = playerDiscordNames.reduce((acc, player) => {
   <StatsTable playerInfoDict={playerInfoDict} client:load stats={allStats} />
   <AwardsList client:load awards={sillyAwards} title="Match awards" />
   <AwardsList client:load awards={weaponAwards} title="Weapon awards" />
-</Layout>
+</MatchDetailsLayout>

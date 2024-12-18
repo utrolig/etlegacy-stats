@@ -11,10 +11,10 @@ export type MapsMenuProps = {
 
 export const MapsMenu: Component<MapsMenuProps> = (props) => {
   return (
-    <div class="flex p-8 gap-8">
+    <div class="flex px-10 py-8 gap-8 bg-black/10">
       <a
         data-active={!props.activeMap}
-        class="text-2xl group"
+        class="text-xl group font-semibold"
         href={`/matches/${props.matchId}`}
       >
         <p
@@ -31,7 +31,7 @@ export const MapsMenu: Component<MapsMenuProps> = (props) => {
           <div class="flex flex-col gap-1">
             <a
               data-active={props.activeMap === map}
-              class="text-2xl flex flex-col gap-1 group"
+              class="text-xl flex flex-col gap-1 group font-semibold"
               href={`/matches/${props.matchId}/${map}`}
             >
               <p
@@ -48,7 +48,7 @@ export const MapsMenu: Component<MapsMenuProps> = (props) => {
                 <>
                   <a
                     href={`/matches/${props.matchId}/${map}?round=${idx + 1}`}
-                    class={clsx("text-xs", {
+                    class={clsx("text-xs hover:text-white", {
                       "text-mud-500":
                         isCurrentMap(map, props.activeMap) &&
                         !isCurrentRound(idx + 1, props.activeRound) &&

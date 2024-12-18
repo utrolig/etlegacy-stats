@@ -34,18 +34,18 @@ export const PlayerRow: Component<PlayerRowProps> = (props) => {
     <Collapsible
       onOpenChange={setOpen}
       open={open()}
-      class="flex flex-col odd:bg-white/5 hover:bg-white/10"
+      class="flex flex-col bg-mud-800 odd:bg-white/5 hover:bg-white/10"
     >
       <Collapsible.Trigger class="grid grid-cols-stats items-center gap-4 py-1 px-4">
-        <div class="flex items-center gap-1 justify-start pl-[2px]">
+        <div class="flex items-center gap-1 justify-start pl-[2px] h-7">
           <BsCaretRightFill
             class={clsx(
-              "text-mud-400 transition-transform",
+              "text-mud-400 transition-transform mr-2",
               open() && "rotate-90",
             )}
             size={12}
           />
-          <div class="flex items-center overflow-hidden text-ellipsis whitespace-nowrap">
+          <div class="flex items-center overflow-hidden text-ellipsis whitespace-nowrap font-semibold">
             <Show
               when={props.preferDiscordNames && props.playerInfo}
               fallback={

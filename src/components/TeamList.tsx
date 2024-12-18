@@ -13,7 +13,7 @@ export const TeamList: Component<TeamListProps> = (props) => {
   });
 
   return (
-    <div class="z-10 flex flex-col items-center justify-center gap-6 text-xl">
+    <div class="z-10 flex flex-col items-center justify-center gap-6 text-xl font-semibold">
       <h3 class="text-sm text-white lg:text-xl capitalize">{props.team}</h3>
       <div class="flex flex-col items-center">
         <For each={players()}>

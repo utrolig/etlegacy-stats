@@ -27,7 +27,7 @@ export const StatsTable: Component<StatsTableProps> = (props) => {
   };
 
   return (
-    <div class="flex flex-col gap-8">
+    <div class="flex flex-col gap-8 bg-black/10">
       <TeamTable
         stats={props.stats}
         team="alpha"

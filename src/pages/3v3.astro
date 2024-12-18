@@ -1,14 +1,14 @@
 ---
 import { MatchListItem } from "../components/MatchListItem";
 import { MatchTypeMenu } from "../components/MatchTypeMenu";
-import Layout from "../layouts/Layout.astro";
+import MatchListLayout from "../layouts/MatchListLayout.astro";
 import { statsApi } from "../util/stats-api";
 
 const matches = await statsApi.fetchGroups();
 const filteredMatches = matches.filter((match) => match.size === 6);
 ---
 
-<Layout
+<MatchListLayout
   frontmatter={{
     title: "ETL Stats",
     description: "Stats page for ETLegacy games",
@@ -21,4 +21,4 @@ const filteredMatches = matches.filter((match) => match.size === 6);
       {filteredMatches.map((match) => <MatchListItem match={match} />)}
     </ul>
   </div>
-</Layout>
+</MatchListLayout>

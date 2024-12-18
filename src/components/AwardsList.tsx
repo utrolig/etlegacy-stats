@@ -10,7 +10,7 @@ export type AwardsListProps = {
 
 export const AwardsList: Component<AwardsListProps> = (props) => {
   return (
-    <div class="p-8 flex flex-col gap-4">
+    <div class="p-8 flex flex-col gap-4 bg-black/10">
       <h1 class="text-xl font-semibold text-orange-50">{props.title}</h1>
       <div class="flex flex-col gap-1">
         <For each={props.awards}>

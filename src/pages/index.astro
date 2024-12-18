@@ -1,13 +1,13 @@
 ---
 import { MatchListItem } from "../components/MatchListItem";
 import { MatchTypeMenu } from "../components/MatchTypeMenu";
-import Layout from "../layouts/Layout.astro";
+import MatchListLayout from "../layouts/MatchListLayout.astro";
 import { statsApi } from "../util/stats-api";
 
 const matches = await statsApi.fetchGroups();
 ---
 
-<Layout
+<MatchListLayout
   frontmatter={{
     title: "ETL Stats",
     description: "Stats page for ETLegacy games",
@@ -20,4 +20,4 @@ const matches = await statsApi.fetchGroups();
       {matches.map((match) => <MatchListItem match={match} />)}
     </ul>
   </div>
-</Layout>
+</MatchListLayout>

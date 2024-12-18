@@ -102,7 +102,7 @@ export const TotalRow: Component<TotalRowProps> = (props) => {
   });
 
   return (
-    <div class="grid grid-cols-stats items-center gap-4 py-1 px-4 border-t-mud-500 border-t">
+    <div class="grid grid-cols-stats items-center gap-4 py-1 px-4">
       <div class="flex items-center gap-1 justify-start pl-[2px]">
         <div class="flex items-center" />
       </div>
