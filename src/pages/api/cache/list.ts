@@ -1,11 +1,11 @@
 import type { APIRoute } from "astro";
 
 export const POST: APIRoute = async ({ request }) => {
-  console.log("incoming request");
   const { headers } = request;
 
   const expectedHeader = `Bearer ${import.meta.env.CACHE_NUKE_TOKEN}`;
   const authHeader = headers.get("Authorization");
+  console.log(`Expected: ${expectedHeader} --- Got: ${authHeader}`);
 
   if (authHeader !== expectedHeader) {
     return new Response(JSON.stringify({ error: true, msg: "Invalid token." }));
