@@ -4,6 +4,8 @@ import { MatchTypeMenu } from "../components/MatchTypeMenu";
 import MatchListLayout from "../layouts/MatchListLayout.astro";
 import { statsApi } from "../util/stats-api";
 
+Astro.response.headers.set("Cache-Tag", "match-list");
+
 const matches = await statsApi.fetchGroups();
 const filteredMatches = matches.filter((match) => match.size === 6);
 ---

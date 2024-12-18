@@ -9,7 +9,13 @@ import { AwardsList } from "../../../components/AwardsList";
 import { getAllWeaponAwards, getAllSillyAwards } from "../../../util/awards";
 
 const { match } = Astro.params;
+
 const matchDetails = await statsApi.fetchGroupDetails(match!);
+
+if (matchDetails.match) {
+  Astro.response.headers.set("Cache-Tag", `match-details-${match}`);
+}
+
 const matchStats = getMatchStats(matchDetails);
 const allStats = getMapStats("all", [], matchStats);
 const sillyAwards = getAllSillyAwards(allStats, matchDetails.match.match_id);
