@@ -10,6 +10,14 @@ export type MapsMenuProps = {
 };
 
 export const MapsMenu: Component<MapsMenuProps> = (props) => {
+  const getRoundQueryParams = (map: string, round?: number) => {
+    if (!round) {
+      return `?map=${map}`;
+    }
+
+    return `?map=${map}&round=${round}`;
+  };
+
   return (
     <div class="flex px-6 big:px-10 py-8 gap-8 bg-black/10">
       <a
@@ -32,7 +40,7 @@ export const MapsMenu: Component<MapsMenuProps> = (props) => {
             <a
               data-active={props.activeMap === map}
               class="big:text-xl flex flex-col gap-1 group font-semibold"
-              href={`/matches/${props.matchId}/${map}`}
+              href={`/matches/${props.matchId}${getRoundQueryParams(map)}`}
             >
               <p
                 class={clsx(
@@ -47,7 +55,7 @@ export const MapsMenu: Component<MapsMenuProps> = (props) => {
               {getMapTimes(props.match, map).map((time, idx, arr) => (
                 <>
                   <a
-                    href={`/matches/${props.matchId}/${map}?round=${idx + 1}`}
+                    href={`/matches/${props.matchId}${getRoundQueryParams(map, idx + 1)}`}
                     class={clsx("text-xs hover:text-white", {
                       "text-mud-500":
                         isCurrentMap(map, props.activeMap) &&
