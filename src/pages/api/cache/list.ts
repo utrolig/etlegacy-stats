@@ -1,11 +1,15 @@
 import type { APIRoute } from "astro";
+import { getSecret } from "astro:env/server";
 
 export const POST: APIRoute = async ({ request }) => {
   const { headers } = request;
 
-  const expectedHeader = `Bearer ${import.meta.env.CACHE_NUKE_TOKEN}`;
+  const cacheNukeToken = getSecret("CACHE_NUKE_TOKEN");
+  const expectedHeader = `Bearer ${cacheNukeToken}`;
   const authHeader = headers.get("Authorization");
-  console.log(`Expected: ${expectedHeader} --- Got: ${authHeader}`);
+  console.log(
+    `Expected: ${expectedHeader} OR ${cacheNukeToken} --- Got: ${authHeader}`,
+  );
   console.log(`TEST: ${import.meta.env.TEST_VARIABLE}`);
 
   if (authHeader !== expectedHeader) {
