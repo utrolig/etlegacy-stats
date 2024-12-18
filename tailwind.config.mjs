@@ -77,7 +77,7 @@ export default {
   theme: {
     extend: {
       screens: {
-        big: "1150px",
+        big: "850px",
       },
       gridTemplateColumns: {
         stats: statsColumns.map(({ value }) => value).join(" "),
