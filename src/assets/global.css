@@ -5,3 +5,7 @@
   font-weight: normal;
   src: url("/fonts/MonaspaceNeon-Regular-v1.101.woff2") format("woff2");
 }
+
+html {
+  scrollbar-color: #302c2a #25211f;
+}
