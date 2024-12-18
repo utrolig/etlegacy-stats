@@ -1,16 +1,24 @@
 import type { APIRoute } from "astro";
+import { getSecret } from "astro:env/server";
 
 export const POST: APIRoute = async ({ request, params }) => {
   const { headers } = request;
-
   const { id } = params;
 
-  const expectedHeader = `Bearer ${import.meta.env.CACHE_NUKE_TOKEN}`;
+  const cacheNukeToken = getSecret("CACHE_NUKE_TOKEN");
+  const xAuthEmail = getSecret("CLOUDFLARE_EMAIL");
+  const xAuthKey = getSecret("CLOUDFLARE_API_KEY");
+  const expectedHeader = `Bearer ${cacheNukeToken}`;
   const authHeader = headers.get("Authorization");
-  console.log(`Expected: ${expectedHeader} --- Got: ${authHeader}`);
 
   if (authHeader !== expectedHeader) {
     return new Response(JSON.stringify({ error: true, msg: "Invalid token." }));
+  }
+
+  if (!xAuthEmail || !xAuthKey) {
+    return new Response(
+      JSON.stringify({ error: true, msg: "Invalid API keys." }),
+    );
   }
 
   const result = await fetch(
@@ -18,8 +26,8 @@ export const POST: APIRoute = async ({ request, params }) => {
     {
       method: "POST",
       headers: {
-        "X-Auth-Email": import.meta.env.CLOUDFLARE_EMAIL,
-        "X-Auth-Key": import.meta.env.CLOUDFLARE_API_KEY,
+        "X-Auth-Email": xAuthEmail,
+        "X-Auth-Key": xAuthKey,
       },
       body: JSON.stringify({
         files: [`https://etlstats.stiba.lol/matches/${id}`],
@@ -28,10 +36,6 @@ export const POST: APIRoute = async ({ request, params }) => {
   );
 
   if (!result.ok) {
-    if (import.meta.env.DEV) {
-      console.error(result);
-      console.error(await result.json());
-    }
     return new Response(JSON.stringify({ error: true }));
   }
 

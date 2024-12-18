@@ -5,15 +5,19 @@ export const POST: APIRoute = async ({ request }) => {
   const { headers } = request;
 
   const cacheNukeToken = getSecret("CACHE_NUKE_TOKEN");
+  const xAuthEmail = getSecret("CLOUDFLARE_EMAIL");
+  const xAuthKey = getSecret("CLOUDFLARE_API_KEY");
   const expectedHeader = `Bearer ${cacheNukeToken}`;
   const authHeader = headers.get("Authorization");
-  console.log(
-    `Expected: ${expectedHeader} OR ${cacheNukeToken} --- Got: ${authHeader}`,
-  );
-  console.log(`TEST: ${import.meta.env.TEST_VARIABLE}`);
 
   if (authHeader !== expectedHeader) {
     return new Response(JSON.stringify({ error: true, msg: "Invalid token." }));
+  }
+
+  if (!xAuthEmail || !xAuthKey) {
+    return new Response(
+      JSON.stringify({ error: true, msg: "Invalid API keys." }),
+    );
   }
 
   const result = await fetch(
@@ -21,18 +25,14 @@ export const POST: APIRoute = async ({ request }) => {
     {
       method: "POST",
       headers: {
-        "X-Auth-Email": import.meta.env.CLOUDFLARE_EMAIL,
-        "X-Auth-Key": import.meta.env.CLOUDFLARE_API_KEY,
+        "X-Auth-Email": xAuthEmail,
+        "X-Auth-Key": xAuthKey,
       },
       body: JSON.stringify({ files: ["https://etlstats.stiba.lol"] }),
     },
   );
 
   if (!result.ok) {
-    if (import.meta.env.DEV) {
-      console.error(result);
-      console.error(await result.json());
-    }
     return new Response(JSON.stringify({ error: true }));
   }
 
