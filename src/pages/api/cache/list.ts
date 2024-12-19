@@ -33,6 +33,8 @@ export const POST: APIRoute = async ({ request }) => {
   );
 
   if (!result.ok) {
+    const error = await result.json();
+    console.error({ error, msg: "Failed to purge cache for group list." });
     return new Response(JSON.stringify({ error: true }));
   }
 
@@ -42,5 +44,6 @@ export const POST: APIRoute = async ({ request }) => {
     console.log({ data });
   }
 
+  console.log({ msg: "Purged cache for group list." });
   return new Response(JSON.stringify({ success: true }));
 };

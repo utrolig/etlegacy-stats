@@ -36,6 +36,8 @@ export const POST: APIRoute = async ({ request, params }) => {
   );
 
   if (!result.ok) {
+    const error = await result.json();
+    console.error({ error, msg: "Failed to purge cache for match.", id });
     return new Response(JSON.stringify({ error: true }));
   }
 
@@ -45,5 +47,6 @@ export const POST: APIRoute = async ({ request, params }) => {
     console.log({ data });
   }
 
+  console.log({ msg: "Purged cache for match.", id });
   return new Response(JSON.stringify({ success: true }));
 };

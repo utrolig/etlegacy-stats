@@ -1,11 +1,9 @@
 ---
-import { MatchListItem } from "../components/MatchListItem";
-import { MatchTypeMenu } from "../components/MatchTypeMenu";
+import { MatchList } from "../components/MatchList";
 import MatchListLayout from "../layouts/MatchListLayout.astro";
 import { statsApi } from "../util/stats-api";
 
-Astro.response.headers.set("Cache-Tag", "match-list");
-
+const type = Astro.url.searchParams.get("type");
 const matches = await statsApi.fetchGroups();
 ---
 
@@ -17,9 +15,6 @@ const matches = await statsApi.fetchGroups();
 >
   <div class="flex flex-col">
     <h1 class="text-4xl my-6 text-center">ETLegacy Stats</h1>
-    <MatchTypeMenu currentType="/" />
-    <ul class="list-none">
-      {matches.map((match) => <MatchListItem match={match} />)}
-    </ul>
+    <MatchList client:load matches={matches} type={type} />
   </div>
 </MatchListLayout>
