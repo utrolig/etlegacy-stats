@@ -118,7 +118,7 @@ export type Player = {
 
 export type GroupDetails = {
   match: {
-    match_id: number;
+    match_id: string;
     channel_id: string | null;
     channel_name: string | null;
     state: "waiting_report" | "finished" | "cancelled";

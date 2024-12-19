@@ -69,20 +69,19 @@ export type MatchStats = {
 };
 
 export function getMapStats(
-  map: "all" | (string & {}),
+  map: string,
   rounds: number[],
   stats: MatchStats,
 ): Stats[] {
-  const filteredRounds =
-    map === "all"
-      ? [...stats.rounds]
-      : stats.rounds.filter((round) => {
-          if (rounds.length) {
-            return round.map === map && rounds.includes(round.roundNumber);
-          }
+  const filteredRounds = !map
+    ? [...stats.rounds]
+    : stats.rounds.filter((round) => {
+        if (rounds.length) {
+          return round.map === map && rounds.includes(round.roundNumber);
+        }
 
-          return round.map === map;
-        });
+        return round.map === map;
+      });
 
   const playersMap = filteredRounds.reduce(
     (acc, roundStats) => {

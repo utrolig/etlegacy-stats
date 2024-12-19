@@ -64,7 +64,7 @@ export function getAllWeaponAwards(stats: Stats[]): Award[] {
     .filter(Boolean);
 }
 
-export function getBaiterAward(stats: Stats[], roundId: number): Award | null {
+export function getBaiterAward(stats: Stats[], roundId: string): Award | null {
   const random = createSeededRandom(roundId);
   const baiters = stats.reduce(
     (acc, player) => {
@@ -359,7 +359,7 @@ export function getSpammerAward(stats: Stats[]): Award | null {
   };
 }
 
-export function getAllSillyAwards(stats: Stats[], roundId: number): Award[] {
+export function getAllSillyAwards(stats: Stats[], roundId: string): Award[] {
   const awards = [
     getHighestPlaytimeAward(stats),
     getMostRevivesAward(stats),

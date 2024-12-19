@@ -28,12 +28,6 @@ export const PerformanceComparisonModal: Component<
   );
   const [comparison, setComparison] = createSignal<Stats>(props.stats[1]);
 
-  if (!selectedPlayer() || !comparison()) {
-    throw new Error(
-      `Were missing one of the players in the comparison: ${selectedPlayer()} ${comparison()}`,
-    );
-  }
-
   const names = createMemo(() => {
     return props.stats.map((s) => s.name);
   });

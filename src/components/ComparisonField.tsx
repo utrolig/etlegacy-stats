@@ -13,7 +13,6 @@ export type ComparisonFieldProps = {
 export const ComparisonField: Component<ComparisonFieldProps> = (props) => {
   const diff = createMemo(() => {
     const d = getDiff(props.selectedValue, props.comparisonValue);
-    console.log({ d, s: props.selectedValue, c: props.comparisonValue });
     return d;
   });
 

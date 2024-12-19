@@ -1,34 +1,19 @@
 ---
 import MatchDetailsLayout from "../../../layouts/MatchDetailsLayout.astro";
-import { MatchHeader } from "../../../components/MatchHeader";
+import { MatchPageWrapper } from "../../../components/MatchPageWrapper";
 import { statsApi, type PlayerInfoDict } from "../../../util/stats-api";
-import { StatsTable } from "../../../components/StatsTable";
-import { getMapStats, getMatchStats } from "../../../util/stats";
-import { MapsMenu } from "../../../components/MapsMenu";
-import { AwardsList } from "../../../components/AwardsList";
-import { getAllWeaponAwards, getAllSillyAwards } from "../../../util/awards";
+import { getMatchStats } from "../../../util/stats";
 
 const { match } = Astro.params;
 const roundsQuery = Astro.url.searchParams.get("round");
 const mapQuery = Astro.url.searchParams.get("map");
 const matchDetails = await statsApi.fetchGroupDetails(match!);
-
-if (matchDetails.match) {
-  Astro.response.headers.set("Cache-Tag", `match-details-${match}`);
-}
-
 const matchStats = getMatchStats(matchDetails);
 
 const parseRoundsQuery = (roundsQuery: string) => {
   return Number(roundsQuery);
 };
 
-const map = mapQuery ?? "all";
-const parsedQuery = roundsQuery ? parseRoundsQuery(roundsQuery) : 0;
-const rounds = parsedQuery ? [parsedQuery] : [];
-const allStats = getMapStats(map, rounds, matchStats);
-const sillyAwards = getAllSillyAwards(allStats, matchDetails.match.match_id);
-const weaponAwards = getAllWeaponAwards(allStats);
 const playerGuids = [...matchStats.teams.beta, ...matchStats.teams.alpha].map(
   (s) => s.longId,
 );
@@ -49,14 +34,11 @@ const playerInfoDict = playerDiscordNames.reduce((acc, player) => {
     description: `Stats for match ${match}`,
   }}
 >
-  <MatchHeader activeMap={map} match={matchStats} />
-  <MapsMenu
-    activeRound={parsedQuery}
-    activeMap={map}
-    matchId={match!}
-    match={matchStats}
+  <MatchPageWrapper
+    client:load
+    round={parseRoundsQuery(roundsQuery ?? "0")}
+    map={mapQuery ?? undefined}
+    matchDetails={matchDetails}
+    playerInfoDict={playerInfoDict}
   />
-  <StatsTable playerInfoDict={playerInfoDict} client:load stats={allStats} />
-  <AwardsList client:load awards={sillyAwards} title="Match awards" />
-  <AwardsList client:load awards={weaponAwards} title="Weapon awards" />
 </MatchDetailsLayout>
