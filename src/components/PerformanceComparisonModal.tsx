@@ -1,4 +1,9 @@
-import { createMemo, createSignal, type Component } from "solid-js";
+import {
+  createEffect,
+  createMemo,
+  createSignal,
+  type Component,
+} from "solid-js";
 import { Dialog } from "@kobalte/core/dialog";
 import {
   getDeaths,
@@ -27,6 +32,15 @@ export const PerformanceComparisonModal: Component<
     props.stats[0],
   );
   const [comparison, setComparison] = createSignal<Stats>(props.stats[1]);
+
+  createEffect(() => {
+    const newSelectedPlayer = props.stats.find(
+      (p) => p.name === selectedPlayer().name,
+    );
+    const newComparison = props.stats.find((p) => p.name === comparison().name);
+    setSelectedPlayer(newSelectedPlayer || props.stats[0]);
+    setComparison(newComparison || props.stats[1]);
+  });
 
   const names = createMemo(() => {
     return props.stats.map((s) => s.name);
