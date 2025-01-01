@@ -11,6 +11,7 @@ import karsiah_te2 from "../assets/maps/karsiah_te2.jpg";
 import braundorf_b4 from "../assets/maps/braundorf_b4.jpg";
 import erdenberg_t2 from "../assets/maps/erdenberg_t2.jpg";
 import operation_b7 from "../assets/maps/operation_b7.jpg";
+import et_brewdog from "../assets/maps/et_brewdog.jpg";
 import et_brewdog_b6 from "../assets/maps/et_brewdog_b6.jpg";
 import etl_adlernest from "../assets/maps/etl_adlernest.jpg";
 import etl_frostbite from "../assets/maps/etl_frostbite.jpg";
@@ -31,6 +32,7 @@ const mapUrls: Record<string, ImageMetadata> = {
   braundorf_b4,
   erdenberg_t2,
   operation_b7,
+  et_brewdog,
   et_brewdog_b6,
   etl_adlernest,
   etl_frostbite,
