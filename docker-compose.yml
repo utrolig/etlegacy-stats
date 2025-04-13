@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  astro-server:
+    build:
+      context: ./astro-server
+      dockerfile: Dockerfile
+    ports:
+      - "4321:4321"
+    restart: unless-stopped
