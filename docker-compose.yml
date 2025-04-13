@@ -12,7 +12,7 @@ services:
   varnish:
     image: varnish
     ports:
-      - "80:80"
+      - "4322:80"
     volumes:
       - ./varnish-cache/default.vcl:/etc/varnish/default.vcl:ro
     tmpfs:
