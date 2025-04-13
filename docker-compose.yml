@@ -5,6 +5,15 @@ services:
     build:
       context: ./astro-server
       dockerfile: Dockerfile
-    ports:
-      - "4321:4321"
+    expose:
+      - "4321"
     restart: unless-stopped
+
+  varnish:
+    image: varnish
+    ports:
+      - "8080:80"
+    volumes:
+      - ./varnish-cache/default.vcl:/etc/varnish/default.vcl:ro
+    tmpfs:
+      - /var/lib/varnish/varnishd:exec
