@@ -12,11 +12,6 @@ backend default {
 
 # Respond to health checks
 sub vcl_recv {
-    # Health check
-    if (req.url == "/varnish-health") {
-        return(synth(200, "OK"));
-    }
-
     # Normalize Accept-Encoding header to improve cache hit rates
     if (req.http.Accept-Encoding) {
         if (req.http.Accept-Encoding ~ "gzip") {
@@ -30,11 +25,6 @@ sub vcl_recv {
 
     # Only cache GET and HEAD requests
     if (req.method != "GET" && req.method != "HEAD") {
-        return (pass);
-    }
-
-    # Handle special URLs that should bypass cache (admin pages, etc.)
-    if (req.url ~ "^/admin" || req.url ~ "^/login") {
         return (pass);
     }
 
