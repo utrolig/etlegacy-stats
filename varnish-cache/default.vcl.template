@@ -12,6 +12,18 @@ backend default {
 
 # Respond to health checks
 sub vcl_recv {
+    # Handle PURGE requests for cache invalidation
+    if (req.method == "PURGE") {
+
+        # Check for the secret token
+        if (req.http.X-Purge-Token != "$VARNISH_PURGE_TOKEN") {
+            return(synth(401, "Unauthorized"));
+        }
+
+        # Use purge if supported (Varnish 5.2+) or ban otherwise
+        return (purge);
+    }
+
     # Normalize Accept-Encoding header to improve cache hit rates
     if (req.http.Accept-Encoding) {
         if (req.http.Accept-Encoding ~ "gzip") {
