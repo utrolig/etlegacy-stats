@@ -16,7 +16,7 @@ sub vcl_recv {
     if (req.method == "PURGE") {
 
         # Check for the secret token
-        if (req.http.X-Purge-Token != "purge_me_d4ddy") {
+        if (req.http.X-Purge-Token != "$VARNISH_PURGE_TOKEN") {
             return(synth(401, "Unauthorized"));
         }
 

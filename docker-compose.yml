@@ -10,10 +10,12 @@ services:
     restart: unless-stopped
 
   varnish:
-    image: varnish
+    build:
+      context: ./varnish-cache
+      dockerfile: Dockerfile
     ports:
       - "4322:80"
-    volumes:
-      - ./varnish-cache/default.vcl:/etc/varnish/default.vcl:ro
+    environment:
+      - VARNISH_PURGE_TOKEN=${VARNISH_PURGE_TOKEN}
     tmpfs:
       - /var/lib/varnish/varnishd:exec
