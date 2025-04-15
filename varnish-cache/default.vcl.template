@@ -47,7 +47,7 @@ sub vcl_recv {
 sub vcl_backend_response {
     # Set default TTL for all responses if not defined by backend
     if (!beresp.ttl > 0s) {
-        set beresp.ttl = 1h; # Default TTL: 1 hour
+        set beresp.ttl = 365d;
     }
 
     # Don't cache 50x responses
