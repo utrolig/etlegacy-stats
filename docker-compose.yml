@@ -13,6 +13,8 @@ services:
     build:
       context: ./varnish-cache
       dockerfile: Dockerfile
+    ulimits:
+      memlock: -1
     ports:
       - "4322:80"
     environment:
