@@ -15,6 +15,6 @@ const matches = await statsApi.fetchGroups();
 >
   <div class="flex flex-col">
     <h1 class="text-4xl my-6 text-center">ETLegacy Stats</h1>
-    <MatchList client:load matches={matches} type={type} />
+    <MatchList client:load matches={matches.items} type={type} />
   </div>
 </MatchListLayout>

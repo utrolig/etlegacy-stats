@@ -2,6 +2,16 @@ import urlJoin from "url-join";
 
 const BASE_URL = "https://api.etl.lol/api/v2/stats/etl";
 
+type PaginatedResponse<T> = {
+  items: T[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+  next_page: number | null;
+  prev_page: number | null;
+};
+
 export const statsApi = {
   async fetchUsersByGuid(guids: string[], apiToken: string) {
     const url = urlJoin(
@@ -15,9 +25,9 @@ export const statsApi = {
     });
     return data;
   },
-  async fetchGroups(): Promise<Group[]> {
-    const url = urlJoin(BASE_URL, "/matches/groups");
-    const data = await getJson<Group[]>(url);
+  async fetchGroups() {
+    const url = urlJoin(BASE_URL, "/matches/groups?page=1&page_size=50");
+    const data = await getJson<PaginatedResponse<Group>>(url);
     return data;
   },
   async fetchGroupDetails(groupId: string | number): Promise<GroupDetails> {
