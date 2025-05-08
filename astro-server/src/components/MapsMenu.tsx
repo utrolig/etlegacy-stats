@@ -1,4 +1,10 @@
-import { For, type JSX, type Component } from "solid-js";
+import {
+  For,
+  type JSX,
+  type Component,
+  createEffect,
+  onCleanup,
+} from "solid-js";
 import { getMapTimes, type MatchStats } from "../util/stats";
 import clsx from "clsx";
 
@@ -13,6 +19,37 @@ export type MapsMenuProps = {
 };
 
 export const MapsMenu: Component<MapsMenuProps> = (props) => {
+  createEffect(() => {
+    const handlePopState = () => {
+      const searchParams = new URLSearchParams(location.search);
+      const mapParam = searchParams.get("map");
+      const roundParam = searchParams.get("round");
+
+      if (!mapParam) {
+        props.onTotalClicked();
+        return;
+      }
+
+      if (mapParam && !roundParam) {
+        props.onMapClicked(mapParam);
+        return;
+      }
+
+      if (mapParam && roundParam) {
+        const roundNumber = parseInt(roundParam, 10);
+        if (!isNaN(roundNumber)) {
+          props.onRoundClicked(mapParam, roundNumber);
+        }
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+
+    onCleanup(() => {
+      window.removeEventListener("popstate", handlePopState);
+    });
+  });
+
   const getRoundQueryParams = (map: string, round?: number) => {
     if (!round) {
       return `?map=${map}`;

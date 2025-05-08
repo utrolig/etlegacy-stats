@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { type Component } from "solid-js";
+import { createEffect, onCleanup, type Component } from "solid-js";
 
 export type MatchTypeMenuProps = {
   type: string | null;
@@ -7,6 +7,20 @@ export type MatchTypeMenuProps = {
 };
 
 export const MatchTypeMenu: Component<MatchTypeMenuProps> = (props) => {
+  createEffect(() => {
+    const handlePopState = () => {
+      const searchParams = new URLSearchParams(window.location.search);
+      const typeParam = searchParams.get("type");
+      props.onTypeChanged(typeParam);
+    };
+
+    window.addEventListener("popstate", handlePopState);
+
+    onCleanup(() => {
+      window.removeEventListener("popstate", handlePopState);
+    });
+  });
+
   const onLinkClick = (e: MouseEvent, type: string | null = null) => {
     e.preventDefault();
     e.stopPropagation();
