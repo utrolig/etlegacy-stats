@@ -118,6 +118,7 @@ export default {
 
         stats: {
           bg: "#25211f",
+          "bg-dark": "#231F1D",
           odd: "#292522",
           even: "#302C2A",
           hover: "#3B3836",

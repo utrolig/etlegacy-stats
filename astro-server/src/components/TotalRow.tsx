@@ -103,7 +103,7 @@ export const TotalRow: Component<TotalRowProps> = (props) => {
 
   return (
     <div class="bg-black/5 grid grid-cols-stats items-center gap-4 h-8 big:text-base text-xs border-t border-t-mud-300 min-w-max w-full">
-      <div class="flex items-center gap-1 justify-start text-mud-300 sticky left-0 bg-stats-bg h-full pl-4">
+      <div class="flex items-center gap-1 justify-start text-mud-300 sticky left-0 bg-stats-bg-dark h-full pl-4">
         <div class="flex items-center" />
       </div>
       <div class="text-right">{eff().toFixed(0)}</div>
