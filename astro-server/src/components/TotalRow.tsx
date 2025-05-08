@@ -102,11 +102,11 @@ export const TotalRow: Component<TotalRowProps> = (props) => {
   });
 
   return (
-    <div class="bg-black/5 grid grid-cols-statsSmall big:grid-cols-stats items-center gap-4 h-8 px-4 big:text-base text-xs border-t border-t-mud-300">
-      <div class="flex items-center gap-1 justify-start pl-[25px] text-mud-300">
+    <div class="bg-black/5 grid grid-cols-stats items-center gap-4 h-8 big:text-base text-xs border-t border-t-mud-300 min-w-max w-full">
+      <div class="flex items-center gap-1 justify-start text-mud-300 sticky left-0 bg-stats-bg h-full pl-4">
         <div class="flex items-center" />
       </div>
-      <div class="text-right hidden big:block">{eff().toFixed(0)}</div>
+      <div class="text-right">{eff().toFixed(0)}</div>
       <div
         class={clsx(
           "text-right",
@@ -119,18 +119,18 @@ export const TotalRow: Component<TotalRowProps> = (props) => {
       <div class="text-right">{deaths()}</div>
       <div
         class={clsx(
-          "text-right hidden big:block",
+          "text-right",
           damageGiven() > damageReceived() ? "text-green-700" : "text-red-700",
         )}
       >
         {damageGiven()}
       </div>
-      <div class="text-right hidden big:block">{damageReceived()}</div>
-      <div class="text-right hidden big:block">{headshots()}</div>
-      <div class="text-right hidden big:block">{gibs()}</div>
-      <div class="text-right hidden big:block">{selfKills()}</div>
-      <div class="text-right hidden big:block">{revives()}</div>
-      <div class="text-right hidden big:block">{timePlayed().toFixed(0)}</div>
+      <div class="text-right">{damageReceived()}</div>
+      <div class="text-right">{headshots()}</div>
+      <div class="text-right">{gibs()}</div>
+      <div class="text-right">{selfKills()}</div>
+      <div class="text-right">{revives()}</div>
+      <div class="text-right pr-4">{timePlayed().toFixed(0)}</div>
     </div>
   );
 };

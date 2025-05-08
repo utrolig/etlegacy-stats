@@ -32,7 +32,7 @@ export const TeamTable: Component<TeamTableProps> = (props) => {
   });
 
   return (
-    <div class="flex flex-col big:px-6">
+    <div class="flex flex-col big:px-6 overflow-hidden">
       <div class="flex items-center justify-between pl-5 pb-4">
         <h1 class="big:text-xl capitalize font-semibold text-orange-50">
           {props.team}
@@ -47,21 +47,23 @@ export const TeamTable: Component<TeamTableProps> = (props) => {
           </div>
         </Show>
       </div>
-      <TableHeader
-        sortKey={props.sortKey}
-        sortDirection={props.sortDir}
-        onSortClicked={props.onSortClicked}
-      />
-      <For each={teamStats()}>
-        {(stats) => (
-          <PlayerRow
-            preferDiscordNames={props.preferDiscordNames}
-            playerInfo={props.playerInfoDict[stats.longId]}
-            stats={stats}
-          />
-        )}
-      </For>
-      <TotalRow stats={teamStats()} />
+      <div class="flex flex-col overflow-x-auto">
+        <TableHeader
+          sortKey={props.sortKey}
+          sortDirection={props.sortDir}
+          onSortClicked={props.onSortClicked}
+        />
+        <For each={teamStats()}>
+          {(stats) => (
+            <PlayerRow
+              preferDiscordNames={props.preferDiscordNames}
+              playerInfo={props.playerInfoDict[stats.longId]}
+              stats={stats}
+            />
+          )}
+        </For>
+        <TotalRow stats={teamStats()} />
+      </div>
     </div>
   );
 };

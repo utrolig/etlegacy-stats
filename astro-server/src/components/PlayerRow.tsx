@@ -34,10 +34,10 @@ export const PlayerRow: Component<PlayerRowProps> = (props) => {
     <Collapsible
       onOpenChange={setOpen}
       open={open()}
-      class="flex flex-col bg-mud-800 odd:bg-white/5 hover:bg-white/10 text-xs big:text-base"
+      class="flex flex-col bg-stats-even odd:bg-stats-odd hover:bg-stats-hover text-xs big:text-base min-w-max w-full group"
     >
-      <Collapsible.Trigger class="grid grid-cols-statsSmall big:grid-cols-stats items-center gap-4 py-1 px-4">
-        <div class="flex items-center gap-1 justify-start pl-[2px] h-5 big:h-7">
+      <Collapsible.Trigger class="grid grid-cols-stats items-center gap-4 h-8">
+        <div class="flex items-center gap-1 justify-start h-full sticky left-0 pl-4 group-even:bg-stats-even group-odd:bg-stats-odd group-hover:bg-stats-hover">
           <BsCaretRightFill
             class={clsx(
               "text-mud-400 transition-transform mr-2",
@@ -73,9 +73,7 @@ export const PlayerRow: Component<PlayerRowProps> = (props) => {
             </Show>
           </div>
         </div>
-        <div class="text-right hidden big:block">
-          {getEfficiency(props.stats).toFixed(0)}
-        </div>
+        <div class="text-right">{getEfficiency(props.stats).toFixed(0)}</div>
         <div
           class={clsx(
             "text-right",
@@ -88,7 +86,7 @@ export const PlayerRow: Component<PlayerRowProps> = (props) => {
         <div class="text-right">{getDeaths(props.stats)}</div>
         <div
           class={clsx(
-            "text-right hidden big:block",
+            "text-right",
             props.stats.playerStats.damageGiven >
               props.stats.playerStats.damageReceived
               ? "text-green-700"
@@ -97,20 +95,12 @@ export const PlayerRow: Component<PlayerRowProps> = (props) => {
         >
           {props.stats.playerStats.damageGiven}
         </div>
-        <div class="text-right hidden big:block">
-          {props.stats.playerStats.damageReceived}
-        </div>
-        <div class="text-right hidden big:block">
-          {getHeadshots(props.stats)}
-        </div>
-        <div class="text-right hidden big:block">
-          {props.stats.playerStats.gibs}
-        </div>
-        <div class="text-right hidden big:block">
-          {props.stats.playerStats.selfKills}
-        </div>
-        <div class="text-right hidden big:block">{getRevives(props.stats)}</div>
-        <div class="text-right hidden big:block">
+        <div class="text-right">{props.stats.playerStats.damageReceived}</div>
+        <div class="text-right">{getHeadshots(props.stats)}</div>
+        <div class="text-right">{props.stats.playerStats.gibs}</div>
+        <div class="text-right">{props.stats.playerStats.selfKills}</div>
+        <div class="text-right">{getRevives(props.stats)}</div>
+        <div class="text-right pr-4">
           {props.stats.playerStats.playtime.toFixed(0)}
         </div>
       </Collapsible.Trigger>

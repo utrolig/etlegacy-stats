@@ -15,7 +15,8 @@ export type TableHeaderColumnProps = {
   sortDirection: SortDirection;
   columnKey: SortKey;
   onClick: (key: SortKey) => void;
-  hiddenOnMobile?: boolean;
+  sticky?: boolean;
+  last?: boolean;
 };
 
 export const TableHeaderColumn: Component<TableHeaderColumnProps> = (props) => {
@@ -37,10 +38,7 @@ export const TableHeaderColumn: Component<TableHeaderColumnProps> = (props) => {
 
   return (
     <Tooltip
-      triggerClass={clsx(
-        "justify-end",
-        props.hiddenOnMobile && "hidden big:block",
-      )}
+      triggerClass={clsx("justify-end")}
       content={getColumnDescription(props.columnKey)}
       getAnchorRect={getAnchorRect}
     >
@@ -48,6 +46,8 @@ export const TableHeaderColumn: Component<TableHeaderColumnProps> = (props) => {
         class={clsx(
           "flex items-center gap-1 select-none cursor-pointer",
           !props.alignStart && "justify-end",
+          props.sticky && "sticky left-0 bg-stats-bg pl-4",
+          props.last && "pr-4",
         )}
         onClick={() => props.onClick(props.columnKey)}
       >
