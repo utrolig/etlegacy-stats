@@ -45,8 +45,12 @@ export const MapsBackground: Component<MapsBackgroundProps> = (props) => {
               "absolute h-full object-cover object-center",
               props.activeMap && props.activeMap !== name && "grayscale",
             )}
+            height={image.height}
+            width={image.width}
             src={image.src}
             style={getImageStyle(idx())}
+            decoding="async"
+            loading="lazy"
           />
         )}
       </For>
