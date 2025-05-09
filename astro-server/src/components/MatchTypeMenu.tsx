@@ -1,74 +1,87 @@
 import clsx from "clsx";
-import { createEffect, onCleanup, type Component } from "solid-js";
+import { type Component } from "solid-js";
 
 export type MatchTypeMenuProps = {
-  type: string | null;
-  onTypeChanged: (type: string | null) => void;
+  currentUrl: string;
+  size?: number;
 };
 
 export const MatchTypeMenu: Component<MatchTypeMenuProps> = (props) => {
-  createEffect(() => {
-    const handlePopState = () => {
-      const searchParams = new URLSearchParams(window.location.search);
-      const typeParam = searchParams.get("type");
-      props.onTypeChanged(typeParam);
-    };
+  const getSizeLink = (size?: number) => {
+    const url = new URL(props.currentUrl);
+    const sp = new URLSearchParams(url.search);
 
-    window.addEventListener("popstate", handlePopState);
-
-    onCleanup(() => {
-      window.removeEventListener("popstate", handlePopState);
-    });
-  });
-
-  const onLinkClick = (e: MouseEvent, type: string | null = null) => {
-    e.preventDefault();
-    e.stopPropagation();
-    props.onTypeChanged(type);
-
-    if (!type) {
-      history.pushState({}, "", location.pathname);
-      return;
+    if (!size) {
+      sp.delete("size");
+    } else {
+      sp.set("size", size.toString());
     }
 
-    const qp = new URLSearchParams();
+    sp.set("page", "1");
 
-    qp.set("type", type);
-    history.pushState({}, "", `${location.pathname}?${qp.toString()}`);
+    url.search = sp.toString();
+    return url.toString();
   };
 
   return (
-    <div class="flex items-center">
+    <div class="flex items-center sticky top-0 bg-mud-800">
       <a
         class={clsx(
           "py-4 px-8 border-b-2 border-orange-400",
-          !props.type ? "border-orange-400" : "border-transparent",
+          !props.size ? "border-orange-400" : "border-transparent",
         )}
-        href="/"
-        onClick={(e) => onLinkClick(e)}
+        href={getSizeLink()}
       >
         All
       </a>
       <a
         class={clsx(
           "py-4 px-8 border-b-2 border-orange-400",
-          props.type === "6v6" ? "border-orange-400" : "border-transparent",
+          props.size === 12 ? "border-orange-400" : "border-transparent",
         )}
-        onClick={(e) => onLinkClick(e, "6v6")}
-        href="?type=6v6"
+        href={getSizeLink(12)}
       >
         6v6
       </a>
       <a
         class={clsx(
           "py-4 px-8 border-b-2 border-orange-400",
-          props.type === "3v3" ? "border-orange-400" : "border-transparent",
+          props.size === 6 ? "border-orange-400" : "border-transparent",
         )}
-        onClick={(e) => onLinkClick(e, "3v3")}
-        href="?type=3v3"
+        href={getSizeLink(6)}
       >
         3v3
+      </a>
+      <a
+        class={clsx(
+          "py-4 px-8 border-b-2 border-orange-400",
+          props.size === 2 ? "border-orange-400" : "border-transparent",
+        )}
+        href={getSizeLink(2)}
+      >
+        1v1
       </a>
     </div>
   );
 };
+
+function getMatchType(matchSize: number) {
+  switch (matchSize) {
+    case 1:
+      return "Test";
+    case 2:
+      return "1v1";
+    case 4:
+      return "2v2";
+    case 6:
+      return "3v3";
+    case 8:
+      return "4v4";
+    case 10:
+      return "5v5";
+    case 12:
+      return "6v6";
+    default:
+      return "Unknown";
+  }
+}

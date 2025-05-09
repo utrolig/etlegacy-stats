@@ -25,8 +25,17 @@ export const statsApi = {
     });
     return data;
   },
-  async fetchGroups() {
-    const url = urlJoin(BASE_URL, "/matches/groups?page=1&page_size=50");
+  async fetchGroups({ page = 1, size }: { page: number; size?: number }) {
+    const sp = new URLSearchParams();
+
+    sp.append("page_size", "50");
+    sp.append("page", page.toString());
+
+    if (size) {
+      sp.append("size", size.toString());
+    }
+
+    const url = urlJoin(BASE_URL, `/matches/groups?${sp.toString()}`);
     const data = await getJson<PaginatedResponse<Group>>(url);
     return data;
   },
