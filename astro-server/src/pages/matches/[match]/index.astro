@@ -35,7 +35,7 @@ const playerInfoDict = playerDiscordNames.reduce((acc, player) => {
   }}
 >
   <MatchPageWrapper
-    client:load
+    client:idle
     round={parseRoundsQuery(roundsQuery ?? "0")}
     map={mapQuery ?? undefined}
     matchDetails={matchDetails}

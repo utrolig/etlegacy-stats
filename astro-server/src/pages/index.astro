@@ -39,13 +39,11 @@ const matches = await statsApi.fetchGroups({ page, size });
   <div class="flex flex-col">
     <h1 class="text-4xl my-6 text-center">ETLegacy Stats</h1>
     <MatchList
-      client:load
       matches={matches.items}
       size={size}
       currentUrl={Astro.url.toString()}
     />
     <MatchPagination
-      client:load
       page={page}
       totalPages={matches.total_pages}
       currentUrl={Astro.url.toString()}
