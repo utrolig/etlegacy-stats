@@ -64,24 +64,3 @@ export const MatchTypeMenu: Component<MatchTypeMenuProps> = (props) => {
     </div>
   );
 };
-
-function getMatchType(matchSize: number) {
-  switch (matchSize) {
-    case 1:
-      return "Test";
-    case 2:
-      return "1v1";
-    case 4:
-      return "2v2";
-    case 6:
-      return "3v3";
-    case 8:
-      return "4v4";
-    case 10:
-      return "5v5";
-    case 12:
-      return "6v6";
-    default:
-      return "Unknown";
-  }
-}
