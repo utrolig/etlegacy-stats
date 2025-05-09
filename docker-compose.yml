@@ -8,8 +8,6 @@ services:
     expose:
       - "4321"
     restart: unless-stopped
-    networks:
-      - app_network
 
   varnish:
     build:
@@ -23,8 +21,6 @@ services:
       - VARNISH_PURGE_TOKEN=${VARNISH_PURGE_TOKEN}
     tmpfs:
       - /var/lib/varnish/varnishd:exec
-    networks:
-      - app_network
     restart: unless-stopped
 
   nginx:
@@ -32,13 +28,8 @@ services:
     ports:
       - "80:80"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./default.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
       - varnish
-    networks:
-      - app_network
     restart: unless-stopped
-
-networks:
-  app_network:
