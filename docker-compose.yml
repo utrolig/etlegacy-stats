@@ -15,9 +15,19 @@ services:
       dockerfile: Dockerfile
     ulimits:
       memlock: -1
-    ports:
-      - "4322:80"
+    expose:
+      - "80"
     environment:
       - VARNISH_PURGE_TOKEN=${VARNISH_PURGE_TOKEN}
     tmpfs:
       - /var/lib/varnish/varnishd:exec
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "4322:80"
+    volumes:
+      - ./nginx-config/conf.d:/etc/nginx/conf.d
+    depends_on:
+      - varnish
+    restart: unless-stopped
