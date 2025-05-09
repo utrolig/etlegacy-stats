@@ -30,5 +30,15 @@ const { frontmatter } = Astro.props;
     <main class="max-w-[1300px] mx-auto">
       <slot />
     </main>
+    <script
+      defer
+      data-domain="etlstats.stiba.lol"
+      src="https://app.lythia.dev/collect/analytics/script.js"
+      is:inline></script>
+    <script
+      defer
+      data-domain="etlstats.stiba.lol"
+      src="https://app.lythia.dev/collect/metrics/script.js"
+      is:inline></script>
   </body>
 </html>
