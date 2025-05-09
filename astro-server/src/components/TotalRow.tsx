@@ -110,7 +110,7 @@ export const TotalRow: Component<TotalRowProps> = (props) => {
       <div
         class={clsx(
           "text-right",
-          kdr() > 1 ? "text-green-700" : "text-red-700",
+          kdr() > 1 ? "text-green-600" : "text-red-600",
         )}
       >
         {kdr().toFixed(2)}
@@ -120,7 +120,7 @@ export const TotalRow: Component<TotalRowProps> = (props) => {
       <div
         class={clsx(
           "text-right",
-          damageGiven() > damageReceived() ? "text-green-700" : "text-red-700",
+          damageGiven() > damageReceived() ? "text-green-600" : "text-red-600",
         )}
       >
         {damageGiven()}

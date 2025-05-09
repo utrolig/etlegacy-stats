@@ -77,7 +77,7 @@ export const PlayerRow: Component<PlayerRowProps> = (props) => {
         <div
           class={clsx(
             "text-right",
-            kdr() > 1 ? "text-green-700" : "text-red-700",
+            kdr() > 1 ? "text-green-600" : "text-red-600",
           )}
         >
           {kdr().toFixed(2)}
@@ -89,8 +89,8 @@ export const PlayerRow: Component<PlayerRowProps> = (props) => {
             "text-right",
             props.stats.playerStats.damageGiven >
               props.stats.playerStats.damageReceived
-              ? "text-green-700"
-              : "text-red-700",
+              ? "text-green-600"
+              : "text-red-600",
           )}
         >
           {props.stats.playerStats.damageGiven}

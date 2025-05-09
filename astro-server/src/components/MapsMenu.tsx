@@ -103,7 +103,7 @@ export const MapsMenu: Component<MapsMenuProps> = (props) => {
         <p
           class={clsx(
             "group-data-[active=false]:group-hover:text-mud-200",
-            !props.activeMap ? "text-orange-50" : "text-mud-500",
+            !props.activeMap ? "text-orange-50" : "text-mud-300",
           )}
         >
           Total
@@ -121,7 +121,7 @@ export const MapsMenu: Component<MapsMenuProps> = (props) => {
               <p
                 class={clsx(
                   "group-data-[active=false]:group-hover:text-mud-200",
-                  props.activeMap === map ? "text-orange-50" : "text-mud-500",
+                  props.activeMap === map ? "text-orange-50" : "text-mud-300",
                 )}
               >
                 {map}
