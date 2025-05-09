@@ -69,7 +69,10 @@ export const PerformanceComparisonModal: Component<
   return (
     <Dialog>
       <Tooltip content="Compare players">
-        <Dialog.Trigger class="text-sm p-2 rounded-md hover:bg-mud-700 bg-white/5">
+        <Dialog.Trigger
+          aria-label="Compare performance"
+          class="text-sm p-2 rounded-md hover:bg-mud-700 bg-white/5"
+        >
           <OcGitcompare3 size={24} />
         </Dialog.Trigger>
       </Tooltip>
