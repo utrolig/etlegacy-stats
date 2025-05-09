@@ -19,8 +19,8 @@ const { frontmatter } = Astro.props;
   lang="en"
 >
   <head>
-    <Head {...frontmatter} />
     <meta charset="UTF-8" />
+    <Head {...frontmatter} />
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/svg+xml" href="/etl.svg" />
     <meta name="generator" content={Astro.generator} />
