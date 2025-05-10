@@ -15,7 +15,7 @@ services:
       dockerfile: Dockerfile
     ulimits:
       memlock: -1
-    ports:
+    expose:
       - "4322:80"
     environment:
       - VARNISH_PURGE_TOKEN=${VARNISH_PURGE_TOKEN}
