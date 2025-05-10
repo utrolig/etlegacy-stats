@@ -19,8 +19,7 @@ export const MatchTypeMenu: Component<MatchTypeMenuProps> = (props) => {
 
     sp.set("page", "1");
 
-    url.search = sp.toString();
-    return url.toString();
+    return `/?${sp.toString()}`;
   };
 
   return (
