@@ -1,6 +1,5 @@
 vcl 4.1;
 
-# Default backend definition using environment variables
 backend default {
     .host = "astro-server";
     .port = "4321";
@@ -10,11 +9,8 @@ backend default {
     .max_connections = 300;
 }
 
-# Respond to health checks
 sub vcl_recv {
-    # Handle PURGE requests for cache invalidation
     if (req.method == "PURGE") {
-        # Check for the secret token
         if (req.http.X-Purge-Token != "$VARNISH_PURGE_TOKEN") {
             return(synth(401, "Unauthorized"));
         }
@@ -25,11 +21,19 @@ sub vcl_recv {
             return(synth(200, "Ban for root path processed"));
         }
         
+        # Special case for match paths - use ban to invalidate all variations with query params
+        if (req.url ~ "^/matches/[^/?]+$" || req.url ~ "^/matches/[^/]+\?") {
+            # Extract the match ID from the URL
+            if (req.url ~ "^/matches/([^/?]+)") {
+                ban("req.url ~ ^/matches/" + regsub(req.url, "^/matches/([^/?]+).*", "\1") + " && req.http.host == " + req.http.host);
+                return(synth(200, "Ban for match path processed"));
+            }
+        }
+        
         # For all other paths, use regular purge
         return (purge);
     }
 
-    # Normalize Accept-Encoding header to improve cache hit rates
     if (req.http.Accept-Encoding) {
         if (req.http.Accept-Encoding ~ "gzip") {
             set req.http.Accept-Encoding = "gzip";
@@ -40,33 +44,26 @@ sub vcl_recv {
         }
     }
 
-    # Only cache GET and HEAD requests
     if (req.method != "GET" && req.method != "HEAD") {
         return (pass);
     }
 
-    # Default behavior: lookup cache
     return (hash);
 }
 
 sub vcl_backend_response {
-    # Set default TTL for all responses
     set beresp.ttl = 365d;
 
-    # Don't cache 50x responses
     if (beresp.status >= 500 && beresp.status < 600) {
         set beresp.uncacheable = true;
         return (deliver);
     }
 
-    # Set a grace period for object fetches
     set beresp.grace = 1h;
-
     return (deliver);
 }
 
 sub vcl_deliver {
-    # Add a header to indicate cache hit/miss
     if (obj.hits > 0) {
         set resp.http.X-Cache = "HIT";
         set resp.http.X-Cache-Hits = obj.hits;
@@ -74,8 +71,6 @@ sub vcl_deliver {
         set resp.http.X-Cache = "MISS";
     }
 
-    # Remove the X-Powered-By header for security
     unset resp.http.X-Powered-By;
-
     return (deliver);
 }
