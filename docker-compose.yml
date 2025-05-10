@@ -16,7 +16,7 @@ services:
     ulimits:
       memlock: -1
     expose:
-      - "4322"
+      - "80"
     environment:
       - VARNISH_PURGE_TOKEN=${VARNISH_PURGE_TOKEN}
     tmpfs:
