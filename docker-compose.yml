@@ -21,3 +21,15 @@ services:
       - VARNISH_PURGE_TOKEN=${VARNISH_PURGE_TOKEN}
     tmpfs:
       - /var/lib/varnish/varnishd:exec
+    depends_on:
+      - astro-server
+
+  nginx:
+    image: nginx:alpine
+    expose:
+      - "80"
+    volumes:
+      - ./nginx-config/conf.d:/etc/nginx/conf.d
+    depends_on:
+      - varnish
+    restart: unless-stopped

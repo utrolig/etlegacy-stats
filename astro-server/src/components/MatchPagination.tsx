@@ -11,11 +11,9 @@ export const MatchPagination: Component<MatchPaginationProps> = (props) => {
   const getPageUrl = (page: number) => {
     const url = new URL(props.currentUrl);
     const sp = new URLSearchParams(url.search);
-
     sp.set("page", page.toString());
-    url.search = sp.toString();
 
-    return url.toString();
+    return `/?${sp.toString()}`;
   };
 
   return (
