@@ -21,6 +21,8 @@ services:
       - VARNISH_PURGE_TOKEN=${VARNISH_PURGE_TOKEN}
     tmpfs:
       - /var/lib/varnish/varnishd:exec
+    depends_on:
+      - astro-server
 
   nginx:
     image: nginx:alpine
