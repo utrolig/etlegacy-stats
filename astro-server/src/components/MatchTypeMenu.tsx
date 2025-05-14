@@ -4,6 +4,7 @@ import { type Component } from "solid-js";
 export type MatchTypeMenuProps = {
   currentUrl: string;
   size?: number;
+  search?: boolean;
 };
 
 export const MatchTypeMenu: Component<MatchTypeMenuProps> = (props) => {
@@ -59,6 +60,16 @@ export const MatchTypeMenu: Component<MatchTypeMenuProps> = (props) => {
         href={getSizeLink(2)}
       >
         1v1
+      </a>
+
+      <a
+        class={clsx(
+          "py-4 px-8 border-b-2 border-orange-400 ml-auto",
+          props.search ? "border-orange-400" : "border-transparent",
+        )}
+        href="/search"
+      >
+        Search
       </a>
     </div>
   );

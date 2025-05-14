@@ -11,13 +11,10 @@ export type MatchListProps = {
 
 export const MatchList: Component<MatchListProps> = (props) => {
   return (
-    <>
-      <MatchTypeMenu currentUrl={props.currentUrl} size={props.size} />
-      <ul class="list-none">
-        <For each={props.matches}>
-          {(match) => <MatchListItem match={match} />}
-        </For>
-      </ul>
-    </>
+    <ul class="list-none">
+      <For each={props.matches}>
+        {(match) => <MatchListItem match={match} />}
+      </For>
+    </ul>
   );
 };

@@ -2,7 +2,7 @@ import urlJoin from "url-join";
 
 const BASE_URL = "https://api.etl.lol/api/v2/stats/etl";
 
-type PaginatedResponse<T> = {
+export type PaginatedResponse<T> = {
   items: T[];
   total: number;
   page: number;
@@ -65,6 +65,59 @@ export const statsApi = {
     }
 
     const data = await getJson<GroupDetails>(url);
+    return data;
+  },
+  async searchGroups({
+    query,
+    fields,
+    fuzzy,
+    fuzzyThreshold,
+    sortOrder,
+    page = 1,
+  }: {
+    query: string;
+    fields?: {
+      original_match_id?: boolean;
+      channel_name?: boolean;
+      maps?: boolean;
+      players?: boolean;
+      server?: boolean;
+    };
+    page?: number;
+    fuzzy?: boolean;
+    fuzzyThreshold?: number;
+    sortOrder?: "asc" | "desc";
+  }) {
+    const url = urlJoin(BASE_URL, "/matches/groups/search");
+
+    const params = new URLSearchParams();
+
+    params.append("query", query);
+
+    if (fuzzy) {
+      params.append("fuzzy", "true");
+    }
+
+    if (fuzzyThreshold) {
+      params.append("fuzzy_threshold", fuzzyThreshold.toString());
+    }
+
+    if (sortOrder) {
+      params.append("sort_order", sortOrder);
+    }
+
+    params.append("page", page.toString());
+
+    for (const [key, value] of Object.entries(fields || {})) {
+      if (value) {
+        params.append("fields", key);
+      }
+    }
+
+    const data = await getJson<PaginatedResponse<Group>>(
+      `${url}?${params.toString()}`,
+    );
+
     return data;
   },
 };

@@ -1,0 +1,63 @@
+---
+import { MatchList } from "../components/MatchList";
+import { MatchPagination } from "../components/MatchPagination";
+import { NoQueryPlaceholder } from "../components/NoQueryPlaceholder";
+import MatchListLayout from "../layouts/MatchListLayout.astro";
+import { SearchBar } from "../components/SearchBar";
+import {
+  statsApi,
+  type Group,
+  type PaginatedResponse,
+} from "../util/stats-api";
+
+function getPage() {
+  const page = Astro.url.searchParams.get("page");
+
+  if (page === null) {
+    return 1;
+  }
+
+  return Number(page);
+}
+
+const page = getPage();
+
+const query = Astro.url.searchParams.get("q");
+
+let response: PaginatedResponse<Group> = {
+  items: [],
+  page: 1,
+  total_pages: 1,
+  next_page: null,
+  page_size: 0,
+  prev_page: null,
+  total: 0,
+};
+
+if (query) {
+  response = await statsApi.searchGroups({ query, page });
+}
+---
+
+<MatchListLayout
+  frontmatter={{
+    title: "ETL Stats - Search",
+    description: "Search games",
+  }}
+>
+  <div class="flex flex-col">
+    <a href="/" class="text-4xl my-6 text-center">ETLegacy Stats</a>
+    <SearchBar client:load value={query ?? undefined} />
+    <MatchList matches={response.items} currentUrl={Astro.url.toString()} />
+    {
+      (!query || !response.items.length) && (
+        <NoQueryPlaceholder query={query ?? undefined} />
+      )
+    }
+    <MatchPagination
+      page={page}
+      totalPages={response.total_pages}
+      currentUrl={Astro.url.toString()}
+    />
+  </div>
+</MatchListLayout>
