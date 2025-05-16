@@ -18,7 +18,7 @@ export const statsApi = {
       BASE_URL,
       `/players/by-guid?${guids.map((guid) => `guid=${guid}`).join("&")}`,
     );
-    const data = await getJson<PlayerInfo[]>(url, {
+    const data = await getJsonOrDefault<PlayerInfo[]>([], url, {
       headers: {
         authorization: `Bearer ${apiToken}`,
       },
@@ -121,6 +121,17 @@ export const statsApi = {
     return data;
   },
 };
+
+async function getJsonOrDefault<T>(
+  defaultData: T,
+  ...args: Parameters<typeof fetch>
+) {
+  try {
+    return await getJson<T>(...args);
+  } catch {
+    return defaultData as T;
+  }
+}
 
 async function getJson<T>(...args: Parameters<typeof fetch>) {
   const response = await fetch(...args);
