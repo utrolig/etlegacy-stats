@@ -4,7 +4,7 @@ import {
   getAccuracy,
   getDeaths,
   getDistanceTravelled,
-  getDistanceTravelledSpawn,
+  getDistanceTravelledSpawnAvg,
   getHeadshotPercentage,
   getKills,
   WEAPON_NAMES,
@@ -107,21 +107,23 @@ export const PlayerDetailedStats: Component<PlayerDetailedStatsProps> = (
         </div>
       </div>
 
-      <Show when={props.stats.metaStats.distanceTravelledMeters > 0}>
-        <div class="flex text-sm">
-          <div class="flex flex-col">
+      <div class="flex text-sm">
+        <div class="flex flex-col">
+          <Show when={props.stats.metaStats.distanceTravelledMeters > 0}>
             <div class="grid gap-2 grid-cols-[220px,80px] items-center">
               <p>Distance traveled:</p>
               <p>{getDistanceTravelled(props.stats).toFixed(0)}m</p>
             </div>
+          </Show>
 
+          <Show when={props.stats.metaStats.distanceTravelledSpawnAvg > 0}>
             <div class="grid gap-2 grid-cols-[220px,80px] items-center">
               <p>Total distance 3 secs after spawn:</p>
-              <p>{getDistanceTravelledSpawn(props.stats).toFixed(0)}m</p>
+              <p>{getDistanceTravelledSpawnAvg(props.stats).toFixed(0)}m</p>
             </div>
-          </div>
+          </Show>
         </div>
-      </Show>
+      </div>
 
       <div class="flex text-sm">
         <div class="flex flex-col">

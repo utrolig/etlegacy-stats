@@ -391,7 +391,7 @@ export function getComaAward(stats: Stats[]): Award | null {
   const distances = stats
     .reduce(
       (acc, player) => {
-        const distance = player.metaStats.distanceTravelledSpawn;
+        const distance = player.metaStats.distanceTravelledSpawnAvg;
         acc.push([distance, player.name]);
         return acc;
       },
@@ -404,7 +404,7 @@ export function getComaAward(stats: Stats[]): Award | null {
   }
 
   return {
-    reason: "for least distance travelled 3 seconds after spawning",
+    reason: "for least distance travelled on average 3 seconds after spawning",
     valueName: "Distance travelled",
     valueDecimals: 0,
     type: "silly",

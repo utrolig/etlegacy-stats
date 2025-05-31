@@ -216,6 +216,7 @@ export type GroupRound = {
         };
         distance_travelled_meters?: number;
         distance_travelled_spawn?: number;
+        distance_travelled_spawn_avg?: number;
         class_switches?: {
           timestamp: number;
           toClass: GameClass;

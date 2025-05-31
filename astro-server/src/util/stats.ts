@@ -33,7 +33,7 @@ export type PlayerStats = {
 
 export type MetaStats = {
   distanceTravelledMeters: number;
-  distanceTravelledSpawn: number;
+  distanceTravelledSpawnAvg: number;
   classesPlayed: GameClass[];
   customRating: number;
 };
@@ -737,7 +737,7 @@ function convertMetaStats(
 
     return {
       distanceTravelledMeters: firstRound.distance_travelled_meters ?? 0,
-      distanceTravelledSpawn: firstRound.distance_travelled_spawn ?? 0,
+      distanceTravelledSpawnAvg: firstRound.distance_travelled_spawn_avg ?? 0,
       classesPlayed,
       customRating,
     };
@@ -747,9 +747,10 @@ function convertMetaStats(
   const secondDistance = secondRound.distance_travelled_meters ?? 0;
   const distanceTravelledMeters = secondDistance - firstDistance;
 
-  const firstDistanceSpawn = firstRound.distance_travelled_spawn ?? 0;
-  const secondDistanceSpawn = secondRound.distance_travelled_spawn ?? 0;
-  const distanceTravelledSpawn = secondDistanceSpawn - firstDistanceSpawn;
+  const firstDistanceSpawnAvg = firstRound.distance_travelled_spawn_avg ?? 0;
+  const secondDistanceSpawnAvg = secondRound.distance_travelled_spawn_avg ?? 0;
+  const distanceTravelledSpawnAvg =
+    secondDistanceSpawnAvg - firstDistanceSpawnAvg;
 
   const firstRoundCustomRating = getCustomRating(
     playerId,
@@ -765,7 +766,7 @@ function convertMetaStats(
 
   return {
     distanceTravelledMeters,
-    distanceTravelledSpawn,
+    distanceTravelledSpawnAvg,
     classesPlayed,
     customRating,
   };
@@ -954,8 +955,8 @@ export function getDistanceTravelled(stats: Stats) {
   return stats.metaStats.distanceTravelledMeters;
 }
 
-export function getDistanceTravelledSpawn(stats: Stats) {
-  return stats.metaStats.distanceTravelledSpawn;
+export function getDistanceTravelledSpawnAvg(stats: Stats) {
+  return stats.metaStats.distanceTravelledSpawnAvg;
 }
 
 export function getDeaths(stats: Stats) {
