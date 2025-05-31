@@ -1,5 +1,12 @@
 import deepEqual from "deep-equal";
-import type { Group, GroupDetails, GroupRound } from "./stats-api";
+import type {
+  GameClass,
+  Group,
+  GroupDetails,
+  GroupRound,
+  Obituary,
+  RawPlayerStats,
+} from "./stats-api";
 
 export type WeaponStats = {
   hits: number;
@@ -24,6 +31,18 @@ export type PlayerStats = {
   xp: number;
 };
 
+export type MetaStats = {
+  distanceTravelledMeters: number;
+  distanceTravelledSpawnAvg: number;
+  classesPlayed: GameClass[];
+  customRating: number;
+  secondsSpentLeaning: number;
+  secondsSpentProne: number;
+  secondsSpentCrouching: number;
+  secondsSpentInBinoculars: number;
+  secondsSpentInMg: number;
+};
+
 export type Stats = {
   id: string;
   name: string;
@@ -31,6 +50,7 @@ export type Stats = {
   longId: string;
   playerStats: PlayerStats;
   weaponStats: WeaponStats[];
+  metaStats: MetaStats;
 };
 
 export type RoundStats = {};
@@ -93,6 +113,7 @@ export function getMapStats(
             ...prevEntry,
             playerStats: addPlayerStats(prevEntry, roundStat),
             weaponStats: addWeaponStats(prevEntry, roundStat),
+            metaStats: addMetaStats(prevEntry, roundStat),
           };
         } else {
           acc[roundStat.id] = roundStat;
@@ -165,6 +186,35 @@ function addWeaponStats(
   );
 
   return Object.values(stats);
+}
+
+function addMetaStats(
+  { metaStats: prevMetaStats }: Stats,
+  { metaStats }: Stats,
+) {
+  return {
+    distanceTravelledMeters:
+      prevMetaStats.distanceTravelledMeters + metaStats.distanceTravelledMeters,
+    distanceTravelledSpawnAvg:
+      (prevMetaStats.distanceTravelledSpawnAvg +
+        metaStats.distanceTravelledSpawnAvg) /
+      2,
+    classesPlayed: [
+      ...new Set([...prevMetaStats.classesPlayed, ...metaStats.classesPlayed]),
+    ].sort((a, b) => a.localeCompare(b)),
+    customRating: (prevMetaStats.customRating + metaStats.customRating) / 2,
+    secondsSpentCrouching:
+      prevMetaStats.secondsSpentCrouching + metaStats.secondsSpentCrouching,
+    secondsSpentLeaning:
+      prevMetaStats.secondsSpentLeaning + metaStats.secondsSpentLeaning,
+    secondsSpentProne:
+      prevMetaStats.secondsSpentProne + metaStats.secondsSpentProne,
+    secondsSpentInBinoculars:
+      (prevMetaStats.secondsSpentInBinoculars ?? 0) +
+      (metaStats.secondsSpentInBinoculars ?? 0),
+    secondsSpentInMg:
+      (prevMetaStats.secondsSpentInMg ?? 0) + (metaStats.secondsSpentInMg ?? 0),
+  } satisfies MetaStats;
 }
 
 function getMaps(rounds: GroupRound[]) {
@@ -269,27 +319,47 @@ export function getMatchStats(info: GroupDetails): MatchStats {
             let playerStats = convertPlayerStats(ps.weaponStats);
             let weaponStats = convertWeaponStats(ps.weaponStats);
 
+            let metaStats = convertMetaStats(
+              longId,
+              ps,
+              playerStats,
+              round.round_data.round_info.obituaries ?? [],
+            );
+
             if (round.round_data.round_info.round === 2) {
               const prevRound = allRounds[idx - 1];
-              const prevRoundRawStats = Object.values(
+              const prevRoundRawPlayerStats = Object.values(
                 prevRound.round_data.player_stats,
-              ).find((p) => p.guid === ps.guid)?.weaponStats;
+              ).find((p) => p.guid === ps.guid);
+              const prevRoundPlayerStats = { ...playerStats };
 
-              if (!prevRoundRawStats) {
+              const prevRoundRawWeaponStats =
+                prevRoundRawPlayerStats?.weaponStats;
+
+              if (!prevRoundRawWeaponStats) {
                 throw new Error(
                   "Could not find previous round stats for player.",
                 );
               }
 
               playerStats = convertPlayerStats(
-                prevRoundRawStats,
+                prevRoundRawWeaponStats,
                 ps.weaponStats,
                 prevRound,
                 round,
               );
               weaponStats = convertWeaponStats(
-                prevRoundRawStats,
+                prevRoundRawWeaponStats,
                 ps.weaponStats,
+              );
+              metaStats = convertMetaStats(
+                longId,
+                prevRoundRawPlayerStats,
+                prevRoundPlayerStats,
+                prevRound.round_data.round_info.obituaries ?? [],
+                ps,
+                playerStats,
+                round.round_data.round_info.obituaries ?? [],
               );
             }
 
@@ -300,6 +370,7 @@ export function getMatchStats(info: GroupDetails): MatchStats {
               team: getPlayerTeam(ps.guid, teams),
               playerStats,
               weaponStats,
+              metaStats,
             };
           },
         ),
@@ -592,6 +663,144 @@ function convertWeaponStats(
   return convertSecondRoundWeaponStats(firstRoundRaw, secondRoundRaw);
 }
 
+function getClassesPlayed(
+  firstRound: RawPlayerStats,
+  secondRound?: RawPlayerStats,
+): GameClass[] {
+  if (!secondRound) {
+    return [
+      ...new Set([...(firstRound.class_switches?.map((s) => s.toClass) ?? [])]),
+    ].sort((a, b) => a.localeCompare(b));
+  }
+
+  const firstClasses = firstRound.class_switches?.map((s) => s.toClass) ?? [];
+  const secondClasses = secondRound.class_switches?.map((s) => s.toClass) ?? [];
+
+  return [...new Set([...firstClasses, ...secondClasses])].sort((a, b) =>
+    a.localeCompare(b),
+  );
+}
+
+function getKillMultiplierBasedOnRespawnTime(rt: number): number {
+  if (rt < 2) {
+    return 0.3;
+  }
+
+  if (rt < 5) {
+    return 0.4;
+  }
+
+  if (rt < 10) {
+    return 0.7;
+  }
+
+  if (rt < 13) {
+    return 1;
+  }
+
+  if (rt < 15) {
+    return 1.2;
+  }
+
+  if (rt < 20) {
+    return 1.5;
+  }
+
+  if (rt < 25) {
+    return 1.8;
+  }
+
+  if (rt < 30) {
+    return 2;
+  }
+
+  return 2;
+}
+
+const EARLY_SELFKILL_PENALTY = 0.4;
+
+function convertMetaStats(
+  playerId: string,
+  firstRound: RawPlayerStats,
+  firstRoundPlayerStats: PlayerStats,
+  firstRoundObituaries: Obituary[],
+  secondRound?: RawPlayerStats,
+  secondRoundPlayerStats?: PlayerStats,
+  secondRoundObituaries?: Obituary[],
+): MetaStats {
+  const classesPlayed = getClassesPlayed(firstRound, secondRound);
+
+  if (!secondRound || !secondRoundPlayerStats || !secondRoundObituaries) {
+    const customRating = getCustomRating(
+      playerId,
+      firstRoundPlayerStats,
+      firstRoundObituaries,
+    );
+
+    return {
+      distanceTravelledMeters: firstRound.distance_travelled_meters ?? 0,
+      distanceTravelledSpawnAvg: firstRound.distance_travelled_spawn_avg ?? 0,
+      classesPlayed,
+      customRating,
+      secondsSpentCrouching: firstRound.stance_stats_seconds?.in_crouch ?? 0,
+      secondsSpentLeaning: firstRound.stance_stats_seconds?.in_prone ?? 0,
+      secondsSpentProne: firstRound.stance_stats_seconds?.in_prone ?? 0,
+      secondsSpentInBinoculars:
+        firstRound.stance_stats_seconds?.in_binoculars ?? 0,
+      secondsSpentInMg: firstRound.stance_stats_seconds?.in_mg ?? 0,
+    };
+  }
+
+  const firstDistance = firstRound.distance_travelled_meters ?? 0;
+  const secondDistance = secondRound.distance_travelled_meters ?? 0;
+  const distanceTravelledMeters = secondDistance + firstDistance;
+
+  const firstDistanceSpawnAvg = firstRound.distance_travelled_spawn_avg ?? 0;
+  const secondDistanceSpawnAvg = secondRound.distance_travelled_spawn_avg ?? 0;
+  const distanceTravelledSpawnAvg =
+    secondDistanceSpawnAvg + firstDistanceSpawnAvg;
+
+  const firstRoundCustomRating = getCustomRating(
+    playerId,
+    firstRoundPlayerStats,
+    firstRoundObituaries,
+  );
+  const secondRoundCustomRating = getCustomRating(
+    playerId,
+    secondRoundPlayerStats,
+    secondRoundObituaries,
+  );
+  const customRating = firstRoundCustomRating + secondRoundCustomRating / 2;
+
+  const secondsSpentCrouching =
+    (firstRound.stance_stats_seconds?.in_crouch ?? 0) +
+    (secondRound.stance_stats_seconds?.in_crouch ?? 0);
+  const secondsSpentLeaning =
+    (firstRound.stance_stats_seconds?.in_lean ?? 0) +
+    (secondRound.stance_stats_seconds?.in_lean ?? 0);
+  const secondsSpentProne =
+    (firstRound.stance_stats_seconds?.in_prone ?? 0) +
+    (secondRound.stance_stats_seconds?.in_prone ?? 0);
+  const secondsSpentInBinoculars =
+    (firstRound.stance_stats_seconds?.in_binoculars ?? 0) +
+    (secondRound.stance_stats_seconds?.in_binoculars ?? 0);
+  const secondsSpentInMg =
+    (firstRound.stance_stats_seconds?.in_mg ?? 0) +
+    (secondRound.stance_stats_seconds?.in_mg ?? 0);
+
+  return {
+    distanceTravelledMeters,
+    distanceTravelledSpawnAvg,
+    classesPlayed,
+    customRating,
+    secondsSpentCrouching,
+    secondsSpentLeaning,
+    secondsSpentProne,
+    secondsSpentInBinoculars,
+    secondsSpentInMg,
+  };
+}
+
 export function sortByWeaponIds(a: WeaponStats, b: WeaponStats) {
   return (
     WEAPON_NAMES_IDS[a.name as keyof typeof WEAPON_NAMES_IDS] -
@@ -771,6 +980,14 @@ export function getKills(stats: Stats) {
   return stats.weaponStats.reduce((kills, entry) => kills + entry.kills, 0);
 }
 
+export function getDistanceTravelled(stats: Stats) {
+  return stats.metaStats.distanceTravelledMeters;
+}
+
+export function getDistanceTravelledSpawnAvg(stats: Stats) {
+  return stats.metaStats.distanceTravelledSpawnAvg;
+}
+
 export function getDeaths(stats: Stats) {
   return stats.weaponStats.reduce((deaths, entry) => deaths + entry.deaths, 0);
 }
@@ -826,6 +1043,63 @@ export function getHeadshotPercentage(stats: Stats) {
   const hits = stats.weaponStats.reduce((hits, wpn) => wpn.hits + hits, 0);
   const headshots = getHeadshots(stats);
   return headshots / hits;
+}
+
+export function getCustomRating(
+  playerId: string,
+  playerStats: PlayerStats,
+  obituaries: Obituary[],
+) {
+  const allValidObituaries = obituaries.filter(
+    (obituary) => obituary.attacker !== obituary.target,
+  );
+
+  const allKillValues = allValidObituaries.reduce((acc, obituary) => {
+    return (
+      acc + getKillMultiplierBasedOnRespawnTime(obituary.victimRespawnTime)
+    );
+  }, 0);
+
+  const killValues = obituaries.reduce((acc, obituary) => {
+    if (
+      obituary.attacker === playerId &&
+      obituary.attacker === obituary.target
+    ) {
+      if (obituary.victimRespawnTime > 3) {
+        return acc - EARLY_SELFKILL_PENALTY;
+      }
+      return acc;
+    }
+
+    if (obituary.attacker !== playerId) {
+      return acc;
+    }
+
+    return (
+      acc + getKillMultiplierBasedOnRespawnTime(obituary.victimRespawnTime)
+    );
+  }, 0);
+
+  const selfKillPenalty = obituaries.reduce((acc, obituary) => {
+    if (
+      obituary.attacker === playerId &&
+      obituary.attacker === obituary.target
+    ) {
+      if (obituary.victimRespawnTime > 3) {
+        return acc - EARLY_SELFKILL_PENALTY;
+      }
+      return acc;
+    }
+
+    return acc;
+  }, 0);
+
+  const gibsValue = playerStats.gibs / 10;
+  const killValuesWithPenalty = killValues + selfKillPenalty + gibsValue;
+  const playtimeMultiplier = playerStats.playtime / 100;
+  const rawCustomRating = killValuesWithPenalty / allKillValues;
+
+  return rawCustomRating * 10 * playtimeMultiplier;
 }
 
 export function getSpamKills(stats: Stats) {

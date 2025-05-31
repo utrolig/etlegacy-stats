@@ -167,6 +167,15 @@ export type Group = {
   winner: Team;
 };
 
+export type Obituary = {
+  timestamp: number;
+  target: string;
+  victimRespawnTime: number;
+  attacker: string;
+  meansOfDeath: number;
+  attackerRespawnTime: number;
+};
+
 export type GroupRound = {
   round_filename: string;
   round_data: {
@@ -178,21 +187,57 @@ export type GroupRound = {
       nextTimeLimit: string;
       timelimit: string;
       mapname: string;
+      obituaries?: Obituary[];
       config: string;
       winnerteam: number;
+      damageStats: {
+        attacker: string;
+        target: string;
+        damageFlags: number;
+        damage: number;
+        timestamp: number;
+        hitRegion: string;
+        meansOfDeath: number;
+      }[];
     };
     player_stats: Record<
       string,
       {
         name: string;
         rounds: string;
+        obj_destroyed?: {
+          [timestamp: string]: string;
+        };
+        obj_planted?: {
+          [timestamp: string]: string;
+        };
+        shoves_given?: {
+          [timestamp: string]: string;
+        };
+        distance_travelled_meters?: number;
+        distance_travelled_spawn?: number;
+        distance_travelled_spawn_avg?: number;
+        class_switches?: {
+          timestamp: number;
+          toClass: GameClass;
+          fromClass?: GameClass;
+        }[];
         weaponStats: string[];
+        stance_stats_seconds?: {
+          in_prone: number;
+          in_crouch: number;
+          in_lean: number;
+          in_mg: number;
+          in_binoculars: number;
+        };
         team: string;
         guid: string;
       }
     >;
   };
 };
+
+export type RawPlayerStats = GroupRound["round_data"]["player_stats"][string];
 
 export type Player = {
   id: string;
@@ -232,3 +277,10 @@ export type PlayerInfo = {
   discord_nick: string;
   date_added: string;
 };
+
+export type GameClass =
+  | "medic"
+  | "fieldop"
+  | "engineer"
+  | "soldier"
+  | "covertops";

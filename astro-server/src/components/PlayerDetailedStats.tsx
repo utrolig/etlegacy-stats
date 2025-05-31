@@ -1,14 +1,19 @@
-import { createMemo, For, type Component } from "solid-js";
+import { createMemo, For, Show, type Component } from "solid-js";
 import {
   byWeaponIds,
   getAccuracy,
   getDeaths,
+  getDistanceTravelled,
+  getDistanceTravelledSpawnAvg,
   getHeadshotPercentage,
   getKills,
   WEAPON_NAMES,
   type Stats,
 } from "../util/stats";
 import { getWeaponIcons } from "../util/weaponIcons";
+import { ClassIcon } from "./ClassIcon";
+import { DateTime } from "luxon";
+import { formatTime } from "../util/formatTime";
 
 export type PlayerDetailedStatsProps = {
   stats: Stats;
@@ -62,6 +67,61 @@ export const PlayerDetailedStats: Component<PlayerDetailedStatsProps> = (
           </For>
         </div>
       </div>
+
+      <Show when={props.stats.metaStats.classesPlayed.length > 0}>
+        <div class="flex text-sm">
+          <div class="flex flex-col gap-2">
+            <div class="grid gap-2 grid-cols-[120px,300px] items-center">
+              <p>Classes played:</p>
+              <div class="flex gap-2">
+                <For each={props.stats.metaStats.classesPlayed}>
+                  {(gameClass) => <ClassIcon gameClass={gameClass} />}
+                </For>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Show>
+
+      <Show when={hasStanceStats(props.stats)}>
+        <div class="flex text-sm">
+          <div class="flex flex-col">
+            <Show when={props.stats.metaStats.secondsSpentCrouching > 0}>
+              <p>
+                Crouched for{" "}
+                {formatTime(props.stats.metaStats.secondsSpentCrouching)}
+              </p>
+            </Show>
+
+            <Show when={props.stats.metaStats.secondsSpentProne > 0}>
+              <p>
+                Proned for {formatTime(props.stats.metaStats.secondsSpentProne)}
+              </p>
+            </Show>
+
+            <Show when={props.stats.metaStats.secondsSpentLeaning > 0}>
+              <p>
+                Leaned for{" "}
+                {formatTime(props.stats.metaStats.secondsSpentLeaning)}
+              </p>
+            </Show>
+
+            <Show when={props.stats.metaStats.secondsSpentInBinoculars > 0}>
+              <p>
+                In binoculars for{" "}
+                {formatTime(props.stats.metaStats.secondsSpentInBinoculars)}
+              </p>
+            </Show>
+
+            <Show when={props.stats.metaStats.secondsSpentInMg > 0}>
+              <p>
+                In MG for {formatTime(props.stats.metaStats.secondsSpentInMg)}
+              </p>
+            </Show>
+          </div>
+        </div>
+      </Show>
+
       <div class="flex text-sm">
         <div class="flex flex-col">
           <div class="grid gap-2 grid-cols-[120px,80px] items-center">
@@ -85,6 +145,24 @@ export const PlayerDetailedStats: Component<PlayerDetailedStatsProps> = (
             <p>Team Damage received:</p>
             <p>{props.stats.playerStats.teamDamageReceived}</p>
           </div>
+        </div>
+      </div>
+
+      <div class="flex text-sm">
+        <div class="flex flex-col">
+          <Show when={props.stats.metaStats.distanceTravelledMeters > 0}>
+            <div class="grid gap-2 grid-cols-[220px,80px] items-center">
+              <p>Distance traveled:</p>
+              <p>{getDistanceTravelled(props.stats).toFixed(0)}m</p>
+            </div>
+          </Show>
+
+          <Show when={props.stats.metaStats.distanceTravelledSpawnAvg > 0}>
+            <div class="grid gap-2 grid-cols-[220px,80px] items-center">
+              <p>Total distance 3 secs after spawn:</p>
+              <p>{getDistanceTravelledSpawnAvg(props.stats).toFixed(0)}m</p>
+            </div>
+          </Show>
         </div>
       </div>
 
@@ -215,4 +293,14 @@ function formatHeadshots(headshots: number | null) {
   }
 
   return headshots;
+}
+
+function hasStanceStats(stats: Stats) {
+  return (
+    stats.metaStats.secondsSpentCrouching ||
+    stats.metaStats.secondsSpentLeaning ||
+    stats.metaStats.secondsSpentProne ||
+    stats.metaStats.secondsSpentInBinoculars ||
+    stats.metaStats.secondsSpentInMg
+  );
 }

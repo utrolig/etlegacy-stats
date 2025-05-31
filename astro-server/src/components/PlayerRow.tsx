@@ -30,6 +30,24 @@ export const PlayerRow: Component<PlayerRowProps> = (props) => {
     return getKdr(props.stats);
   });
 
+  const customRating = createMemo(() => {
+    return Number(props.stats.metaStats.customRating.toFixed(2));
+  });
+
+  const getCustomRatingColor = createMemo(() => {
+    const cr = customRating();
+
+    if (cr > 1.5) {
+      return "text-yellow-600";
+    }
+
+    if (cr > 1) {
+      return "text-green-600";
+    }
+
+    return "text-red-600";
+  });
+
   return (
     <Collapsible
       onOpenChange={setOpen}
@@ -77,7 +95,7 @@ export const PlayerRow: Component<PlayerRowProps> = (props) => {
         <div
           class={clsx(
             "text-right",
-            kdr() > 1 ? "text-green-600" : "text-red-600",
+            kdr() >= 1 ? "text-green-600" : "text-red-600",
           )}
         >
           {kdr().toFixed(2)}
@@ -100,8 +118,11 @@ export const PlayerRow: Component<PlayerRowProps> = (props) => {
         <div class="text-right">{props.stats.playerStats.gibs}</div>
         <div class="text-right">{props.stats.playerStats.selfKills}</div>
         <div class="text-right">{getRevives(props.stats)}</div>
-        <div class="text-right pr-4">
+        <div class="text-right">
           {props.stats.playerStats.playtime.toFixed(0)}
+        </div>
+        <div class={clsx("text-right", getCustomRatingColor(), "pr-4")}>
+          {customRating().toFixed(2)}
         </div>
       </Collapsible.Trigger>
       <Collapsible.Content>

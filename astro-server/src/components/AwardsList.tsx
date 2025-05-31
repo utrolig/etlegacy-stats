@@ -54,10 +54,17 @@ export const AwardsList: Component<AwardsListProps> = (props) => {
                                 </For>
                               </div>
                               <span>
-                                {line[0].toFixed(award().valueDecimals)}
-                                <Show when={award().isPercentage}>
+                                <Show
+                                  when={award().formatValue}
+                                  fallback={line[0].toFixed(
+                                    award().valueDecimals,
+                                  )}
+                                >
+                                  {(formatter) => formatter()(line[0])}
+                                </Show>
+                                <Show when={award().suffix}>
                                   <span class="text-mud-300 text-ellipsis overflow-hidden whitespace-nowrap">
-                                    %
+                                    {award().suffix}
                                   </span>
                                 </Show>
                               </span>

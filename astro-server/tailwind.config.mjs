@@ -34,6 +34,10 @@ const statsColumns = [
     value: "3.5rem",
   },
   {
+    name: "utro",
+    value: "3.5rem",
+  },
+  {
     name: "Kills",
     value: "4.5rem",
   },
