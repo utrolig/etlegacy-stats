@@ -55,9 +55,9 @@ export const AwardsList: Component<AwardsListProps> = (props) => {
                               </div>
                               <span>
                                 {line[0].toFixed(award().valueDecimals)}
-                                <Show when={award().isPercentage}>
+                                <Show when={award().suffix}>
                                   <span class="text-mud-300 text-ellipsis overflow-hidden whitespace-nowrap">
-                                    %
+                                    {award().suffix}
                                   </span>
                                 </Show>
                               </span>

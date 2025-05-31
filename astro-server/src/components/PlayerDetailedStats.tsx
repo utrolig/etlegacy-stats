@@ -3,6 +3,8 @@ import {
   byWeaponIds,
   getAccuracy,
   getDeaths,
+  getDistanceTravelled,
+  getDistanceTravelledSpawn,
   getHeadshotPercentage,
   getKills,
   WEAPON_NAMES,
@@ -84,6 +86,20 @@ export const PlayerDetailedStats: Component<PlayerDetailedStatsProps> = (
           <div class="grid gap-2 grid-cols-[160px,80px] items-center">
             <p>Team Damage received:</p>
             <p>{props.stats.playerStats.teamDamageReceived}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex text-sm">
+        <div class="flex flex-col">
+          <div class="grid gap-2 grid-cols-[220px,80px] items-center">
+            <p>Distance traveled:</p>
+            <p>{getDistanceTravelled(props.stats).toFixed(0)}m</p>
+          </div>
+
+          <div class="grid gap-2 grid-cols-[220px,80px] items-center">
+            <p>Total distance 3 secs after spawn:</p>
+            <p>{getDistanceTravelledSpawn(props.stats).toFixed(0)}m</p>
           </div>
         </div>
       </div>

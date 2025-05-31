@@ -1,5 +1,11 @@
 import deepEqual from "deep-equal";
-import type { Group, GroupDetails, GroupRound } from "./stats-api";
+import type {
+  GameClass,
+  Group,
+  GroupDetails,
+  GroupRound,
+  RawPlayerStats,
+} from "./stats-api";
 
 export type WeaponStats = {
   hits: number;
@@ -24,6 +30,11 @@ export type PlayerStats = {
   xp: number;
 };
 
+export type MetaStats = {
+  distanceTravelledMeters: number;
+  distanceTravelledSpawn: number;
+};
+
 export type Stats = {
   id: string;
   name: string;
@@ -31,6 +42,7 @@ export type Stats = {
   longId: string;
   playerStats: PlayerStats;
   weaponStats: WeaponStats[];
+  metaStats: MetaStats;
 };
 
 export type RoundStats = {};
@@ -268,29 +280,34 @@ export function getMatchStats(info: GroupDetails): MatchStats {
           ([longId, ps]) => {
             let playerStats = convertPlayerStats(ps.weaponStats);
             let weaponStats = convertWeaponStats(ps.weaponStats);
+            let metaStats = convertMetaStats(ps);
 
             if (round.round_data.round_info.round === 2) {
               const prevRound = allRounds[idx - 1];
-              const prevRoundRawStats = Object.values(
+              const prevRoundRawPlayerStats = Object.values(
                 prevRound.round_data.player_stats,
-              ).find((p) => p.guid === ps.guid)?.weaponStats;
+              ).find((p) => p.guid === ps.guid);
 
-              if (!prevRoundRawStats) {
+              const prevRoundRawWeaponStats =
+                prevRoundRawPlayerStats?.weaponStats;
+
+              if (!prevRoundRawWeaponStats) {
                 throw new Error(
                   "Could not find previous round stats for player.",
                 );
               }
 
               playerStats = convertPlayerStats(
-                prevRoundRawStats,
+                prevRoundRawWeaponStats,
                 ps.weaponStats,
                 prevRound,
                 round,
               );
               weaponStats = convertWeaponStats(
-                prevRoundRawStats,
+                prevRoundRawWeaponStats,
                 ps.weaponStats,
               );
+              metaStats = convertMetaStats(prevRoundRawPlayerStats, ps);
             }
 
             return {
@@ -300,6 +317,7 @@ export function getMatchStats(info: GroupDetails): MatchStats {
               team: getPlayerTeam(ps.guid, teams),
               playerStats,
               weaponStats,
+              metaStats,
             };
           },
         ),
@@ -592,6 +610,31 @@ function convertWeaponStats(
   return convertSecondRoundWeaponStats(firstRoundRaw, secondRoundRaw);
 }
 
+function convertMetaStats(
+  firstRound: RawPlayerStats,
+  secondRound?: RawPlayerStats,
+) {
+  if (!secondRound) {
+    return {
+      distanceTravelledMeters: firstRound.distance_travelled_meters ?? 0,
+      distanceTravelledSpawn: firstRound.distance_travelled_spawn ?? 0,
+    } satisfies MetaStats;
+  }
+
+  const firstDistance = firstRound.distance_travelled_meters ?? 0;
+  const secondDistance = secondRound.distance_travelled_meters ?? 0;
+  const distanceTravelledMeters = secondDistance - firstDistance;
+
+  const firstDistanceSpawn = firstRound.distance_travelled_spawn ?? 0;
+  const secondDistanceSpawn = secondRound.distance_travelled_spawn ?? 0;
+  const distanceTravelledSpawn = secondDistanceSpawn - firstDistanceSpawn;
+
+  return {
+    distanceTravelledMeters,
+    distanceTravelledSpawn,
+  } satisfies MetaStats;
+}
+
 export function sortByWeaponIds(a: WeaponStats, b: WeaponStats) {
   return (
     WEAPON_NAMES_IDS[a.name as keyof typeof WEAPON_NAMES_IDS] -
@@ -769,6 +812,14 @@ export const WEAPON_NAMES = {
 
 export function getKills(stats: Stats) {
   return stats.weaponStats.reduce((kills, entry) => kills + entry.kills, 0);
+}
+
+export function getDistanceTravelled(stats: Stats) {
+  return stats.metaStats.distanceTravelledMeters;
+}
+
+export function getDistanceTravelledSpawn(stats: Stats) {
+  return stats.metaStats.distanceTravelledSpawn;
 }
 
 export function getDeaths(stats: Stats) {

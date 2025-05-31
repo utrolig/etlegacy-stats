@@ -13,7 +13,7 @@ export type Award = {
   values: Array<[number, string]>;
   winner: [number, string];
   type: "weapon" | "silly";
-  isPercentage?: boolean;
+  suffix?: string;
   valueName: string;
   valueDecimals: number;
   reason: string;
@@ -105,7 +105,7 @@ export function getBaiterAward(stats: Stats[], roundId: string): Award | null {
     reason: "for baiting their team",
     valueName: "Time spent baiting",
     valueDecimals: 0,
-    isPercentage: true,
+    suffix: "%",
     type: "silly",
     name: "Baiter",
     winner: baiters[0],
@@ -142,7 +142,7 @@ export function getMayanAward(stats: Stats[]): Award | null {
     reason: "for having below 50% accuracy with rifle nade",
     valueName: "Riflenade accuracy",
     valueDecimals: 1,
-    isPercentage: true,
+    suffix: "%",
     type: "silly",
     name: "mayan",
     winner: hasUsedGrenadeLauncherAndHasLessThanFiftyPercentAccuracy[0],
@@ -171,7 +171,7 @@ export function getHighestPlaytimeAward(stats: Stats[]): Award | null {
     valueDecimals: 0,
     type: "silly",
     name: "playtime",
-    isPercentage: true,
+    suffix: "%",
     winner: revives[0],
     values: revives,
   };
@@ -204,7 +204,7 @@ export function getSpectatorAward(stats: Stats[]): Award | null {
     valueDecimals: 0,
     type: "silly",
     name: "spectator",
-    isPercentage: true,
+    suffix: "%",
     winner: revives[0],
     values: revives,
   };
@@ -359,6 +359,62 @@ export function getSpammerAward(stats: Stats[]): Award | null {
   };
 }
 
+export function getMarathonRunnerAward(stats: Stats[]): Award | null {
+  const distances = stats
+    .reduce(
+      (acc, player) => {
+        const distance = player.metaStats.distanceTravelledMeters;
+        acc.push([distance, player.name]);
+        return acc;
+      },
+      [] as Award["values"],
+    )
+    .sort(([a], [b]) => b - a);
+
+  if (!distances.length || distances.every(([distance]) => distance === 0)) {
+    return null;
+  }
+
+  return {
+    reason: "for longest distance travelled",
+    valueName: "Distance travelled",
+    valueDecimals: 0,
+    type: "silly",
+    name: "Dauwalter",
+    suffix: "m",
+    winner: distances[0],
+    values: distances,
+  };
+}
+
+export function getMoveRetardAward(stats: Stats[]): Award | null {
+  const distances = stats
+    .reduce(
+      (acc, player) => {
+        const distance = player.metaStats.distanceTravelledSpawn;
+        acc.push([distance, player.name]);
+        return acc;
+      },
+      [] as Award["values"],
+    )
+    .sort(([a], [b]) => a - b);
+
+  if (!distances.length || distances.every(([distance]) => distance === 0)) {
+    return null;
+  }
+
+  return {
+    reason: "for least distance travelled 3 seconds after spawning",
+    valueName: "Distance travelled",
+    valueDecimals: 0,
+    type: "silly",
+    name: "coma",
+    suffix: "m",
+    winner: distances[0],
+    values: distances,
+  };
+}
+
 export function getAllSillyAwards(stats: Stats[], roundId: string): Award[] {
   const awards = [
     getHighestPlaytimeAward(stats),
@@ -370,6 +426,8 @@ export function getAllSillyAwards(stats: Stats[], roundId: string): Award[] {
     getHeadshotsAward(stats),
     getSpammerAward(stats),
     getIpodAward(stats),
+    getMarathonRunnerAward(stats),
+    getMoveRetardAward(stats),
   ].filter(Boolean) as Award[];
   return awards;
 }
