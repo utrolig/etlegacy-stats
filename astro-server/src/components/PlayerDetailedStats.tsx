@@ -1,4 +1,4 @@
-import { createMemo, For, type Component } from "solid-js";
+import { createMemo, For, Show, type Component } from "solid-js";
 import {
   byWeaponIds,
   getAccuracy,
@@ -66,18 +66,20 @@ export const PlayerDetailedStats: Component<PlayerDetailedStatsProps> = (
         </div>
       </div>
 
-      <div class="flex text-sm">
-        <div class="flex flex-col gap-2">
-          <div class="grid gap-2 grid-cols-[120px,300px] items-center">
-            <p>Classes played:</p>
-            <div class="flex gap-2">
-              <For each={props.stats.metaStats.classesPlayed}>
-                {(gameClass) => <ClassIcon gameClass={gameClass} />}
-              </For>
+      <Show when={props.stats.metaStats.classesPlayed.length > 0}>
+        <div class="flex text-sm">
+          <div class="flex flex-col gap-2">
+            <div class="grid gap-2 grid-cols-[120px,300px] items-center">
+              <p>Classes played:</p>
+              <div class="flex gap-2">
+                <For each={props.stats.metaStats.classesPlayed}>
+                  {(gameClass) => <ClassIcon gameClass={gameClass} />}
+                </For>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </Show>
 
       <div class="flex text-sm">
         <div class="flex flex-col">
@@ -105,19 +107,21 @@ export const PlayerDetailedStats: Component<PlayerDetailedStatsProps> = (
         </div>
       </div>
 
-      <div class="flex text-sm">
-        <div class="flex flex-col">
-          <div class="grid gap-2 grid-cols-[220px,80px] items-center">
-            <p>Distance traveled:</p>
-            <p>{getDistanceTravelled(props.stats).toFixed(0)}m</p>
-          </div>
+      <Show when={props.stats.metaStats.distanceTravelledMeters > 0}>
+        <div class="flex text-sm">
+          <div class="flex flex-col">
+            <div class="grid gap-2 grid-cols-[220px,80px] items-center">
+              <p>Distance traveled:</p>
+              <p>{getDistanceTravelled(props.stats).toFixed(0)}m</p>
+            </div>
 
-          <div class="grid gap-2 grid-cols-[220px,80px] items-center">
-            <p>Total distance 3 secs after spawn:</p>
-            <p>{getDistanceTravelledSpawn(props.stats).toFixed(0)}m</p>
+            <div class="grid gap-2 grid-cols-[220px,80px] items-center">
+              <p>Total distance 3 secs after spawn:</p>
+              <p>{getDistanceTravelledSpawn(props.stats).toFixed(0)}m</p>
+            </div>
           </div>
         </div>
-      </div>
+      </Show>
 
       <div class="flex text-sm">
         <div class="flex flex-col">
