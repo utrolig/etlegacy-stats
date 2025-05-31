@@ -387,7 +387,7 @@ export function getMarathonRunnerAward(stats: Stats[]): Award | null {
   };
 }
 
-export function getMoveRetardAward(stats: Stats[]): Award | null {
+export function getComaAward(stats: Stats[]): Award | null {
   const distances = stats
     .reduce(
       (acc, player) => {
@@ -427,7 +427,7 @@ export function getAllSillyAwards(stats: Stats[], roundId: string): Award[] {
     getSpammerAward(stats),
     getIpodAward(stats),
     getMarathonRunnerAward(stats),
-    getMoveRetardAward(stats),
+    getComaAward(stats),
   ].filter(Boolean) as Award[];
   return awards;
 }
