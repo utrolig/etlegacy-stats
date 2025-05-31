@@ -95,6 +95,13 @@ export const TableHeader: Component<TableHeaderProps> = (props) => {
         onClick={props.onSortClicked}
         sortDirection={props.sortDirection}
         sortKey={props.sortKey}
+      />
+
+      <TableHeaderColumn
+        columnKey={SortKey.CustomRating}
+        onClick={props.onSortClicked}
+        sortDirection={props.sortDirection}
+        sortKey={props.sortKey}
         last
       />
     </div>

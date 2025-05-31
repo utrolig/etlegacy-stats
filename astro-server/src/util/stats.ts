@@ -4,6 +4,7 @@ import type {
   Group,
   GroupDetails,
   GroupRound,
+  Obituary,
   RawPlayerStats,
 } from "./stats-api";
 
@@ -34,6 +35,7 @@ export type MetaStats = {
   distanceTravelledMeters: number;
   distanceTravelledSpawn: number;
   classesPlayed: GameClass[];
+  customRating: number;
 };
 
 export type Stats = {
@@ -281,13 +283,20 @@ export function getMatchStats(info: GroupDetails): MatchStats {
           ([longId, ps]) => {
             let playerStats = convertPlayerStats(ps.weaponStats);
             let weaponStats = convertWeaponStats(ps.weaponStats);
-            let metaStats = convertMetaStats(ps);
+
+            let metaStats = convertMetaStats(
+              longId,
+              ps,
+              playerStats,
+              round.round_data.round_info.obituaries ?? [],
+            );
 
             if (round.round_data.round_info.round === 2) {
               const prevRound = allRounds[idx - 1];
               const prevRoundRawPlayerStats = Object.values(
                 prevRound.round_data.player_stats,
               ).find((p) => p.guid === ps.guid);
+              const prevRoundPlayerStats = { ...playerStats };
 
               const prevRoundRawWeaponStats =
                 prevRoundRawPlayerStats?.weaponStats;
@@ -308,7 +317,15 @@ export function getMatchStats(info: GroupDetails): MatchStats {
                 prevRoundRawWeaponStats,
                 ps.weaponStats,
               );
-              metaStats = convertMetaStats(prevRoundRawPlayerStats, ps);
+              metaStats = convertMetaStats(
+                longId,
+                prevRoundRawPlayerStats,
+                prevRoundPlayerStats,
+                prevRound.round_data.round_info.obituaries ?? [],
+                ps,
+                playerStats,
+                round.round_data.round_info.obituaries ?? [],
+              );
             }
 
             return {
@@ -629,18 +646,101 @@ function getClassesPlayed(
   );
 }
 
+function getKillMultiplierBasedOnRespawnTime(rt: number): number {
+  if (rt < 2) {
+    return 0.3;
+  }
+
+  if (rt < 5) {
+    return 0.4;
+  }
+
+  if (rt < 10) {
+    return 0.7;
+  }
+
+  if (rt < 13) {
+    return 1;
+  }
+
+  if (rt < 15) {
+    return 1.2;
+  }
+
+  if (rt < 20) {
+    return 1.5;
+  }
+
+  if (rt < 25) {
+    return 1.8;
+  }
+
+  if (rt < 30) {
+    return 2;
+  }
+
+  return 2;
+}
+
+const EARLY_SELFKILL_PENALTY = 0.4; // selfkill penalty for early selfkills
+
+// function getCustomRating(
+//   attackerId: string,
+//   isDefendingTeam: boolean,
+//   obituaries: Obituary[],
+// ): number {
+//   const killValues = obituaries.reduce((acc, obituary) => {
+//     if (
+//       obituary.attacker === attackerId &&
+//       obituary.attacker === obituary.target
+//     ) {
+//       if (obituary.victimRespawnTime > 3) {
+//         return acc - EARLY_SELFKILL_PENALTY;
+//       }
+//
+//       return acc;
+//     }
+//
+//     if (obituary.attacker !== attackerId) {
+//       return acc;
+//     }
+//
+//     return (
+//       acc +
+//       getKillMultiplierBasedOnRespawnTime(
+//         obituary.victimRespawnTime,
+//         isDefendingTeam,
+//       )
+//     );
+//   }, 0);
+//
+//   return killValues;
+// }
+//
 function convertMetaStats(
+  playerId: string,
   firstRound: RawPlayerStats,
+  firstRoundPlayerStats: PlayerStats,
+  firstRoundObituaries: Obituary[],
   secondRound?: RawPlayerStats,
-) {
+  secondRoundPlayerStats?: PlayerStats,
+  secondRoundObituaries?: Obituary[],
+): MetaStats {
   const classesPlayed = getClassesPlayed(firstRound, secondRound);
 
-  if (!secondRound) {
+  if (!secondRound || !secondRoundPlayerStats || !secondRoundObituaries) {
+    const customRating = getCustomRating(
+      playerId,
+      firstRoundPlayerStats,
+      firstRoundObituaries,
+    );
+
     return {
       distanceTravelledMeters: firstRound.distance_travelled_meters ?? 0,
       distanceTravelledSpawn: firstRound.distance_travelled_spawn ?? 0,
       classesPlayed,
-    } satisfies MetaStats;
+      customRating,
+    };
   }
 
   const firstDistance = firstRound.distance_travelled_meters ?? 0;
@@ -651,11 +751,24 @@ function convertMetaStats(
   const secondDistanceSpawn = secondRound.distance_travelled_spawn ?? 0;
   const distanceTravelledSpawn = secondDistanceSpawn - firstDistanceSpawn;
 
+  const firstRoundCustomRating = getCustomRating(
+    playerId,
+    firstRoundPlayerStats,
+    firstRoundObituaries,
+  );
+  const secondRoundCustomRating = getCustomRating(
+    playerId,
+    secondRoundPlayerStats,
+    secondRoundObituaries,
+  );
+  const customRating = firstRoundCustomRating + secondRoundCustomRating / 2;
+
   return {
     distanceTravelledMeters,
     distanceTravelledSpawn,
     classesPlayed,
-  } satisfies MetaStats;
+    customRating,
+  };
 }
 
 export function sortByWeaponIds(a: WeaponStats, b: WeaponStats) {
@@ -900,6 +1013,63 @@ export function getHeadshotPercentage(stats: Stats) {
   const hits = stats.weaponStats.reduce((hits, wpn) => wpn.hits + hits, 0);
   const headshots = getHeadshots(stats);
   return headshots / hits;
+}
+
+export function getCustomRating(
+  playerId: string,
+  playerStats: PlayerStats,
+  obituaries: Obituary[],
+) {
+  const allValidObituaries = obituaries.filter(
+    (obituary) => obituary.attacker !== obituary.target,
+  );
+
+  const allKillValues = allValidObituaries.reduce((acc, obituary) => {
+    return (
+      acc + getKillMultiplierBasedOnRespawnTime(obituary.victimRespawnTime)
+    );
+  }, 0);
+
+  const killValues = obituaries.reduce((acc, obituary) => {
+    if (
+      obituary.attacker === playerId &&
+      obituary.attacker === obituary.target
+    ) {
+      if (obituary.victimRespawnTime > 3) {
+        return acc - EARLY_SELFKILL_PENALTY;
+      }
+      return acc;
+    }
+
+    if (obituary.attacker !== playerId) {
+      return acc;
+    }
+
+    return (
+      acc + getKillMultiplierBasedOnRespawnTime(obituary.victimRespawnTime)
+    );
+  }, 0);
+
+  const selfKillPenalty = obituaries.reduce((acc, obituary) => {
+    if (
+      obituary.attacker === playerId &&
+      obituary.attacker === obituary.target
+    ) {
+      if (obituary.victimRespawnTime > 3) {
+        return acc - EARLY_SELFKILL_PENALTY;
+      }
+      return acc;
+    }
+
+    return acc;
+  }, 0);
+
+  const gibsValue = playerStats.gibs / 10;
+  const killValuesWithPenalty = killValues + selfKillPenalty + gibsValue;
+  const playtimeMultiplier = playerStats.playtime / 100;
+  const rawCustomRating = killValuesWithPenalty / allKillValues;
+
+  return rawCustomRating * 10 * playtimeMultiplier;
 }
 
 export function getSpamKills(stats: Stats) {

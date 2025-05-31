@@ -12,6 +12,7 @@ import {
 export const SortKey = {
   Name: "name",
   Effiency: "eff",
+  CustomRating: "utro",
   Kdr: "kdr",
   Kills: "kills",
   Deaths: "deaths",
@@ -48,6 +49,10 @@ export const playersByKeyAndDir =
           .map((s) => s.text)
           .join("");
         return aName.localeCompare(bName) * dirVal;
+      }
+
+      case SortKey.CustomRating: {
+        return (a.metaStats.customRating - b.metaStats.customRating) * dirVal;
       }
 
       case SortKey.Gibs: {
@@ -96,6 +101,10 @@ export const playersByKeyAndDir =
 
 export function getColumnDescription(key: SortKey) {
   switch (key) {
+    case SortKey.CustomRating: {
+      return "Unified Tactical Rating Overview";
+    }
+
     case SortKey.Kdr: {
       return "Kills / Deaths";
     }

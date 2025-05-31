@@ -101,6 +101,14 @@ export const TotalRow: Component<TotalRowProps> = (props) => {
     return totalEff / props.stats.length;
   });
 
+  const customRating = createMemo(() => {
+    const totalCustomRating = props.stats.reduce(
+      (total, stats) => total + stats.metaStats.customRating,
+      0,
+    );
+    return totalCustomRating / props.stats.length;
+  });
+
   return (
     <div class="bg-black/5 grid grid-cols-stats items-center gap-4 h-8 big:text-base text-xs border-t border-t-mud-300 min-w-max w-full">
       <div class="flex items-center gap-1 justify-start text-mud-300 sticky left-0 bg-stats-bg-dark h-full pl-4">
@@ -130,7 +138,8 @@ export const TotalRow: Component<TotalRowProps> = (props) => {
       <div class="text-right">{gibs()}</div>
       <div class="text-right">{selfKills()}</div>
       <div class="text-right">{revives()}</div>
-      <div class="text-right pr-4">{timePlayed().toFixed(0)}</div>
+      <div class="text-right">{timePlayed().toFixed(0)}</div>
+      <div class="text-right pr-4">{customRating().toFixed(2)}</div>
     </div>
   );
 };

@@ -167,6 +167,15 @@ export type Group = {
   winner: Team;
 };
 
+export type Obituary = {
+  timestamp: number;
+  target: string;
+  victimRespawnTime: number;
+  attacker: string;
+  meansOfDeath: number;
+  attackerRespawnTime: number;
+};
+
 export type GroupRound = {
   round_filename: string;
   round_data: {
@@ -178,14 +187,7 @@ export type GroupRound = {
       nextTimeLimit: string;
       timelimit: string;
       mapname: string;
-      obituaries?: {
-        timestamp: number;
-        target: string;
-        victimRespawnTime: number;
-        attacker: string;
-        meansOfDeath: number;
-        attackerRespawnTime: number;
-      }[];
+      obituaries?: Obituary[];
       config: string;
       winnerteam: number;
       damageStats: {
