@@ -717,41 +717,8 @@ function getKillMultiplierBasedOnRespawnTime(rt: number): number {
   return 2;
 }
 
-const EARLY_SELFKILL_PENALTY = 0.4; // selfkill penalty for early selfkills
+const EARLY_SELFKILL_PENALTY = 0.4;
 
-// function getCustomRating(
-//   attackerId: string,
-//   isDefendingTeam: boolean,
-//   obituaries: Obituary[],
-// ): number {
-//   const killValues = obituaries.reduce((acc, obituary) => {
-//     if (
-//       obituary.attacker === attackerId &&
-//       obituary.attacker === obituary.target
-//     ) {
-//       if (obituary.victimRespawnTime > 3) {
-//         return acc - EARLY_SELFKILL_PENALTY;
-//       }
-//
-//       return acc;
-//     }
-//
-//     if (obituary.attacker !== attackerId) {
-//       return acc;
-//     }
-//
-//     return (
-//       acc +
-//       getKillMultiplierBasedOnRespawnTime(
-//         obituary.victimRespawnTime,
-//         isDefendingTeam,
-//       )
-//     );
-//   }, 0);
-//
-//   return killValues;
-// }
-//
 function convertMetaStats(
   playerId: string,
   firstRound: RawPlayerStats,
