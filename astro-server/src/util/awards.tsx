@@ -1,4 +1,5 @@
 import { getColoredNameParts } from "./colors";
+import { formatTime } from "./formatTime";
 import { createSeededRandom, getRandomBetween } from "./random";
 import {
   getDeaths,
@@ -17,6 +18,7 @@ export type Award = {
   valueName: string;
   valueDecimals: number;
   reason: string;
+  formatValue?: (value: number) => string;
 };
 
 export function getWeaponAward(
@@ -415,6 +417,154 @@ export function getComaAward(stats: Stats[]): Award | null {
   };
 }
 
+export function getCroucherAward(stats: Stats[]): Award | null {
+  const crouchTimes = stats
+    .reduce(
+      (acc, player) => {
+        if (player.metaStats.secondsSpentCrouching > 0) {
+          acc.push([player.metaStats.secondsSpentCrouching, player.name]);
+        }
+        return acc;
+      },
+      [] as Award["values"],
+    )
+    .sort(([a], [b]) => b - a);
+
+  if (!crouchTimes.length || crouchTimes.every(([time]) => time === 0)) {
+    return null;
+  }
+
+  return {
+    reason: "for most time spent crouching",
+    name: "croucher",
+    type: "silly",
+    valueDecimals: 0,
+    valueName: "Seconds spent crouching",
+    values: crouchTimes,
+    winner: crouchTimes[0],
+    formatValue: formatTime,
+  };
+}
+
+export function getLeanerAward(stats: Stats[]): Award | null {
+  const leanTimes = stats
+    .reduce(
+      (acc, player) => {
+        if (player.metaStats.secondsSpentLeaning > 0) {
+          acc.push([player.metaStats.secondsSpentLeaning, player.name]);
+        }
+        return acc;
+      },
+      [] as Award["values"],
+    )
+    .sort(([a], [b]) => b - a);
+
+  if (!leanTimes.length || leanTimes.every(([time]) => time === 0)) {
+    return null;
+  }
+
+  return {
+    reason: "for most time spent leaning",
+    name: "purple drank",
+    type: "silly",
+    valueDecimals: 0,
+    valueName: "Time spent leaning",
+    values: leanTimes,
+    winner: leanTimes[0],
+    formatValue: formatTime,
+  };
+}
+
+export function getMgAward(stats: Stats[]): Award | null {
+  const mgTimes = stats
+    .reduce(
+      (acc, player) => {
+        if (player.metaStats.secondsSpentInMg > 0) {
+          acc.push([player.metaStats.secondsSpentInMg, player.name]);
+        }
+        return acc;
+      },
+      [] as Award["values"],
+    )
+    .sort(([a], [b]) => b - a);
+
+  if (!mgTimes.length || mgTimes.every(([time]) => time === 0)) {
+    return null;
+  }
+
+  return {
+    reason: "for most time spent in MG",
+    name: "MG",
+    type: "silly",
+    valueDecimals: 0,
+    valueName: "Time spent in MG",
+    values: mgTimes,
+    winner: mgTimes[0],
+    formatValue: formatTime,
+  };
+}
+
+export function getProneAward(stats: Stats[]): Award | null {
+  const proneTimes = stats
+    .reduce(
+      (acc, player) => {
+        if (player.metaStats.secondsSpentProne > 0) {
+          acc.push([player.metaStats.secondsSpentProne, player.name]);
+        }
+        return acc;
+      },
+      [] as Award["values"],
+    )
+    .sort(([a], [b]) => b - a);
+
+  if (!proneTimes.length || proneTimes.every(([time]) => time === 0)) {
+    return null;
+  }
+
+  return {
+    reason: "for most time spent proning",
+    name: "prone",
+    type: "silly",
+    valueDecimals: 0,
+    valueName: "Time spent proning",
+    values: proneTimes,
+    winner: proneTimes[0],
+    formatValue: formatTime,
+  };
+}
+
+export function getBinocularsAward(stats: Stats[]): Award | null {
+  const binocularsTimes = stats
+    .reduce(
+      (acc, player) => {
+        if (player.metaStats.secondsSpentInBinoculars > 0) {
+          acc.push([player.metaStats.secondsSpentInBinoculars, player.name]);
+        }
+        return acc;
+      },
+      [] as Award["values"],
+    )
+    .sort(([a], [b]) => b - a);
+
+  if (
+    !binocularsTimes.length ||
+    binocularsTimes.every(([time]) => time === 0)
+  ) {
+    return null;
+  }
+
+  return {
+    reason: "for most time spent looking through binoculars",
+    name: "binoculars",
+    type: "silly",
+    valueDecimals: 0,
+    valueName: "Time spent looking through binoculars",
+    values: binocularsTimes,
+    winner: binocularsTimes[0],
+    formatValue: formatTime,
+  };
+}
+
 export function getAllSillyAwards(stats: Stats[], roundId: string): Award[] {
   const awards = [
     getHighestPlaytimeAward(stats),
@@ -428,6 +578,11 @@ export function getAllSillyAwards(stats: Stats[], roundId: string): Award[] {
     getIpodAward(stats),
     getMarathonRunnerAward(stats),
     getComaAward(stats),
+    getLeanerAward(stats),
+    getCroucherAward(stats),
+    getMgAward(stats),
+    getProneAward(stats),
+    getBinocularsAward(stats),
   ].filter(Boolean) as Award[];
   return awards;
 }

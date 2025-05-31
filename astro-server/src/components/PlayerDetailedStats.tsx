@@ -12,6 +12,8 @@ import {
 } from "../util/stats";
 import { getWeaponIcons } from "../util/weaponIcons";
 import { ClassIcon } from "./ClassIcon";
+import { DateTime } from "luxon";
+import { formatTime } from "../util/formatTime";
 
 export type PlayerDetailedStatsProps = {
   stats: Stats;
@@ -77,6 +79,45 @@ export const PlayerDetailedStats: Component<PlayerDetailedStatsProps> = (
                 </For>
               </div>
             </div>
+          </div>
+        </div>
+      </Show>
+
+      <Show when={hasStanceStats(props.stats)}>
+        <div class="flex text-sm">
+          <div class="flex flex-col">
+            <Show when={props.stats.metaStats.secondsSpentCrouching > 0}>
+              <p>
+                Crouched for{" "}
+                {formatTime(props.stats.metaStats.secondsSpentCrouching)}
+              </p>
+            </Show>
+
+            <Show when={props.stats.metaStats.secondsSpentProne > 0}>
+              <p>
+                Proned for {formatTime(props.stats.metaStats.secondsSpentProne)}
+              </p>
+            </Show>
+
+            <Show when={props.stats.metaStats.secondsSpentLeaning > 0}>
+              <p>
+                Leaned for{" "}
+                {formatTime(props.stats.metaStats.secondsSpentLeaning)}
+              </p>
+            </Show>
+
+            <Show when={props.stats.metaStats.secondsSpentInBinoculars > 0}>
+              <p>
+                In binoculars for{" "}
+                {formatTime(props.stats.metaStats.secondsSpentInBinoculars)}
+              </p>
+            </Show>
+
+            <Show when={props.stats.metaStats.secondsSpentInMg > 0}>
+              <p>
+                In MG for {formatTime(props.stats.metaStats.secondsSpentInMg)}
+              </p>
+            </Show>
           </div>
         </div>
       </Show>
@@ -252,4 +293,14 @@ function formatHeadshots(headshots: number | null) {
   }
 
   return headshots;
+}
+
+function hasStanceStats(stats: Stats) {
+  return (
+    stats.metaStats.secondsSpentCrouching ||
+    stats.metaStats.secondsSpentLeaning ||
+    stats.metaStats.secondsSpentProne ||
+    stats.metaStats.secondsSpentInBinoculars ||
+    stats.metaStats.secondsSpentInMg
+  );
 }

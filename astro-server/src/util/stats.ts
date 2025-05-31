@@ -36,6 +36,11 @@ export type MetaStats = {
   distanceTravelledSpawnAvg: number;
   classesPlayed: GameClass[];
   customRating: number;
+  secondsSpentLeaning: number;
+  secondsSpentProne: number;
+  secondsSpentCrouching: number;
+  secondsSpentInBinoculars: number;
+  secondsSpentInMg: number;
 };
 
 export type Stats = {
@@ -108,6 +113,7 @@ export function getMapStats(
             ...prevEntry,
             playerStats: addPlayerStats(prevEntry, roundStat),
             weaponStats: addWeaponStats(prevEntry, roundStat),
+            metaStats: addMetaStats(prevEntry, roundStat),
           };
         } else {
           acc[roundStat.id] = roundStat;
@@ -180,6 +186,35 @@ function addWeaponStats(
   );
 
   return Object.values(stats);
+}
+
+function addMetaStats(
+  { metaStats: prevMetaStats }: Stats,
+  { metaStats }: Stats,
+) {
+  return {
+    distanceTravelledMeters:
+      prevMetaStats.distanceTravelledMeters + metaStats.distanceTravelledMeters,
+    distanceTravelledSpawnAvg:
+      (prevMetaStats.distanceTravelledSpawnAvg +
+        metaStats.distanceTravelledSpawnAvg) /
+      2,
+    classesPlayed: [
+      ...new Set([...prevMetaStats.classesPlayed, ...metaStats.classesPlayed]),
+    ].sort((a, b) => a.localeCompare(b)),
+    customRating: (prevMetaStats.customRating + metaStats.customRating) / 2,
+    secondsSpentCrouching:
+      prevMetaStats.secondsSpentCrouching + metaStats.secondsSpentCrouching,
+    secondsSpentLeaning:
+      prevMetaStats.secondsSpentLeaning + metaStats.secondsSpentLeaning,
+    secondsSpentProne:
+      prevMetaStats.secondsSpentProne + metaStats.secondsSpentProne,
+    secondsSpentInBinoculars:
+      (prevMetaStats.secondsSpentInBinoculars ?? 0) +
+      (metaStats.secondsSpentInBinoculars ?? 0),
+    secondsSpentInMg:
+      (prevMetaStats.secondsSpentInMg ?? 0) + (metaStats.secondsSpentInMg ?? 0),
+  } satisfies MetaStats;
 }
 
 function getMaps(rounds: GroupRound[]) {
@@ -740,17 +775,23 @@ function convertMetaStats(
       distanceTravelledSpawnAvg: firstRound.distance_travelled_spawn_avg ?? 0,
       classesPlayed,
       customRating,
+      secondsSpentCrouching: firstRound.stance_stats_seconds?.in_crouch ?? 0,
+      secondsSpentLeaning: firstRound.stance_stats_seconds?.in_prone ?? 0,
+      secondsSpentProne: firstRound.stance_stats_seconds?.in_prone ?? 0,
+      secondsSpentInBinoculars:
+        firstRound.stance_stats_seconds?.in_binoculars ?? 0,
+      secondsSpentInMg: firstRound.stance_stats_seconds?.in_mg ?? 0,
     };
   }
 
   const firstDistance = firstRound.distance_travelled_meters ?? 0;
   const secondDistance = secondRound.distance_travelled_meters ?? 0;
-  const distanceTravelledMeters = secondDistance - firstDistance;
+  const distanceTravelledMeters = secondDistance + firstDistance;
 
   const firstDistanceSpawnAvg = firstRound.distance_travelled_spawn_avg ?? 0;
   const secondDistanceSpawnAvg = secondRound.distance_travelled_spawn_avg ?? 0;
   const distanceTravelledSpawnAvg =
-    secondDistanceSpawnAvg - firstDistanceSpawnAvg;
+    secondDistanceSpawnAvg + firstDistanceSpawnAvg;
 
   const firstRoundCustomRating = getCustomRating(
     playerId,
@@ -764,11 +805,32 @@ function convertMetaStats(
   );
   const customRating = firstRoundCustomRating + secondRoundCustomRating / 2;
 
+  const secondsSpentCrouching =
+    (firstRound.stance_stats_seconds?.in_crouch ?? 0) +
+    (secondRound.stance_stats_seconds?.in_crouch ?? 0);
+  const secondsSpentLeaning =
+    (firstRound.stance_stats_seconds?.in_lean ?? 0) +
+    (secondRound.stance_stats_seconds?.in_lean ?? 0);
+  const secondsSpentProne =
+    (firstRound.stance_stats_seconds?.in_prone ?? 0) +
+    (secondRound.stance_stats_seconds?.in_prone ?? 0);
+  const secondsSpentInBinoculars =
+    (firstRound.stance_stats_seconds?.in_binoculars ?? 0) +
+    (secondRound.stance_stats_seconds?.in_binoculars ?? 0);
+  const secondsSpentInMg =
+    (firstRound.stance_stats_seconds?.in_mg ?? 0) +
+    (secondRound.stance_stats_seconds?.in_mg ?? 0);
+
   return {
     distanceTravelledMeters,
     distanceTravelledSpawnAvg,
     classesPlayed,
     customRating,
+    secondsSpentCrouching,
+    secondsSpentLeaning,
+    secondsSpentProne,
+    secondsSpentInBinoculars,
+    secondsSpentInMg,
   };
 }
 
