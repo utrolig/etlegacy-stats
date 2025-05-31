@@ -11,6 +11,7 @@ import {
   type Stats,
 } from "../util/stats";
 import { getWeaponIcons } from "../util/weaponIcons";
+import { ClassIcon } from "./ClassIcon";
 
 export type PlayerDetailedStatsProps = {
   stats: Stats;
@@ -64,6 +65,20 @@ export const PlayerDetailedStats: Component<PlayerDetailedStatsProps> = (
           </For>
         </div>
       </div>
+
+      <div class="flex text-sm">
+        <div class="flex flex-col gap-2">
+          <div class="grid gap-2 grid-cols-[120px,300px] items-center">
+            <p>Classes played:</p>
+            <div class="flex gap-2">
+              <For each={props.stats.metaStats.classesPlayed}>
+                {(gameClass) => <ClassIcon gameClass={gameClass} />}
+              </For>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="flex text-sm">
         <div class="flex flex-col">
           <div class="grid gap-2 grid-cols-[120px,80px] items-center">

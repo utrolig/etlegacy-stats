@@ -33,6 +33,7 @@ export type PlayerStats = {
 export type MetaStats = {
   distanceTravelledMeters: number;
   distanceTravelledSpawn: number;
+  classesPlayed: GameClass[];
 };
 
 export type Stats = {
@@ -610,14 +611,35 @@ function convertWeaponStats(
   return convertSecondRoundWeaponStats(firstRoundRaw, secondRoundRaw);
 }
 
+function getClassesPlayed(
+  firstRound: RawPlayerStats,
+  secondRound?: RawPlayerStats,
+): GameClass[] {
+  if (!secondRound) {
+    return [
+      ...new Set([...(firstRound.class_switches?.map((s) => s.toClass) ?? [])]),
+    ].sort((a, b) => a.localeCompare(b));
+  }
+
+  const firstClasses = firstRound.class_switches?.map((s) => s.toClass) ?? [];
+  const secondClasses = secondRound.class_switches?.map((s) => s.toClass) ?? [];
+
+  return [...new Set([...firstClasses, ...secondClasses])].sort((a, b) =>
+    a.localeCompare(b),
+  );
+}
+
 function convertMetaStats(
   firstRound: RawPlayerStats,
   secondRound?: RawPlayerStats,
 ) {
+  const classesPlayed = getClassesPlayed(firstRound, secondRound);
+
   if (!secondRound) {
     return {
       distanceTravelledMeters: firstRound.distance_travelled_meters ?? 0,
       distanceTravelledSpawn: firstRound.distance_travelled_spawn ?? 0,
+      classesPlayed,
     } satisfies MetaStats;
   }
 
@@ -632,6 +654,7 @@ function convertMetaStats(
   return {
     distanceTravelledMeters,
     distanceTravelledSpawn,
+    classesPlayed,
   } satisfies MetaStats;
 }
 
