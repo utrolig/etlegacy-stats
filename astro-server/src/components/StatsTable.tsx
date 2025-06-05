@@ -7,7 +7,6 @@ import type { PlayerInfoDict } from "../util/stats-api";
 export type StatsTableProps = {
   stats: Stats[];
   playerInfoDict: PlayerInfoDict;
-  attackingTeam: string;
 };
 
 export const StatsTable: Component<StatsTableProps> = (props) => {

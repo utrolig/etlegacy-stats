@@ -93,7 +93,7 @@ export const MapsMenu: Component<MapsMenuProps> = (props) => {
   };
 
   return (
-    <div class="flex px-6 big:px-10 py-8 gap-8 bg-black/10">
+    <div class="flex px-6 big:px-10 py-8 gap-8 bg-black/10 overflow-x-auto">
       <a
         onClick={onTotalClicked}
         data-active={!props.activeMap}
