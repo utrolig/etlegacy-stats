@@ -70,7 +70,7 @@ export const PlayerRow: Component<PlayerRowProps> = (props) => {
                 <For each={getColoredNameParts(props.stats.name)}>
                   {({ color, text }) => (
                     <span
-                      class="overflow-hidden whitespace-nowrap text-ellipsis"
+                      class="overflow-hidden whitespace-pre text-ellipsis"
                       style={{ color }}
                     >
                       {text}
