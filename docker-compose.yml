@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  astro-server:
+  etlegacy-stats-astro:
     build:
       context: ./astro-server
       dockerfile: Dockerfile
@@ -9,7 +9,7 @@ services:
       - "4321"
     restart: unless-stopped
 
-  varnish:
+  etlegacy-stats-varnish:
     build:
       context: ./varnish-cache
       dockerfile: Dockerfile
@@ -22,14 +22,14 @@ services:
     tmpfs:
       - /var/lib/varnish/varnishd:exec
     depends_on:
-      - astro-server
+      - etlegacy-stats-astro
 
-  nginx:
+  etlegacy-stats-nginx:
     image: nginx:alpine
     expose:
       - "80"
     volumes:
       - ./nginx-config/conf.d:/etc/nginx/conf.d
     depends_on:
-      - varnish
+      - etlegacy-stats-varnish
     restart: unless-stopped
