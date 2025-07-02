@@ -1,7 +1,7 @@
 vcl 4.1;
 
 backend default {
-    .host = "astro-server";
+    .host = "etlegacy-stats-astro";
     .port = "4321";
     .connect_timeout = 5s;
     .first_byte_timeout = 60s;
