@@ -1,0 +1,4 @@
+{
+  "destination": "http://localhost:4321",
+  "bind": "127.0.0.1:4444"
+}

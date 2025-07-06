@@ -6,11 +6,28 @@ use std::convert::Infallible;
 use std::net::SocketAddr;
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::env;
 use tokio::sync::RwLock;
 use tokio::net::TcpListener;
 use http_body_util::{BodyExt, Full};
 use hyper::body::Bytes;
+use serde::{Deserialize, Serialize};
+use std::fs;
+use std::path::Path;
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+struct Config {
+    destination: String,
+    bind: Option<String>,
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Config {
+            destination: "".to_string(),
+            bind: Some("127.0.0.1:3000".to_string()),
+        }
+    }
+}
 
 #[derive(Clone)]
 struct CacheEntry {
@@ -21,6 +38,24 @@ struct CacheEntry {
 }
 
 type Cache = Arc<RwLock<HashMap<String, CacheEntry>>>;
+
+fn load_config() -> Result<Config, Box<dyn std::error::Error>> {
+    let config_path = "isenkram.json";
+    
+    if !Path::new(config_path).exists() {
+        return Err("isenkram.json config file is required".into());
+    }
+    
+    let config_content = fs::read_to_string(config_path)?;
+    let config: Config = serde_json::from_str(&config_content)?;
+    
+    if config.destination.is_empty() {
+        return Err("destination cannot be empty in config file".into());
+    }
+    
+    println!("Loaded configuration from {config_path}");
+    Ok(config)
+}
 
 async fn proxy_handler(
     req: Request<Incoming>,
@@ -119,26 +154,20 @@ async fn proxy_handler(
 
 #[tokio::main]
 async fn main() {
-    // Load .env file in development (ignore if file doesn't exist)
-    let _ = dotenvy::dotenv();
+    let config = load_config().expect("Failed to load configuration");
     
-    let destination = env::var("ISENKRAM_DESTINATION")
-        .expect("ISENKRAM_DESTINATION environment variable is required");
-    
-    let bind = env::var("ISENKRAM_BIND")
-        .unwrap_or_else(|_| "127.0.0.1:3000".to_string());
-    
+    let bind = config.bind.unwrap_or_else(|| "127.0.0.1:3000".to_string());
     let addr: SocketAddr = bind.parse().expect("Invalid bind address");
     let cache: Cache = Arc::new(RwLock::new(HashMap::new()));
     
     let listener = TcpListener::bind(addr).await.expect("Failed to bind to address");
     println!("Proxy server listening on {addr}");
-    println!("Proxying requests to {destination}");
+    println!("Proxying requests to {}", config.destination);
     
     loop {
         let (stream, _) = listener.accept().await.expect("Failed to accept connection");
         let io = TokioIo::new(stream);
-        let destination = destination.clone();
+        let destination = config.destination.clone();
         let cache = cache.clone();
         
         tokio::task::spawn(async move {
