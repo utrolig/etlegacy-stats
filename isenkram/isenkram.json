@@ -1,6 +1,6 @@
 {
   "destination": "http://localhost:4321",
-  "bind": "127.0.0.1:3000",
+  "bind": "0.0.0.0:3000",
 
   "rewrites": {
     "/anal/m/script.js": "https://app.lythia.dev/collect/metrics/script.js",
