@@ -7,10 +7,21 @@ services:
       - "4321"
     restart: unless-stopped
 
+  etlegacy-stats-isenkram:
+    build:
+      context: ./isenkram
+      dockerfile: Dockerfile
+    expose:
+      - "3000"
+    environment:
+      - ISENKRAM_DESTINATION=http://etlegacy-stats-astro:4321
+      - ISENKRAM_BIND=0.0.0.0:3000
+    restart: unless-stopped
+
   etlegacy-stats-nginx:
     image: nginx:alpine
-    expose:
-      - "80"
+    ports:
+      - "80:80"
     volumes:
       - ./nginx-config/conf.d:/etc/nginx/conf.d
     depends_on:
