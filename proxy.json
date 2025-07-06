@@ -1,0 +1,11 @@
+{
+  "destination": "http://etlegacy-stats-astro:4321",
+  "bind": "0.0.0.0:3000",
+
+  "rewrites": {
+    "/anal/m/script.js": "https://app.lythia.dev/collect/metrics/script.js",
+    "/anal/a/script.js": "https://app.lythia.dev/collect/analytics/script.js",
+    "/anal/a": "https://app.lythia.dev/collect/analytics/report",
+    "/anal/m": "https://app.lythia.dev/collect/metrics/report"
+  }
+}

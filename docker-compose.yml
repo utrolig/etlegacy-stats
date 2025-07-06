@@ -11,19 +11,9 @@ services:
     build:
       context: ./isenkram
       dockerfile: Dockerfile
-    expose:
-      - "3000"
-    environment:
-      - ISENKRAM_DESTINATION=http://etlegacy-stats-astro:4321
-      - ISENKRAM_BIND=0.0.0.0:3000
-    restart: unless-stopped
-
-  etlegacy-stats-nginx:
-    image: nginx:alpine
     ports:
-      - "80:80"
-    volumes:
-      - ./nginx-config/conf.d:/etc/nginx/conf.d
-    depends_on:
-      - etlegacy-stats-astro
+      - "3000:3000"
     restart: unless-stopped
+    volumes:
+      - ./proxy.json:/app/proxy.json
+    command: ["isenkram", "--config", "/app/proxy.json"]
