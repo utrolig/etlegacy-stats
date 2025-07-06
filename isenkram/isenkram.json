@@ -1,4 +1,11 @@
 {
   "destination": "http://localhost:4321",
-  "bind": "127.0.0.1:4444"
+  "bind": "127.0.0.1:3000",
+
+  "rewrites": {
+    "/anal/m/script.js": "https://app.lythia.dev/collect/metrics/script.js",
+    "/anal/a/script.js": "https://app.lythia.dev/collect/analytics/script.js",
+    "/anal/a": "https://app.lythia.dev/collect/analytics/report",
+    "/anal/m": "https://app.lythia.dev/collect/metrics/report"
+  }
 }
