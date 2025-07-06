@@ -13,6 +13,15 @@ use hyper::body::Bytes;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;
+use clap::Parser;
+
+#[derive(Parser, Debug)]
+#[command(name = "isenkram")]
+#[command(about = "A caching HTTP proxy server")]
+struct Args {
+    #[arg(short, long, help = "Path to configuration file")]
+    config: Option<String>,
+}
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct Config {
@@ -39,21 +48,21 @@ struct CacheEntry {
 
 type Cache = Arc<RwLock<HashMap<String, CacheEntry>>>;
 
-fn load_config() -> Result<Config, Box<dyn std::error::Error>> {
-    let config_path = "isenkram.json";
+fn load_config(config_path: Option<String>) -> Result<Config, Box<dyn std::error::Error>> {
+    let config_path = config_path.unwrap_or_else(|| "isenkram.json".to_string());
     
-    if !Path::new(config_path).exists() {
-        return Err("isenkram.json config file is required".into());
+    if !Path::new(&config_path).exists() {
+        return Err(format!("Config file '{}' not found", config_path).into());
     }
     
-    let config_content = fs::read_to_string(config_path)?;
+    let config_content = fs::read_to_string(&config_path)?;
     let config: Config = serde_json::from_str(&config_content)?;
     
     if config.destination.is_empty() {
         return Err("destination cannot be empty in config file".into());
     }
     
-    println!("Loaded configuration from {config_path}");
+    println!("Loaded configuration from {}", config_path);
     Ok(config)
 }
 
@@ -154,7 +163,8 @@ async fn proxy_handler(
 
 #[tokio::main]
 async fn main() {
-    let config = load_config().expect("Failed to load configuration");
+    let args = Args::parse();
+    let config = load_config(args.config).expect("Failed to load configuration");
     
     let bind = config.bind.unwrap_or_else(|| "127.0.0.1:3000".to_string());
     let addr: SocketAddr = bind.parse().expect("Invalid bind address");
