@@ -64,5 +64,13 @@ export const toColoredParts = (parts: string[]) =>
   });
 
 export const getColoredNameParts = (coloredName: string) => {
+  coloredName = coloredName.replace(
+    /\\u\{([0-9a-f]+)\}\\u\{([0-9a-f]+)\}/gi,
+    (_match, byte1, byte2) => {
+      const bytes = new Uint8Array([parseInt(byte1, 16), parseInt(byte2, 16)]);
+      return new TextDecoder("utf-8").decode(bytes);
+    },
+  );
+
   return toColoredParts(splitByColorDelimiters(coloredName));
 };
