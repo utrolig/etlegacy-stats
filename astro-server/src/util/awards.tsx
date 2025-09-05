@@ -73,6 +73,8 @@ export function getBaiterAward(stats: Stats[], roundId: string): Award | null {
       const kazimRegex = new RegExp(/.*k[a]+[z]+[iy]+[mn][em]?.*/gi);
       const ipodRegex = new RegExp(/(littyj|litoriousj|the adjuster)/gi);
       const bltzzRegex = new RegExp(/(bltzz)/gi);
+      const fireballRegex = new RegExp(/[fph][i1!][r][e3][b8][a4@][l1!][l1!]/i);
+      const bladeRegex = new RegExp(/[b8][l1!][a4@][d][e3]/i);
 
       const playerName = getColoredNameParts(player.name)
         .map((s) => s.text)
@@ -89,15 +91,17 @@ export function getBaiterAward(stats: Stats[], roundId: string): Award | null {
         kazimRegex.test(playerName) ||
         ipodRegex.test(playerName) ||
         bltzzRegex.test(playerName) ||
+        fireballRegex.test(playerName) ||
+        bladeRegex.test(playerName) ||
         playerName.includes("pod")
       ) {
-        acc.push([getRandomBetween(75, 97, random), player.name]);
+        acc.push([getRandomBetween(60, 97, random), player.name]);
       }
 
       return acc;
     },
     [] as Award["values"],
-  );
+  ).sort(([a], [b]) => b - a);
 
   if (!baiters.length) {
     return null;
