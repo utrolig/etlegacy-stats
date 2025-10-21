@@ -26,7 +26,7 @@ export const Tooltip: Component<TooltipProps> = (props) => {
         >
           {props.children}
         </KobalteTooltip.Trigger>
-        <KobalteTooltip.Content class="z-50 bgmud-900 p-2 px-4 bg-mud-900 rounded">
+        <KobalteTooltip.Content class="z-50 bgmud-900 p-2 px-4 bg-mud-900 rounded max-w-96 text-center">
           <KobalteTooltip.Arrow />
           {props.content}
         </KobalteTooltip.Content>

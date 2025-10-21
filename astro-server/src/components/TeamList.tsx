@@ -1,6 +1,6 @@
 import { createMemo, For, type Component } from "solid-js";
 import type { TeamList as TeamListType, Team } from "../util/stats";
-import { getColoredNameParts } from "../util/colors";
+import { getColoredParts } from "../util/colors";
 
 export type TeamListProps = {
   team: Team;
@@ -19,7 +19,7 @@ export const TeamList: Component<TeamListProps> = (props) => {
         <For each={players()}>
           {(player) => (
             <div class="text-xs lg:text-xl">
-              {getColoredNameParts(player.name).map((part) => (
+              {getColoredParts(player.name).map((part) => (
                 <span
                   style={{
                     color: part.color,

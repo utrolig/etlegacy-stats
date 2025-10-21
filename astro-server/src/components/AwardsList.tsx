@@ -1,6 +1,6 @@
 import { For, Show, type Component } from "solid-js";
 import { type Award } from "../util/awards";
-import { getColoredNameParts } from "../util/colors";
+import { getColoredParts } from "../util/colors";
 import { Collapsible } from "@kobalte/core/collapsible";
 
 export type AwardsListProps = {
@@ -25,7 +25,7 @@ export const AwardsList: Component<AwardsListProps> = (props) => {
                           <span class="text-mud-300">{texts()[0]}</span>
                           {texts()[1]}
                           <span class="text-mud-300">{texts()[2]}</span>
-                          <For each={getColoredNameParts(texts()[3])}>
+                          <For each={getColoredParts(texts()[3])}>
                             {(part) => (
                               <span style={{ color: part.color }}>
                                 {part.text}
@@ -45,7 +45,7 @@ export const AwardsList: Component<AwardsListProps> = (props) => {
                           {(line) => (
                             <div class="grid grid-cols-[200px,auto] overflow-hidden">
                               <div class="text-ellipsis overflow-hidden whitespace-nowrap">
-                                <For each={getColoredNameParts(line[1])}>
+                                <For each={getColoredParts(line[1])}>
                                   {(part) => (
                                     <span style={{ color: part.color }}>
                                       {part.text}

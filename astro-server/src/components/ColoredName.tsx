@@ -1,5 +1,5 @@
 import { For, type Component } from "solid-js";
-import { getColoredNameParts } from "../util/colors";
+import { getColoredParts } from "../util/colors";
 
 export type ColoredNameProps = {
   class?: string;
@@ -9,7 +9,7 @@ export type ColoredNameProps = {
 export const ColoredName: Component<ColoredNameProps> = (props) => {
   return (
     <span class={props.class}>
-      <For each={getColoredNameParts(props.name)}>
+      <For each={getColoredParts(props.name)}>
         {(part) => <span style={{ color: part.color }}>{part.text}</span>}
       </For>
     </span>

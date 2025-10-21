@@ -8,7 +8,7 @@ import {
   getRevives,
   type Stats,
 } from "../util/stats";
-import { getColoredNameParts } from "../util/colors";
+import { getColoredParts } from "../util/colors";
 import clsx from "clsx";
 import { PlayerDetailedStats } from "./PlayerDetailedStats";
 import { Collapsible } from "@kobalte/core/collapsible";
@@ -67,7 +67,7 @@ export const PlayerRow: Component<PlayerRowProps> = (props) => {
             <Show
               when={props.preferDiscordNames && props.playerInfo}
               fallback={
-                <For each={getColoredNameParts(props.stats.name)}>
+                <For each={getColoredParts(props.stats.name)}>
                   {({ color, text }) => (
                     <span
                       class="overflow-hidden whitespace-pre text-ellipsis"

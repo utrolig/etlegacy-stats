@@ -1,11 +1,17 @@
 import { createMemo, createSignal, type Component } from "solid-js";
 import type { GroupDetails, PlayerInfoDict } from "../util/stats-api";
 import { MatchHeader } from "./MatchHeader";
-import { getMapStats, getMatchStats } from "../util/stats";
+import {
+  getMapStats,
+  getMatchStats,
+  getMessages,
+  getPlayers,
+} from "../util/stats";
 import { MapsMenu } from "./MapsMenu";
 import { StatsTable } from "./StatsTable";
 import { AwardsList } from "./AwardsList";
 import { getAllSillyAwards, getAllWeaponAwards } from "../util/awards";
+import { Messages } from "./Messages";
 
 export type MatchPageWrapperProps = {
   matchDetails: GroupDetails;
@@ -17,6 +23,7 @@ export type MatchPageWrapperProps = {
 export const MatchPageWrapper: Component<MatchPageWrapperProps> = (props) => {
   const [map, setMap] = createSignal<string>(props.map || "");
   const [round, setRound] = createSignal<number>(props.round || 0);
+  const [preferDiscordNames, setPreferDiscordNames] = createSignal(false);
 
   const match = createMemo(() => {
     return getMatchStats(props.matchDetails);
@@ -34,6 +41,17 @@ export const MatchPageWrapper: Component<MatchPageWrapperProps> = (props) => {
 
   const weaponAwards = createMemo(() => {
     return getAllWeaponAwards(allStats());
+  });
+
+  const messages = createMemo(() => {
+    const rounds = round() ? [round()] : [];
+    return getMessages(map(), rounds, match());
+  });
+
+  const players = createMemo(() => {
+    const rounds = round() ? [round()] : [];
+    const players = getPlayers(map(), rounds, match());
+    return players;
   });
 
   return (
@@ -57,9 +75,20 @@ export const MatchPageWrapper: Component<MatchPageWrapperProps> = (props) => {
         matchId={props.matchDetails.match.match_id}
         match={match()}
       />
-      <StatsTable playerInfoDict={props.playerInfoDict} stats={allStats()} />
+      <StatsTable
+        onPreferDiscordNamesChange={setPreferDiscordNames}
+        preferDiscordNames={preferDiscordNames()}
+        playerInfoDict={props.playerInfoDict}
+        stats={allStats()}
+      />
       <AwardsList awards={sillyAwards()} title="Match awards" />
       <AwardsList awards={weaponAwards()} title="Weapon awards" />
+      <Messages
+        preferDiscordNames={preferDiscordNames()}
+        playerInfoDict={props.playerInfoDict}
+        players={players()}
+        messages={messages()}
+      />
     </>
   );
 };

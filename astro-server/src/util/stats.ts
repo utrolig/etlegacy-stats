@@ -4,9 +4,15 @@ import type {
   Group,
   GroupDetails,
   GroupRound,
+  Message,
   Obituary,
   RawPlayerStats,
 } from "./stats-api";
+
+export type MatchPlayer = {
+  id: string;
+  name: string;
+};
 
 export type WeaponStats = {
   hits: number;
@@ -55,6 +61,12 @@ export type Stats = {
 
 export type RoundStats = {};
 
+export type GameMessage = {
+  timestamp: number;
+  guid: string;
+  message: string;
+};
+
 export type MapStats = {
   map: string;
   roundTimes: string[];
@@ -85,6 +97,7 @@ export type MatchStats = {
     roundNumber: number;
     stats: Stats[];
     roundTime: string;
+    messages: Message[];
   }[];
 };
 
@@ -314,6 +327,7 @@ export function getMatchStats(info: GroupDetails): MatchStats {
         roundTime: round.round_data.round_info.nextTimeLimit,
         map: round.round_data.round_info.mapname,
         roundNumber,
+        messages: round.round_data.round_info.messages,
         stats: Object.entries(round.round_data.player_stats).map(
           ([longId, ps]) => {
             let playerStats = convertPlayerStats(ps.weaponStats);
@@ -1153,4 +1167,52 @@ export function getMatchSize(match: Group) {
   }
 
   return teamPlayerCount + "vs" + teamPlayerCount;
+}
+
+export function getMessages(
+  map: string,
+  rounds: number[],
+  stats: MatchStats,
+): Message[] {
+  const filteredRounds = !map
+    ? [...stats.rounds]
+    : stats.rounds.filter((round) => {
+        if (rounds.length) {
+          return round.map === map && rounds.includes(round.roundNumber);
+        }
+
+        return round.map === map;
+      });
+
+  return filteredRounds.flatMap((fr) => fr.messages ?? []);
+}
+
+export function getPlayers(
+  map: string,
+  rounds: number[],
+  stats: MatchStats,
+): Record<string, MatchPlayer> {
+  const filteredRounds = !map
+    ? [...stats.rounds]
+    : stats.rounds.filter((round) => {
+        if (rounds.length) {
+          return round.map === map && rounds.includes(round.roundNumber);
+        }
+
+        return round.map === map;
+      });
+
+  return filteredRounds.reduce(
+    (acc, round) => {
+      round.stats.forEach((stat) => {
+        acc[stat.longId] = {
+          id: stat.longId,
+          name: stat.name,
+        };
+      });
+
+      return acc;
+    },
+    {} as Record<string, MatchPlayer>,
+  );
 }

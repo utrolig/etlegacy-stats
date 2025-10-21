@@ -176,6 +176,13 @@ export type Obituary = {
   attackerRespawnTime: number;
 };
 
+export type Message = {
+  message: string;
+  timestamp: number;
+  guid: string;
+  command: "say_buddy" | "say" | "say_team" | "vsay" | "vsay_team";
+};
+
 export type GroupRound = {
   round_filename: string;
   round_data: {
@@ -190,6 +197,7 @@ export type GroupRound = {
       obituaries?: Obituary[];
       config: string;
       winnerteam: number;
+      messages: Message[];
       damageStats: {
         attacker: string;
         target: string;

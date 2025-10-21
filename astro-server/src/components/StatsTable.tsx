@@ -7,12 +7,13 @@ import type { PlayerInfoDict } from "../util/stats-api";
 export type StatsTableProps = {
   stats: Stats[];
   playerInfoDict: PlayerInfoDict;
+  preferDiscordNames: boolean;
+  onPreferDiscordNamesChange: (value: boolean) => void;
 };
 
 export const StatsTable: Component<StatsTableProps> = (props) => {
   const [sortDir, setSortDir] = createSignal<SortDirection>("desc");
   const [sortKey, setSortKey] = createSignal<SortKey>("kdr");
-  const [preferDiscordNames, setPreferDiscordNames] = createSignal(false);
 
   const onSortClicked = (key: SortKey) => {
     const currKey = sortKey();
@@ -36,8 +37,8 @@ export const StatsTable: Component<StatsTableProps> = (props) => {
         onSortClicked={onSortClicked}
         playerInfoDict={props.playerInfoDict}
         showExtraMenu
-        onPreferDiscordNamesChanged={setPreferDiscordNames}
-        preferDiscordNames={preferDiscordNames()}
+        onPreferDiscordNamesChanged={props.onPreferDiscordNamesChange}
+        preferDiscordNames={props.preferDiscordNames}
       />
       <TeamTable
         stats={props.stats}
@@ -46,8 +47,8 @@ export const StatsTable: Component<StatsTableProps> = (props) => {
         sortDir={sortDir()}
         onSortClicked={onSortClicked}
         playerInfoDict={props.playerInfoDict}
-        onPreferDiscordNamesChanged={setPreferDiscordNames}
-        preferDiscordNames={preferDiscordNames()}
+        onPreferDiscordNamesChanged={props.onPreferDiscordNamesChange}
+        preferDiscordNames={props.preferDiscordNames}
       />
     </div>
   );

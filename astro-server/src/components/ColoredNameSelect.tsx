@@ -1,6 +1,6 @@
 import { Select } from "@kobalte/core/select";
 import { For, type Component } from "solid-js";
-import { getColoredNameParts } from "../util/colors";
+import { getColoredParts } from "../util/colors";
 import { BsCheck, BsChevronDown } from "solid-icons/bs";
 
 export type ColoredNameSelectProps = {
@@ -21,7 +21,7 @@ export const ColoredNameSelect: Component<ColoredNameSelectProps> = (props) => {
           item={props.item}
         >
           <Select.ItemLabel>
-            <For each={getColoredNameParts(props.item.rawValue)}>
+            <For each={getColoredParts(props.item.rawValue)}>
               {(part) => <span style={{ color: part.color }}>{part.text}</span>}
             </For>
           </Select.ItemLabel>
@@ -35,7 +35,7 @@ export const ColoredNameSelect: Component<ColoredNameSelectProps> = (props) => {
         <Select.Value>
           {(state) => (
             <div class="flex items-center gap-1">
-              <For each={getColoredNameParts(state.selectedOption() as string)}>
+              <For each={getColoredParts(state.selectedOption() as string)}>
                 {(part) => (
                   <span style={{ color: part.color }}>{part.text}</span>
                 )}

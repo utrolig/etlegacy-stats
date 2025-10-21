@@ -39,13 +39,16 @@ const colorMap: [string, string][] = [
 ];
 
 export const splitByColorDelimiters = (s: string) => s.split(/(?=\^.)/g);
-export const toColoredParts = (parts: string[]) =>
+export const toColoredParts = (
+  parts: string[],
+  defaultColor: string = "#ffffff",
+) =>
   parts.map((part) => {
     const text = part.replace(/\^./g, "");
     const matches = part.match(/\^./)!;
     if (!matches?.length) {
       const textPart: TextPart = {
-        color: "#ffffff",
+        color: defaultColor,
         text,
       };
       return textPart;
@@ -63,7 +66,7 @@ export const toColoredParts = (parts: string[]) =>
     return textPart;
   });
 
-export const getColoredNameParts = (coloredName: string) => {
+export const getColoredParts = (coloredName: string, defaultColor?: string) => {
   coloredName = coloredName.replace(
     /\\u\{([0-9a-f]+)\}\\u\{([0-9a-f]+)\}/gi,
     (_match, byte1, byte2) => {
@@ -72,5 +75,5 @@ export const getColoredNameParts = (coloredName: string) => {
     },
   );
 
-  return toColoredParts(splitByColorDelimiters(coloredName));
+  return toColoredParts(splitByColorDelimiters(coloredName), defaultColor);
 };

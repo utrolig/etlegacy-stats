@@ -1,4 +1,4 @@
-import { getColoredNameParts } from "./colors";
+import { getColoredParts } from "./colors";
 import { formatTime } from "./formatTime";
 import { createSeededRandom, getRandomBetween } from "./random";
 import {
@@ -68,40 +68,44 @@ export function getAllWeaponAwards(stats: Stats[]): Award[] {
 
 export function getBaiterAward(stats: Stats[], roundId: string): Award | null {
   const random = createSeededRandom(roundId);
-  const baiters = stats.reduce(
-    (acc, player) => {
-      const kazimRegex = new RegExp(/.*k[a]+[z]+[iy]+[mn][em]?.*/gi);
-      const ipodRegex = new RegExp(/(littyj|litoriousj|the adjuster)/gi);
-      const bltzzRegex = new RegExp(/(bltzz)/gi);
-      const fireballRegex = new RegExp(/[fph][i1!][r][e3][b8][a4@][l1!][l1!]/i);
-      const bladeRegex = new RegExp(/[b8][l1!][a4@][d][e3]/i);
+  const baiters = stats
+    .reduce(
+      (acc, player) => {
+        const kazimRegex = new RegExp(/.*k[a]+[z]+[iy]+[mn][em]?.*/gi);
+        const ipodRegex = new RegExp(/(littyj|litoriousj|the adjuster)/gi);
+        const bltzzRegex = new RegExp(/(bltzz)/gi);
+        const fireballRegex = new RegExp(
+          /[fph][i1!][r][e3][b8][a4@][l1!][l1!]/i,
+        );
+        const bladeRegex = new RegExp(/[b8][l1!][a4@][d][e3]/i);
 
-      const playerName = getColoredNameParts(player.name)
-        .map((s) => s.text)
-        .join("");
+        const playerName = getColoredParts(player.name)
+          .map((s) => s.text)
+          .join("");
 
-      const randVal = random();
-      const shouldShowBaiter = randVal > 0.35;
+        const randVal = random();
+        const shouldShowBaiter = randVal > 0.35;
 
-      if (!shouldShowBaiter) {
+        if (!shouldShowBaiter) {
+          return acc;
+        }
+
+        if (
+          kazimRegex.test(playerName) ||
+          ipodRegex.test(playerName) ||
+          bltzzRegex.test(playerName) ||
+          fireballRegex.test(playerName) ||
+          bladeRegex.test(playerName) ||
+          playerName.includes("pod")
+        ) {
+          acc.push([getRandomBetween(60, 97, random), player.name]);
+        }
+
         return acc;
-      }
-
-      if (
-        kazimRegex.test(playerName) ||
-        ipodRegex.test(playerName) ||
-        bltzzRegex.test(playerName) ||
-        fireballRegex.test(playerName) ||
-        bladeRegex.test(playerName) ||
-        playerName.includes("pod")
-      ) {
-        acc.push([getRandomBetween(60, 97, random), player.name]);
-      }
-
-      return acc;
-    },
-    [] as Award["values"],
-  ).sort(([a], [b]) => b - a);
+      },
+      [] as Award["values"],
+    )
+    .sort(([a], [b]) => b - a);
 
   if (!baiters.length) {
     return null;

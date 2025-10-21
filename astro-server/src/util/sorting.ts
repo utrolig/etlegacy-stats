@@ -1,4 +1,4 @@
-import { getColoredNameParts } from "./colors";
+import { getColoredParts } from "./colors";
 import {
   getDeaths,
   getEfficiency,
@@ -42,10 +42,10 @@ export const playersByKeyAndDir =
       }
 
       case SortKey.Name: {
-        const aName = getColoredNameParts(a.name)
+        const aName = getColoredParts(a.name)
           .map((s) => s.text)
           .join("");
-        const bName = getColoredNameParts(b.name)
+        const bName = getColoredParts(b.name)
           .map((s) => s.text)
           .join("");
         return aName.localeCompare(bName) * dirVal;
