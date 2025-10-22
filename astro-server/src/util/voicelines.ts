@@ -51,6 +51,7 @@ const axisVoiceLines: Record<string, string> = {
   // Say Player Class
   IamSoldier: "I'm a soldat.",
   IamMedic: "I'm a medic.",
+  Iammedic: "I'm a medic.",
   IamEngineer: "I'm an engineer.",
   IamFieldOps: "I'm a field op.",
   IamCovertOps: "I'm a covert op.",

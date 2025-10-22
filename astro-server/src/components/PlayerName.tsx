@@ -4,11 +4,13 @@ import { Tooltip } from "./Tooltip";
 import { DiscordIcon } from "./DiscordIcon";
 import type { PlayerInfo } from "../util/stats-api";
 import type { MatchPlayer } from "../util/stats";
+import { getAnonName } from "../util/getAnonName";
 
 export type PlayerNameProps = {
   preferDiscordNames: boolean;
   playerInfo: PlayerInfo;
   player: MatchPlayer;
+  guid: string;
 };
 
 export const PlayerName: Component<PlayerNameProps> = (props) => {
@@ -17,16 +19,18 @@ export const PlayerName: Component<PlayerNameProps> = (props) => {
       <Show
         when={props.preferDiscordNames && props.playerInfo}
         fallback={
-          <For each={getColoredParts(props.player?.name ?? "Unknown")}>
-            {({ color, text }) => (
-              <span
-                class="overflow-hidden whitespace-pre text-ellipsis"
-                style={{ color }}
-              >
-                {text}
-              </span>
-            )}
-          </For>
+          <Show when={props.player?.name} fallback={getAnonName(props.guid)}>
+            <For each={getColoredParts(props.player.name)}>
+              {({ color, text }) => (
+                <span
+                  class="overflow-hidden whitespace-pre text-ellipsis"
+                  style={{ color }}
+                >
+                  {text}
+                </span>
+              )}
+            </For>
+          </Show>
         }
       >
         {props.playerInfo.discord_nick}

@@ -13,6 +13,7 @@ export type MessagesProps = {
 };
 
 export const Messages: Component<MessagesProps> = (props) => {
+  console.log(props.messages);
   return (
     <div class="big:p-8 p-4 flex flex-col gap-4 bg-black/10">
       <div class="flex gap-2">
