@@ -27,7 +27,7 @@ export const MessageLine: Component<MessageLineProps> = (props) => {
         </Match>
 
         <Match when={props.message.command === "say_team"}>
-          <div class="flex">
+          <div class="flex items-start">
             <span>(</span>
             <PlayerName
               player={props.players[props.message.guid]}
@@ -36,11 +36,11 @@ export const MessageLine: Component<MessageLineProps> = (props) => {
             />
             <span>):</span>
           </div>
-          <Msg color="#00FFFF" msg={props.message.message} />
+          <Msg color="#00FFFF" msg={props.message.message.repeat(20)} />
         </Match>
 
         <Match when={props.message.command === "vsay_team"}>
-          <div class="flex">
+          <div class="flex items-start">
             <span>(</span>
             <PlayerName
               player={props.players[props.message.guid]}
@@ -62,13 +62,11 @@ export const MessageLine: Component<MessageLineProps> = (props) => {
         </Match>
 
         <Match when={props.message.command === "vsay"}>
-          <div class="flex items-center">
-            <PlayerName
-              player={props.players[props.message.guid]}
-              playerInfo={props.playerInfoDict[props.message.guid]}
-              preferDiscordNames={props.preferDiscordNames}
-            />
-          </div>
+          <PlayerName
+            player={props.players[props.message.guid]}
+            playerInfo={props.playerInfoDict[props.message.guid]}
+            preferDiscordNames={props.preferDiscordNames}
+          />
           <div class="flex items-center gap-2">
             <BsMegaphone />
             <Msg
