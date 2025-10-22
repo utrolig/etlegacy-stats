@@ -36,7 +36,7 @@ export const MessageLine: Component<MessageLineProps> = (props) => {
             />
             <span>):</span>
           </div>
-          <Msg color="#00FFFF" msg={props.message.message.repeat(20)} />
+          <Msg color="#00FFFF" msg={props.message.message} />
         </Match>
 
         <Match when={props.message.command === "vsay_team"}>
