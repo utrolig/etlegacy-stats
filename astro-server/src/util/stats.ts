@@ -356,37 +356,44 @@ export function getMatchStats(info: GroupDetails): MatchStats {
 
             if (round.round_data.round_info.round === 2) {
               const prevRound = allRounds[idx - 1];
-              const prevRoundRawPlayerStats = Object.values(
-                prevRound.round_data.player_stats,
-              ).find((p) => p.guid === ps.guid);
 
-              if (!prevRoundRawPlayerStats) {
-                // Player is a standin (joined in round 2), use their aggregate stats as-is
+              // Check if previous round exists before processing delta stats
+              if (!prevRound) {
+                // No round 1 data exists, use aggregate stats as-is
                 // Stats are already converted above, no need to recalculate
               } else {
-                // Player existed in round 1, calculate delta stats
-                const prevRoundPlayerStats = { ...playerStats };
-                const prevRoundRawWeaponStats = prevRoundRawPlayerStats.weaponStats;
+                const prevRoundRawPlayerStats = Object.values(
+                  prevRound.round_data.player_stats,
+                ).find((p) => p.guid === ps.guid);
 
-                playerStats = convertPlayerStats(
-                  prevRoundRawWeaponStats,
-                  ps.weaponStats,
-                  prevRound,
-                  round,
-                );
-                weaponStats = convertWeaponStats(
-                  prevRoundRawWeaponStats,
-                  ps.weaponStats,
-                );
-                metaStats = convertMetaStats(
-                  longId,
-                  prevRoundRawPlayerStats,
-                  prevRoundPlayerStats,
-                  prevRound.round_data.round_info.obituaries ?? [],
-                  ps,
-                  playerStats,
-                  round.round_data.round_info.obituaries ?? [],
-                );
+                if (!prevRoundRawPlayerStats) {
+                  // Player is a standin (joined in round 2), use their aggregate stats as-is
+                  // Stats are already converted above, no need to recalculate
+                } else {
+                  // Player existed in round 1, calculate delta stats
+                  const prevRoundPlayerStats = { ...playerStats };
+                  const prevRoundRawWeaponStats = prevRoundRawPlayerStats.weaponStats;
+
+                  playerStats = convertPlayerStats(
+                    prevRoundRawWeaponStats,
+                    ps.weaponStats,
+                    prevRound,
+                    round,
+                  );
+                  weaponStats = convertWeaponStats(
+                    prevRoundRawWeaponStats,
+                    ps.weaponStats,
+                  );
+                  metaStats = convertMetaStats(
+                    longId,
+                    prevRoundRawPlayerStats,
+                    prevRoundPlayerStats,
+                    prevRound.round_data.round_info.obituaries ?? [],
+                    ps,
+                    playerStats,
+                    round.round_data.round_info.obituaries ?? [],
+                  );
+                }
               }
             }
 
