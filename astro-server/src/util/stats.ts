@@ -245,6 +245,18 @@ export function getMatchStats(info: GroupDetails): MatchStats {
 
   const maps = getMaps(match.rounds);
   const teams = getTeams(match.rounds);
+
+  // Helper to get consistent team assignment across all rounds
+  const getPlayerTeamFromGlobal = (guid: string): Team | null => {
+    if (teams.alpha.find((p) => p.id === guid)) {
+      return "alpha";
+    }
+    if (teams.beta.find((p) => p.id === guid)) {
+      return "beta";
+    }
+    return null;
+  };
+
   const score = match.rounds.reduce(
     (scoreAcc, round, roundIdx, rounds) => {
       const { winnerteam } = round.round_data.round_info;
@@ -252,8 +264,8 @@ export function getMatchStats(info: GroupDetails): MatchStats {
 
       for (const player of players) {
         if (Number(player.team) === winnerteam) {
-          // Use the actual team from the round data, not the global teams object
-          const winningTeam = getTeam(player.team);
+          // Use the global team assignment to maintain consistency across maps
+          const winningTeam = getPlayerTeamFromGlobal(player.guid);
           const isAlphaWinner = winningTeam === "alpha";
           const isBetaWinner = winningTeam === "beta";
 
@@ -382,7 +394,7 @@ export function getMatchStats(info: GroupDetails): MatchStats {
               id: ps.guid,
               longId,
               name: ps.name,
-              team: getTeam(ps.team),
+              team: getPlayerTeamFromGlobal(ps.guid),
               playerStats,
               weaponStats,
               metaStats,
@@ -429,16 +441,55 @@ export function getTeam(team: string): Team {
 }
 
 function getTeams(rounds: GroupRound[]): TeamList {
-  // Collect all players from all rounds, using their first team assignment
   const playerMap = new Map<string, { team: Team; player: TeamPlayer }>();
 
+  // First pass: Establish baseline teams from the first round of the first map
+  // This ensures we get the correct alpha/beta assignments before any side switches
+  if (rounds.length > 0) {
+    const firstRound = rounds[0];
+    for (const [longId, playerStats] of Object.entries(
+      firstRound.round_data.player_stats,
+    )) {
+      const team = getTeam(playerStats.team);
+      playerMap.set(playerStats.guid, {
+        team,
+        player: {
+          id: playerStats.guid,
+          name: playerStats.name,
+          longId,
+        },
+      });
+    }
+  }
+
+  // Second pass: For standins (new players), determine team by checking teammates
   for (const round of rounds) {
     for (const [longId, playerStats] of Object.entries(
       round.round_data.player_stats,
     )) {
-      // Only add player if they haven't been seen before (use first team assignment)
       if (!playerMap.has(playerStats.guid)) {
-        const team = getTeam(playerStats.team);
+        // This is a standin - determine their team by checking who they're playing with
+        const teammates = Object.values(round.round_data.player_stats).filter(
+          (p) => p.team === playerStats.team && p.guid !== playerStats.guid,
+        );
+
+        // Count how many teammates are on alpha vs beta
+        let alphaCount = 0;
+        let betaCount = 0;
+
+        for (const teammate of teammates) {
+          const teammateEntry = playerMap.get(teammate.guid);
+          if (teammateEntry) {
+            if (teammateEntry.team === "alpha") {
+              alphaCount++;
+            } else {
+              betaCount++;
+            }
+          }
+        }
+
+        // Assign to the team with more known players
+        const team = alphaCount > betaCount ? "alpha" : "beta";
         playerMap.set(playerStats.guid, {
           team,
           player: {
