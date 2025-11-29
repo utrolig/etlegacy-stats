@@ -1,4 +1,4 @@
-import { createMemo, For, type Component } from "solid-js";
+import { For, type Component } from "solid-js";
 import type { Message, PlayerInfoDict } from "../util/stats-api";
 import type { MatchPlayer } from "../util/stats";
 import { MessageLine } from "./MessageLine";
@@ -13,7 +13,6 @@ export type MessagesProps = {
 };
 
 export const Messages: Component<MessagesProps> = (props) => {
-  console.log(props.messages);
   return (
     <div class="big:p-8 p-4 flex flex-col gap-4 bg-black/10">
       <div class="flex gap-2">

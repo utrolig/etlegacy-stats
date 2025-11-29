@@ -245,6 +245,18 @@ export function getMatchStats(info: GroupDetails): MatchStats {
 
   const maps = getMaps(match.rounds);
   const teams = getTeams(match.rounds);
+
+  // Helper to get consistent team assignment across all rounds
+  const getPlayerTeamFromGlobal = (guid: string): Team | null => {
+    if (teams.alpha.find((p) => p.id === guid)) {
+      return "alpha";
+    }
+    if (teams.beta.find((p) => p.id === guid)) {
+      return "beta";
+    }
+    return null;
+  };
+
   const score = match.rounds.reduce(
     (scoreAcc, round, roundIdx, rounds) => {
       const { winnerteam } = round.round_data.round_info;
@@ -252,8 +264,10 @@ export function getMatchStats(info: GroupDetails): MatchStats {
 
       for (const player of players) {
         if (Number(player.team) === winnerteam) {
-          const isAlphaWinner = teams.alpha.some((p) => p.id === player.guid);
-          const isBetaWinner = teams.beta.some((p) => p.id === player.guid);
+          // Use the global team assignment to maintain consistency across maps
+          const winningTeam = getPlayerTeamFromGlobal(player.guid);
+          const isAlphaWinner = winningTeam === "alpha";
+          const isBetaWinner = winningTeam === "beta";
 
           const previousRound = rounds[roundIdx - 1];
 
@@ -345,43 +359,42 @@ export function getMatchStats(info: GroupDetails): MatchStats {
               const prevRoundRawPlayerStats = Object.values(
                 prevRound.round_data.player_stats,
               ).find((p) => p.guid === ps.guid);
-              const prevRoundPlayerStats = { ...playerStats };
 
-              const prevRoundRawWeaponStats =
-                prevRoundRawPlayerStats?.weaponStats;
+              if (!prevRoundRawPlayerStats) {
+                // Player is a standin (joined in round 2), use their aggregate stats as-is
+                // Stats are already converted above, no need to recalculate
+              } else {
+                // Player existed in round 1, calculate delta stats
+                const prevRoundPlayerStats = { ...playerStats };
+                const prevRoundRawWeaponStats = prevRoundRawPlayerStats.weaponStats;
 
-              if (!prevRoundRawWeaponStats) {
-                throw new Error(
-                  "Could not find previous round stats for player.",
+                playerStats = convertPlayerStats(
+                  prevRoundRawWeaponStats,
+                  ps.weaponStats,
+                  prevRound,
+                  round,
+                );
+                weaponStats = convertWeaponStats(
+                  prevRoundRawWeaponStats,
+                  ps.weaponStats,
+                );
+                metaStats = convertMetaStats(
+                  longId,
+                  prevRoundRawPlayerStats,
+                  prevRoundPlayerStats,
+                  prevRound.round_data.round_info.obituaries ?? [],
+                  ps,
+                  playerStats,
+                  round.round_data.round_info.obituaries ?? [],
                 );
               }
-
-              playerStats = convertPlayerStats(
-                prevRoundRawWeaponStats,
-                ps.weaponStats,
-                prevRound,
-                round,
-              );
-              weaponStats = convertWeaponStats(
-                prevRoundRawWeaponStats,
-                ps.weaponStats,
-              );
-              metaStats = convertMetaStats(
-                longId,
-                prevRoundRawPlayerStats,
-                prevRoundPlayerStats,
-                prevRound.round_data.round_info.obituaries ?? [],
-                ps,
-                playerStats,
-                round.round_data.round_info.obituaries ?? [],
-              );
             }
 
             return {
               id: ps.guid,
               longId,
               name: ps.name,
-              team: getPlayerTeam(ps.guid, teams),
+              team: getPlayerTeamFromGlobal(ps.guid),
               playerStats,
               weaponStats,
               metaStats,
@@ -428,24 +441,72 @@ export function getTeam(team: string): Team {
 }
 
 function getTeams(rounds: GroupRound[]): TeamList {
-  const [firstRound] = rounds;
-  const teams = Object.entries(firstRound.round_data.player_stats).reduce(
-    (acc, [longId, playerStats]) => {
+  const playerMap = new Map<string, { team: Team; player: TeamPlayer }>();
+
+  // First pass: Establish baseline teams from the first round of the first map
+  // This ensures we get the correct alpha/beta assignments before any side switches
+  if (rounds.length > 0) {
+    const firstRound = rounds[0];
+    for (const [longId, playerStats] of Object.entries(
+      firstRound.round_data.player_stats,
+    )) {
       const team = getTeam(playerStats.team);
-      if (acc[team]) {
-        acc[team].push({
+      playerMap.set(playerStats.guid, {
+        team,
+        player: {
           id: playerStats.guid,
           name: playerStats.name,
           longId,
-        });
-      } else {
-        acc[team] = [{ id: playerStats.guid, name: playerStats.name, longId }];
-      }
+        },
+      });
+    }
+  }
 
-      return acc;
-    },
-    {} as TeamList,
-  );
+  // Second pass: For standins (new players), determine team by checking teammates
+  for (const round of rounds) {
+    for (const [longId, playerStats] of Object.entries(
+      round.round_data.player_stats,
+    )) {
+      if (!playerMap.has(playerStats.guid)) {
+        // This is a standin - determine their team by checking who they're playing with
+        const teammates = Object.values(round.round_data.player_stats).filter(
+          (p) => p.team === playerStats.team && p.guid !== playerStats.guid,
+        );
+
+        // Count how many teammates are on alpha vs beta
+        let alphaCount = 0;
+        let betaCount = 0;
+
+        for (const teammate of teammates) {
+          const teammateEntry = playerMap.get(teammate.guid);
+          if (teammateEntry) {
+            if (teammateEntry.team === "alpha") {
+              alphaCount++;
+            } else {
+              betaCount++;
+            }
+          }
+        }
+
+        // Assign to the team with more known players
+        const team = alphaCount > betaCount ? "alpha" : "beta";
+        playerMap.set(playerStats.guid, {
+          team,
+          player: {
+            id: playerStats.guid,
+            name: playerStats.name,
+            longId,
+          },
+        });
+      }
+    }
+  }
+
+  // Convert map to TeamList structure
+  const teams: TeamList = { alpha: [], beta: [] };
+  for (const { team, player } of playerMap.values()) {
+    teams[team].push(player);
+  }
 
   return teams;
 }
