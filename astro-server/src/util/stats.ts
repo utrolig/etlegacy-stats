@@ -252,8 +252,10 @@ export function getMatchStats(info: GroupDetails): MatchStats {
 
       for (const player of players) {
         if (Number(player.team) === winnerteam) {
-          const isAlphaWinner = teams.alpha.some((p) => p.id === player.guid);
-          const isBetaWinner = teams.beta.some((p) => p.id === player.guid);
+          // Use the actual team from the round data, not the global teams object
+          const winningTeam = getTeam(player.team);
+          const isAlphaWinner = winningTeam === "alpha";
+          const isBetaWinner = winningTeam === "beta";
 
           const previousRound = rounds[roundIdx - 1];
 
@@ -345,43 +347,42 @@ export function getMatchStats(info: GroupDetails): MatchStats {
               const prevRoundRawPlayerStats = Object.values(
                 prevRound.round_data.player_stats,
               ).find((p) => p.guid === ps.guid);
-              const prevRoundPlayerStats = { ...playerStats };
 
-              const prevRoundRawWeaponStats =
-                prevRoundRawPlayerStats?.weaponStats;
+              if (!prevRoundRawPlayerStats) {
+                // Player is a standin (joined in round 2), use their aggregate stats as-is
+                // Stats are already converted above, no need to recalculate
+              } else {
+                // Player existed in round 1, calculate delta stats
+                const prevRoundPlayerStats = { ...playerStats };
+                const prevRoundRawWeaponStats = prevRoundRawPlayerStats.weaponStats;
 
-              if (!prevRoundRawWeaponStats) {
-                throw new Error(
-                  "Could not find previous round stats for player.",
+                playerStats = convertPlayerStats(
+                  prevRoundRawWeaponStats,
+                  ps.weaponStats,
+                  prevRound,
+                  round,
+                );
+                weaponStats = convertWeaponStats(
+                  prevRoundRawWeaponStats,
+                  ps.weaponStats,
+                );
+                metaStats = convertMetaStats(
+                  longId,
+                  prevRoundRawPlayerStats,
+                  prevRoundPlayerStats,
+                  prevRound.round_data.round_info.obituaries ?? [],
+                  ps,
+                  playerStats,
+                  round.round_data.round_info.obituaries ?? [],
                 );
               }
-
-              playerStats = convertPlayerStats(
-                prevRoundRawWeaponStats,
-                ps.weaponStats,
-                prevRound,
-                round,
-              );
-              weaponStats = convertWeaponStats(
-                prevRoundRawWeaponStats,
-                ps.weaponStats,
-              );
-              metaStats = convertMetaStats(
-                longId,
-                prevRoundRawPlayerStats,
-                prevRoundPlayerStats,
-                prevRound.round_data.round_info.obituaries ?? [],
-                ps,
-                playerStats,
-                round.round_data.round_info.obituaries ?? [],
-              );
             }
 
             return {
               id: ps.guid,
               longId,
               name: ps.name,
-              team: getPlayerTeam(ps.guid, teams),
+              team: getTeam(ps.team),
               playerStats,
               weaponStats,
               metaStats,
@@ -428,24 +429,33 @@ export function getTeam(team: string): Team {
 }
 
 function getTeams(rounds: GroupRound[]): TeamList {
-  const [firstRound] = rounds;
-  const teams = Object.entries(firstRound.round_data.player_stats).reduce(
-    (acc, [longId, playerStats]) => {
-      const team = getTeam(playerStats.team);
-      if (acc[team]) {
-        acc[team].push({
-          id: playerStats.guid,
-          name: playerStats.name,
-          longId,
-        });
-      } else {
-        acc[team] = [{ id: playerStats.guid, name: playerStats.name, longId }];
-      }
+  // Collect all players from all rounds, using their first team assignment
+  const playerMap = new Map<string, { team: Team; player: TeamPlayer }>();
 
-      return acc;
-    },
-    {} as TeamList,
-  );
+  for (const round of rounds) {
+    for (const [longId, playerStats] of Object.entries(
+      round.round_data.player_stats,
+    )) {
+      // Only add player if they haven't been seen before (use first team assignment)
+      if (!playerMap.has(playerStats.guid)) {
+        const team = getTeam(playerStats.team);
+        playerMap.set(playerStats.guid, {
+          team,
+          player: {
+            id: playerStats.guid,
+            name: playerStats.name,
+            longId,
+          },
+        });
+      }
+    }
+  }
+
+  // Convert map to TeamList structure
+  const teams: TeamList = { alpha: [], beta: [] };
+  for (const { team, player } of playerMap.values()) {
+    teams[team].push(player);
+  }
 
   return teams;
 }
