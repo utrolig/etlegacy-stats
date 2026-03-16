@@ -19,9 +19,7 @@ services:
       - "80"
     environment:
       - VARNISH_PURGE_TOKEN=${VARNISH_PURGE_TOKEN}
-      - VARNISH_CACHE_SIZE=${VARNISH_CACHE_SIZE:-1g}
-    tmpfs:
-      - /var/lib/varnish/varnishd:exec
+      - VARNISH_CACHE_SIZE=${VARNISH_CACHE_SIZE:-3g}
     depends_on:
       - etlegacy-stats-astro
 
