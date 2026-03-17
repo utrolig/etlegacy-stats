@@ -21,15 +21,25 @@ RUN NGINX_VERSION=$(nginx -v 2>&1 | sed -n 's/.*nginx\/\([0-9]\+\.[0-9]\+\.[0-9]
     git clone https://github.com/nginx-modules/ngx_cache_purge.git
 
 # Build nginx with cache-purge module
+# Filter out Alpine-specific flags that don't work when building from source
 WORKDIR /tmp
 RUN NGINX_VERSION=$(nginx -v 2>&1 | sed -n 's/.*nginx\/\([0-9]\+\.[0-9]\+\.[0-9]\+\).*/\1/p') && \
     cd nginx-${NGINX_VERSION} && \
+    NGX_CONFIGURE_FLAGS=$(nginx -V 2>&1 | grep 'configure arguments:' | sed 's/configure arguments: //' | \
+        sed 's/-fstack-clash-protection//g' | \
+        sed 's/-fstack-protector-strong//g' | \
+        sed 's/-Wformat//g' | \
+        sed 's/-Werror=format-security//g' | \
+        sed 's/-D_FORTIFY_SOURCE=2//g' | \
+        sed 's/-Os//g' | \
+        sed 's/--sysroot=[^ ]*//g' | \
+        sed 's/-Wl,-z,relro//g' | \
+        sed 's/-Wl,-z,now//g') && \
     ./configure \
         --with-compat \
         --add-dynamic-module=../ngx_cache_purge \
-        $(nginx -V 2>&1 | grep 'configure arguments:' | sed 's/configure arguments: //') && \
+        ${NGX_CONFIGURE_FLAGS} && \
     make modules && \
-    # Copy module to known location for easier COPY later
     cp objs/ngx_http_cache_purge_module.so /tmp/ngx_http_cache_purge_module.so
 
 # Final image
