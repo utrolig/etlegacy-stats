@@ -9,9 +9,6 @@
 		ttl 720h
 		stale 1h
 		default_cache_control public, s-maxage=2592000, max-age=0, must-revalidate
-		badger {
-			path /var/cache/caddy
-		}
 	}
 }
 
@@ -28,7 +25,7 @@
 			stale 1h
 			default_cache_control public, s-maxage=2592000, max-age=0, must-revalidate
 			badger {
-				path /var/cache/caddy
+				path /var/cache/caddy/root
 			}
 		}
 		reverse_proxy {$ASTRO_UPSTREAM} {
@@ -43,7 +40,7 @@
 			stale 1h
 			default_cache_control public, s-maxage=2592000, max-age=0, must-revalidate
 			badger {
-				path /var/cache/caddy
+				path /var/cache/caddy/matches
 			}
 		}
 		reverse_proxy {$ASTRO_UPSTREAM} {
@@ -90,7 +87,7 @@
 			stale 24h
 			default_cache_control public, max-age=31536000, immutable
 			badger {
-				path /var/cache/caddy
+				path /var/cache/caddy/static
 			}
 		}
 		reverse_proxy {$ASTRO_UPSTREAM}
