@@ -6,6 +6,17 @@
 			souin {
 			}
 		}
+		default_cache {
+			ttl 720h
+			stale 1h
+			default_cache_control public, s-maxage=2592000, max-age=0, must-revalidate
+			simplefs {
+				configuration {
+					path /var/cache/caddy
+					size 100000
+				}
+			}
+		}
 	}
 }
 
