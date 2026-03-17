@@ -6,7 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"net/url"
+
 	"os"
 	"regexp"
 	"strings"
@@ -52,7 +52,7 @@ func main() {
 			return
 		}
 
-		if err := purgeByCacheKeyPatterns(client, souinURL, cacheKeyPatterns(r.Host, guid)); err != nil {
+		if err := purgeBySurrogateKeys(client, souinURL, surrogateKeys(guid)); err != nil {
 			log.Printf("purge failed for guid %s: %v", guid, err)
 			writeJSON(w, http.StatusBadGateway, responseBody{Error: true, Msg: "Failed to purge cache."})
 			return
@@ -65,16 +65,18 @@ func main() {
 	log.Fatal(http.ListenAndServe(addr, mux))
 }
 
-func purgeByCacheKeyPatterns(client *http.Client, souinURL string, patterns []string) error {
-	for _, pattern := range patterns {
+func purgeBySurrogateKeys(client *http.Client, souinURL string, keys []string) error {
+	for _, key := range keys {
+		// Souin uses the Surrogate-Key header to identify what to purge
 		req, err := http.NewRequest(
 			"PURGE",
-			souinURL+"/"+url.PathEscape(pattern),
+			souinURL+"/",
 			nil,
 		)
 		if err != nil {
 			return err
 		}
+		req.Header.Set("Surrogate-Key", key)
 
 		resp, err := client.Do(req)
 		if err != nil {
@@ -84,22 +86,20 @@ func purgeByCacheKeyPatterns(client *http.Client, souinURL string, patterns []st
 		if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 			body, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
 			resp.Body.Close()
-			return fmt.Errorf("souin purge returned %d for %q: %s", resp.StatusCode, pattern, strings.TrimSpace(string(body)))
+			return fmt.Errorf("souin purge returned %d for key %q: %s", resp.StatusCode, key, strings.TrimSpace(string(body)))
 		}
 
 		resp.Body.Close()
+		log.Printf("purged surrogate-key: %s", key)
 	}
 
 	return nil
 }
 
-func cacheKeyPatterns(host, guid string) []string {
-	safeHost := regexp.QuoteMeta(host)
-	safeGuid := regexp.QuoteMeta(guid)
-
+func surrogateKeys(guid string) []string {
 	return []string{
-		fmt.Sprintf("GET-http-%s-/$", safeHost),
-		fmt.Sprintf("GET-http-%s-/matches/%s.*", safeHost, safeGuid),
+		"root",
+		"match-" + guid,
 	}
 }
 
