@@ -9,11 +9,8 @@
 		ttl 720h
 		stale 1h
 		default_cache_control public, s-maxage=2592000, max-age=0, must-revalidate
-		simplefs {
-			configuration {
-				path /var/cache/caddy
-				size 100000
-			}
+		badger {
+			path /var/cache/caddy
 		}
 	}
 }
@@ -30,11 +27,8 @@
 			ttl 720h
 			stale 1h
 			default_cache_control public, s-maxage=2592000, max-age=0, must-revalidate
-			simplefs {
-				configuration {
-					path /var/cache/caddy
-					size 100000
-				}
+			badger {
+				path /var/cache/caddy
 			}
 		}
 		reverse_proxy {$ASTRO_UPSTREAM} {
@@ -48,11 +42,8 @@
 			ttl 720h
 			stale 1h
 			default_cache_control public, s-maxage=2592000, max-age=0, must-revalidate
-			simplefs {
-				configuration {
-					path /var/cache/caddy
-					size 100000
-				}
+			badger {
+				path /var/cache/caddy
 			}
 		}
 		reverse_proxy {$ASTRO_UPSTREAM} {
@@ -98,11 +89,8 @@
 			ttl 8760h
 			stale 24h
 			default_cache_control public, max-age=31536000, immutable
-			simplefs {
-				configuration {
-					path /var/cache/caddy
-					size 100000
-				}
+			badger {
+				path /var/cache/caddy
 			}
 		}
 		reverse_proxy {$ASTRO_UPSTREAM}
