@@ -25,7 +25,7 @@ func main() {
 	addr := envOrDefault("PURGE_HELPER_ADDR", "127.0.0.1:9080")
 	token := strings.TrimSpace(os.Getenv("CACHE_PURGE_TOKEN"))
 	souinURL := strings.TrimRight(
-		envOrDefault("SOUIN_API_URL", "http://127.0.0.1/souin-api/souin"),
+		envOrDefault("SOUIN_API_URL", "http://127.0.0.1:2019/souin-api/souin"),
 		"/",
 	)
 
