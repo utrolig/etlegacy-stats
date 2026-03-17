@@ -26,9 +26,6 @@
 
 	@root_exact expression `{path} == "/" && {query} == ""`
 	handle @root_exact {
-		header {
-			+Surrogate-Key root
-		}
 		cache {
 			ttl 720h
 			stale 1h
@@ -40,14 +37,13 @@
 				}
 			}
 		}
-		reverse_proxy {$ASTRO_UPSTREAM}
+		reverse_proxy {$ASTRO_UPSTREAM} {
+			header_down +Surrogate-Key "root"
+		}
 	}
 
 	@match_page path_regexp match_page ^/matches/([0-9a-fA-F-]+)$
 	handle @match_page {
-		header {
-			+Surrogate-Key "root match-{re.match_page.1}"
-		}
 		cache {
 			ttl 720h
 			stale 1h
@@ -59,7 +55,9 @@
 				}
 			}
 		}
-		reverse_proxy {$ASTRO_UPSTREAM}
+		reverse_proxy {$ASTRO_UPSTREAM} {
+			header_down +Surrogate-Key "root match-{re.match_page.1}"
+		}
 	}
 
 	@analytics_a_script path /anal/a/script.js
