@@ -9,6 +9,9 @@
 		ttl 720h
 		stale 1h
 		default_cache_control public, s-maxage=2592000, max-age=0, must-revalidate
+		badger {
+			path /var/cache/caddy
+		}
 	}
 }
 
@@ -20,14 +23,7 @@
 
 	@root_exact expression `{path} == "/" && {query} == ""`
 	handle @root_exact {
-		cache {
-			ttl 720h
-			stale 1h
-			default_cache_control public, s-maxage=2592000, max-age=0, must-revalidate
-			badger {
-				path /var/cache/caddy/root
-			}
-		}
+		cache
 		reverse_proxy {$ASTRO_UPSTREAM} {
 			header_down +Surrogate-Key "root"
 		}
@@ -35,14 +31,7 @@
 
 	@match_page path_regexp match_page ^/matches/([0-9a-fA-F-]+)$
 	handle @match_page {
-		cache {
-			ttl 720h
-			stale 1h
-			default_cache_control public, s-maxage=2592000, max-age=0, must-revalidate
-			badger {
-				path /var/cache/caddy/matches
-			}
-		}
+		cache
 		reverse_proxy {$ASTRO_UPSTREAM} {
 			header_down +Surrogate-Key "root match-{re.match_page.1}"
 		}
@@ -82,14 +71,7 @@
 
 	@static_assets path_regexp static_assets ^/.+\.(js|css)$
 	handle @static_assets {
-		cache {
-			ttl 8760h
-			stale 24h
-			default_cache_control public, max-age=31536000, immutable
-			badger {
-				path /var/cache/caddy/static
-			}
-		}
+		cache
 		reverse_proxy {$ASTRO_UPSTREAM}
 	}
 

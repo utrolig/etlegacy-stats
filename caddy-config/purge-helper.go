@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"regexp"
 	"strings"
@@ -28,8 +27,6 @@ func main() {
 		envOrDefault("SOUIN_API_URL", "http://127.0.0.1:2019/souin-api/souin"),
 		"/",
 	)
-	externalHost := envOrDefault("EXTERNAL_HOST", "simple-stats.stiba.lol")
-
 	if token == "" {
 		log.Fatal("CACHE_PURGE_TOKEN must be set")
 	}
@@ -53,9 +50,9 @@ func main() {
 			return
 		}
 
-		// Purge by exact cache keys since simplefs doesn't support surrogate key indexing
-		keys := cacheKeys(externalHost, guid)
-		if err := purgeByCacheKeys(client, souinURL, keys); err != nil {
+		// Purge by surrogate keys - works properly with Badger storage
+		keys := surrogateKeys(guid)
+		if err := purgeBySurrogateKeys(client, souinURL, keys); err != nil {
 			log.Printf("purge failed for guid %s: %v", guid, err)
 			writeJSON(w, http.StatusBadGateway, responseBody{Error: true, Msg: "Failed to purge cache."})
 			return
@@ -65,20 +62,21 @@ func main() {
 	})
 
 	log.Printf("purge helper listening on %s", addr)
-	log.Printf("will purge keys for host: %s", externalHost)
+	log.Printf("purge helper started")
 	log.Fatal(http.ListenAndServe(addr, mux))
 }
 
-func purgeByCacheKeys(client *http.Client, souinURL string, keys []string) error {
+func purgeBySurrogateKeys(client *http.Client, souinURL string, keys []string) error {
 	for _, key := range keys {
 		req, err := http.NewRequest(
 			"PURGE",
-			souinURL+"/"+url.PathEscape(key),
+			souinURL+"/",
 			nil,
 		)
 		if err != nil {
 			return err
 		}
+		req.Header.Set("Surrogate-Key", key)
 
 		resp, err := client.Do(req)
 		if err != nil {
@@ -92,18 +90,16 @@ func purgeByCacheKeys(client *http.Client, souinURL string, keys []string) error
 		}
 
 		resp.Body.Close()
-		log.Printf("purged cache key: %s", key)
+		log.Printf("purged surrogate-key: %s", key)
 	}
 
 	return nil
 }
 
-func cacheKeys(host, guid string) []string {
-	// Souin cache key format: GET-http-<host>-<path>
-	// Based on your header: GET-http-simple-stats.stiba.lol-/matches/9c8e8ca2-c006-529a-a6b0-62013fc1f637
+func surrogateKeys(guid string) []string {
 	return []string{
-		fmt.Sprintf("GET-http-%s-/", host),
-		fmt.Sprintf("GET-http-%s-/matches/%s", host, guid),
+		"root",
+		"match-" + guid,
 	}
 }
 
