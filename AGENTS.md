@@ -25,11 +25,14 @@ This repository contains an ET: Legacy match statistics viewer built with Astro 
 │   ├── public/             # Public static assets
 │   ├── scripts/            # Build/utility scripts
 │   └── api-cache/          # Local API cache for development
-├── caddy-config/           # Caddy reverse proxy and cache configuration
-│   ├── Caddyfile           # Caddy configuration
-│   ├── Dockerfile          # Caddy + Souin cache plugin build
-│   ├── purge-helper.go     # Go helper for cache purging
-│   └── docker-entrypoint.sh
+├── cache-proxy/            # Go reverse proxy with disk caching
+│   ├── main.go             # Proxy implementation
+│   ├── Dockerfile          # Proxy container build
+│   └── README.md           # Proxy documentation
+├── dev/                    # Local development scripts
+│   ├── build.sh            # Build both Docker images
+│   ├── up.sh               # Start local dev environment
+│   └── down.sh             # Stop local dev environment
 └── AGENTS.md               # This file
 ```
 
@@ -57,6 +60,26 @@ npm run convert-images   # Convert PNG/JPG images to AVIF format
 npm ci                   # Install exact dependencies from package-lock.json
 ```
 
+## Local Development with Docker
+
+Test the full stack locally with the cache proxy:
+
+```bash
+cd /home/stiba/Repos/etlegacy-stats/dev
+
+# Build both Docker images
+./build.sh
+
+# Start services (proxy on :8080, Astro internal on :4321)
+./up.sh
+
+# Test
+open http://localhost:8080
+
+# Stop services
+./down.sh
+```
+
 ## Deployment Architecture
 
 The application deploys as two separate services:
@@ -66,10 +89,11 @@ The application deploys as two separate services:
    - Builds and runs as standalone server on port 4321
    - Requires `API_TOKEN` environment variable for player Discord name lookups
 
-2. **Caddy Reverse Proxy** (`caddy-config/Dockerfile`)
-   - Caddy 2.11 with Souin caching plugin
+2. **Cache Proxy** (`cache-proxy/Dockerfile`)
+   - Custom Go reverse proxy with file-based disk caching
+   - Simple cache keys: `root`, `match:{guid}`, `static:{path}`
    - Serves cached responses with 720h TTL for match pages
-   - Includes Go-based purge helper for cache invalidation
+   - On-demand purge via `POST /cache/purge/{guid}`
    - Requires environment variables:
      - `ASTRO_UPSTREAM`: URL to Astro service (e.g., `http://etlegacy-stats-astro:4321`)
      - `CACHE_PURGE_TOKEN`: Bearer token for cache purge API
