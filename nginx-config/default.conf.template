@@ -1,6 +1,8 @@
 server {
     listen 80;
     server_name _;
+    resolver 127.0.0.11 valid=10s ipv6=off;
+    set $astro_upstream ${ASTRO_UPSTREAM};
 
     # Rewrite rules for /anal/ paths
     location ~* ^/anal/a/script\.js$ {
@@ -33,7 +35,7 @@ server {
 
     # All other requests go to Astro
     location / {
-        proxy_pass ${ASTRO_UPSTREAM};
+        proxy_pass $astro_upstream;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
