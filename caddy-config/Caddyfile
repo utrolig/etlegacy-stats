@@ -3,9 +3,7 @@
 
 	cache {
 		api {
-			basepath /internal-cache-api
 			souin {
-				basepath /souin
 			}
 		}
 	}
