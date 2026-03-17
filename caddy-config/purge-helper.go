@@ -24,7 +24,10 @@ type responseBody struct {
 func main() {
 	addr := envOrDefault("PURGE_HELPER_ADDR", "127.0.0.1:9080")
 	token := strings.TrimSpace(os.Getenv("CACHE_PURGE_TOKEN"))
-	souinURL := envOrDefault("SOUIN_API_URL", "http://127.0.0.1/internal-cache-api/souin/")
+	souinURL := strings.TrimRight(
+		envOrDefault("SOUIN_API_URL", "http://127.0.0.1/internal-cache-api/souin"),
+		"/",
+	)
 
 	if token == "" {
 		log.Fatal("CACHE_PURGE_TOKEN must be set")

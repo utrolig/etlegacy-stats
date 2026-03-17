@@ -11,7 +11,7 @@ FROM caddy:2.11-builder-alpine AS caddy-builder
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
     xcaddy build \
-      --with github.com/caddyserver/cache-handler \
+      --with github.com/darkweak/souin/plugins/caddy \
       --with github.com/darkweak/storages/simplefs/caddy
 
 FROM caddy:2.11-alpine
