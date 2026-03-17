@@ -15,24 +15,28 @@ RUN apk add --no-cache \
 
 # Download nginx source and cache-purge module
 WORKDIR /tmp
-RUN NGINX_VERSION=$(nginx -v 2>&1 | grep -oP '\d+\.\d+\.\d+') && \
+RUN NGINX_VERSION=$(nginx -v 2>&1 | sed -n 's/.*nginx\/\([0-9]\+\.[0-9]\+\.[0-9]\+\).*/\1/p') && \
     wget http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz && \
     tar -xzf nginx-${NGINX_VERSION}.tar.gz && \
     git clone https://github.com/nginx-modules/ngx_cache_purge.git
 
 # Build nginx with cache-purge module
-WORKDIR /tmp/nginx-${NGINX_VERSION}
-RUN ./configure \
-    --with-compat \
-    --add-dynamic-module=../ngx_cache_purge \
-    $(nginx -V 2>&1 | grep 'configure arguments:' | sed 's/configure arguments: //') && \
-    make modules
+WORKDIR /tmp
+RUN NGINX_VERSION=$(nginx -v 2>&1 | sed -n 's/.*nginx\/\([0-9]\+\.[0-9]\+\.[0-9]\+\).*/\1/p') && \
+    cd nginx-${NGINX_VERSION} && \
+    ./configure \
+        --with-compat \
+        --add-dynamic-module=../ngx_cache_purge \
+        $(nginx -V 2>&1 | grep 'configure arguments:' | sed 's/configure arguments: //') && \
+    make modules && \
+    # Copy module to known location for easier COPY later
+    cp objs/ngx_http_cache_purge_module.so /tmp/ngx_http_cache_purge_module.so
 
 # Final image
 FROM nginx:alpine
 
 # Copy the cache purge module
-COPY --from=builder /tmp/nginx-*/objs/ngx_http_cache_purge_module.so /etc/nginx/modules/
+COPY --from=builder /tmp/ngx_http_cache_purge_module.so /etc/nginx/modules/
 
 # Load the module in nginx.conf
 RUN mkdir -p /var/cache/nginx && \
