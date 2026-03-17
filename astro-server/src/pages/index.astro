@@ -1,0 +1,54 @@
+---
+import { MatchList } from "../components/MatchList";
+import MatchListLayout from "../layouts/MatchListLayout.astro";
+import { MatchPagination } from "../components/MatchPagination.tsx";
+import { statsApi } from "../util/stats-api";
+import { MatchTypeMenu } from "../components/MatchTypeMenu";
+
+function getPage() {
+  const page = Astro.url.searchParams.get("page");
+
+  if (page === null) {
+    return 1;
+  }
+
+  return Number(page);
+}
+
+function getSize() {
+  const size = Astro.url.searchParams.get("size");
+
+  if (size === null) {
+    return undefined;
+  }
+
+  return Number(size);
+}
+
+const page = getPage();
+const size = getSize();
+
+const matches = await statsApi.fetchGroups({ page, size });
+---
+
+<MatchListLayout
+  frontmatter={{
+    title: "ETL Stats",
+    description: "Stats page for ETLegacy games",
+  }}
+>
+  <div class="flex flex-col">
+    <a href="/" class="text-4xl my-6 text-center">ETLegacy Stats</a>
+    <MatchTypeMenu currentUrl={Astro.url.toString()} size={size} />
+    <MatchList
+      matches={matches.items}
+      size={size}
+      currentUrl={Astro.url.toString()}
+    />
+    <MatchPagination
+      page={page}
+      totalPages={matches.total_pages}
+      currentUrl={Astro.url.toString()}
+    />
+  </div>
+</MatchListLayout>

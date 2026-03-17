@@ -1,0 +1,44 @@
+---
+import MatchDetailsLayout from "../../../layouts/MatchDetailsLayout.astro";
+import { MatchPageWrapper } from "../../../components/MatchPageWrapper";
+import { statsApi, type PlayerInfoDict } from "../../../util/stats-api";
+import { getMatchStats } from "../../../util/stats";
+
+const { match } = Astro.params;
+const roundsQuery = Astro.url.searchParams.get("round");
+const mapQuery = Astro.url.searchParams.get("map");
+const matchDetails = await statsApi.fetchGroupDetails(match!);
+const matchStats = getMatchStats(matchDetails);
+
+const parseRoundsQuery = (roundsQuery: string) => {
+  return Number(roundsQuery);
+};
+
+const playerGuids = [...matchStats.teams.beta, ...matchStats.teams.alpha].map(
+  (s) => s.longId,
+);
+const playerDiscordNames = await statsApi.fetchUsersByGuid(
+  playerGuids,
+  import.meta.env.API_TOKEN,
+);
+
+const playerInfoDict = playerDiscordNames.reduce((acc, player) => {
+  acc[player.guid] = player;
+  return acc;
+}, {} as PlayerInfoDict);
+---
+
+<MatchDetailsLayout
+  frontmatter={{
+    title: `ETLStats ${match}`,
+    description: `Stats for match ${match}`,
+  }}
+>
+  <MatchPageWrapper
+    client:idle
+    round={parseRoundsQuery(roundsQuery ?? "0")}
+    map={mapQuery ?? undefined}
+    matchDetails={matchDetails}
+    playerInfoDict={playerInfoDict}
+  />
+</MatchDetailsLayout>

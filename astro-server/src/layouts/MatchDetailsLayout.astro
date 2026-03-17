@@ -1,0 +1,47 @@
+---
+import "@fontsource-variable/nunito-sans";
+import Head from "../components/Head.astro";
+import "../assets/global.css";
+
+interface Props {
+  frontmatter: {
+    title: string;
+    description: string;
+  };
+}
+
+const { frontmatter } = Astro.props;
+---
+
+<!doctype html>
+<html
+  class="h-full w-full m-0 bg-mud-800 text-bush-50 antialiased scrollbar-thin"
+  lang="en"
+>
+  <head>
+    <meta charset="UTF-8" />
+    <Head {...frontmatter} />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/etl.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <title>Astro Basics</title>
+  </head>
+  <body class="h-full w-full m-0">
+    <main class="max-w-[1300px] mx-auto overflow-hidden">
+      <slot />
+    </main>
+
+    <script
+      defer
+      data-domain="etlstats.stiba.lol"
+      data-api="/anal/a"
+      src="/anal/a/script.js"
+      is:inline></script>
+    <script
+      defer
+      data-domain="etlstats.stiba.lol"
+      data-api="/anal/m"
+      src="/anal/m/script.js"
+      is:inline></script>
+  </body>
+</html>

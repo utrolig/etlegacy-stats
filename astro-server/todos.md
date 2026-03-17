@@ -1,0 +1,1 @@
+- Fix image conversion at build time.
