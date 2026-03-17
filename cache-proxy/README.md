@@ -4,11 +4,11 @@ Simple Go reverse proxy with file-based disk caching.
 
 ## Features
 
-- **Disk-based caching** - Persists across restarts
-- **Simple cache keys** - `root`, `match:{guid}`, `static:{path}`
+- **Disk-based caching** - Persists across restarts (HTML pages only)
+- **Simple cache keys** - `root`, `match:{guid}`
 - **Purge API** - `POST /cache/purge/{guid}` or `/cache/purge/root`
 - **Analytics proxy** - Rewrites `/anal/*` to `app.lythia.dev`
-- **Static asset caching** - 1 year immutable cache for CSS/JS/images
+- **Static assets** - Pass through with `immutable` cache headers (not cached in proxy)
 
 ## Environment Variables
 
@@ -21,11 +21,12 @@ Simple Go reverse proxy with file-based disk caching.
 
 ## Cache Keys
 
-| Route | Cache Key |
-|-------|-----------|
-| `/` | `root` |
-| `/matches/{guid}` | `match:{guid}` |
-| `/style.css`, `/app.js`, etc. | `static:{path}` |
+| Route | Cache Key | Cached? |
+|-------|-----------|---------|
+| `/` | `root` | Yes |
+| `/matches/{guid}` | `match:{guid}` | Yes |
+| Static assets (CSS, JS, images) | - | No (cache headers added) |
+| `/search/*`, `/api/*` | - | No |
 
 ## Purge Examples
 
@@ -41,5 +42,6 @@ curl -X POST -H "Authorization: Bearer $TOKEN" \
 
 ## Response Headers
 
-- `X-Cache-Status: HIT|MISS` - Shows if served from cache
-- `Cache-Control` - Set appropriately for each content type
+- `X-Cache-Status: HIT|MISS` - Shows if served from proxy cache (HTML only)
+- `Cache-Control: public, s-maxage=2592000, max-age=0, must-revalidate` - HTML pages
+- `Cache-Control: public, max-age=31536000, immutable` - Static assets

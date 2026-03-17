@@ -163,7 +163,6 @@ func handleProxy(w http.ResponseWriter, r *http.Request) {
 	// Determine cache key and TTL based on path
 	var cacheKey string
 	var ttl time.Duration
-	var immutable bool
 
 	switch {
 	case r.URL.Path == "/":
@@ -176,13 +175,13 @@ func handleProxy(w http.ResponseWriter, r *http.Request) {
 			cacheKey = "match:" + parts[2]
 			ttl = 720 * time.Hour
 		}
-	case isStaticAsset(r.URL.Path):
-		cacheKey = "static:" + r.URL.Path
-		ttl = 8760 * time.Hour // 1 year
-		immutable = true
 	case strings.HasPrefix(r.URL.Path, "/search/") || strings.HasPrefix(r.URL.Path, "/api/"):
 		// No cache for search/API
 		proxyToAstro(w, r)
+		return
+	case isStaticAsset(r.URL.Path):
+		// Pass through to Astro but add cache headers
+		proxyToAstroWithCacheHeader(w, r)
 		return
 	}
 
@@ -194,17 +193,13 @@ func handleProxy(w http.ResponseWriter, r *http.Request) {
 
 	// Try to serve from cache
 	if cached := serveFromCache(w, r, cacheKey, ttl); cached {
-		if !immutable {
-			w.Header().Set("X-Cache-Status", "HIT")
-		}
+		w.Header().Set("X-Cache-Status", "HIT")
 		return
 	}
 
 	// Fetch from upstream and cache
-	if !immutable {
-		w.Header().Set("X-Cache-Status", "MISS")
-	}
-	fetchAndCache(w, r, cacheKey, ttl, immutable)
+	w.Header().Set("X-Cache-Status", "MISS")
+	fetchAndCache(w, r, cacheKey, ttl)
 }
 
 func proxyToAstro(w http.ResponseWriter, r *http.Request) {
@@ -215,6 +210,31 @@ func proxyToAstro(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadGateway)
 	}
 	proxy.ServeHTTP(w, r)
+}
+
+func proxyToAstroWithCacheHeader(w http.ResponseWriter, r *http.Request) {
+	// Wrap response writer to add cache headers
+	rw := &responseWriterWithHeader{
+		ResponseWriter: w,
+		headerCallback: func(h http.Header) {
+			h.Set("Cache-Control", "public, max-age=31536000, immutable")
+		},
+	}
+	proxyToAstro(rw, r)
+}
+
+type responseWriterWithHeader struct {
+	http.ResponseWriter
+	headerCallback func(http.Header)
+	wroteHeader    bool
+}
+
+func (r *responseWriterWithHeader) WriteHeader(status int) {
+	if !r.wroteHeader {
+		r.headerCallback(r.Header())
+		r.wroteHeader = true
+	}
+	r.ResponseWriter.WriteHeader(status)
 }
 
 func serveFromCache(w http.ResponseWriter, _ *http.Request, cacheKey string, ttl time.Duration) bool {
@@ -257,17 +277,13 @@ func serveFromCache(w http.ResponseWriter, _ *http.Request, cacheKey string, ttl
 	return true
 }
 
-func fetchAndCache(w http.ResponseWriter, r *http.Request, cacheKey string, _ time.Duration, immutable bool) {
+func fetchAndCache(w http.ResponseWriter, r *http.Request, cacheKey string, _ time.Duration) {
 	// Create a custom response writer to capture the response
 	captured := &captureWriter{ResponseWriter: w}
 	proxyToAstro(captured, r)
 
 	// Set cache headers on actual response
-	if immutable {
-		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
-	} else {
-		w.Header().Set("Cache-Control", "public, s-maxage=2592000, max-age=0, must-revalidate")
-	}
+	w.Header().Set("Cache-Control", "public, s-maxage=2592000, max-age=0, must-revalidate")
 	w.Header().Set("X-Cache-Status", "MISS")
 
 	// Save to cache
