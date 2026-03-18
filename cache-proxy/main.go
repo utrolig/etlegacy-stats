@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"io"
 	"log"
 	"net/http"
@@ -12,15 +13,19 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
 var (
-	astroUpstream    string
-	purgeToken       string
-	cacheDir         string
-	analyticsClient  *http.Client
+	astroUpstream   string
+	purgeToken      string
+	cacheDir        string
+	analyticsClient *http.Client
+	cacheMu         sync.Mutex
+	astroProxyFunc  = proxyToAstro
 )
 
 func main() {
@@ -80,28 +85,13 @@ func handlePurge(w http.ResponseWriter, r *http.Request) {
 		cacheKey = "match:" + path
 	}
 
-	// Delete from cache
-	cacheFile := filepath.Join(cacheDir, hashKey(cacheKey))
-	if err := os.Remove(cacheFile); err != nil && !os.IsNotExist(err) {
-		log.Printf("Failed to remove cache file %s: %v", cacheFile, err)
-	}
-
-	// Also delete metadata
-	metaFile := cacheFile + ".meta"
-	if err := os.Remove(metaFile); err != nil && !os.IsNotExist(err) {
-		log.Printf("Failed to remove meta file %s: %v", metaFile, err)
-	}
+	recordPurge(cacheKey)
+	deleteCacheEntry(cacheKey)
 
 	// If purging a match, also purge root (match list contains this match)
 	if path != "root" {
-		rootCacheFile := filepath.Join(cacheDir, hashKey("root"))
-		if err := os.Remove(rootCacheFile); err != nil && !os.IsNotExist(err) {
-			log.Printf("Failed to remove root cache file: %v", err)
-		}
-		rootMetaFile := rootCacheFile + ".meta"
-		if err := os.Remove(rootMetaFile); err != nil && !os.IsNotExist(err) {
-			log.Printf("Failed to remove root meta file: %v", err)
-		}
+		recordPurge("root")
+		deleteCacheEntry("root")
 		log.Printf("Also purged root (due to match purge)")
 	}
 
@@ -177,7 +167,7 @@ func handleProxy(w http.ResponseWriter, r *http.Request) {
 		}
 	case strings.HasPrefix(r.URL.Path, "/search/") || strings.HasPrefix(r.URL.Path, "/api/"):
 		// No cache for search/API
-		proxyToAstro(w, r)
+		astroProxyFunc(w, r)
 		return
 	case isStaticAsset(r.URL.Path):
 		// Pass through to Astro but add cache headers
@@ -187,18 +177,16 @@ func handleProxy(w http.ResponseWriter, r *http.Request) {
 
 	if cacheKey == "" {
 		// Default: no cache
-		proxyToAstro(w, r)
+		astroProxyFunc(w, r)
 		return
 	}
 
 	// Try to serve from cache
 	if cached := serveFromCache(w, r, cacheKey, ttl); cached {
-		w.Header().Set("X-Cache-Status", "HIT")
 		return
 	}
 
 	// Fetch from upstream and cache
-	w.Header().Set("X-Cache-Status", "MISS")
 	fetchAndCache(w, r, cacheKey, ttl)
 }
 
@@ -220,7 +208,7 @@ func proxyToAstroWithCacheHeader(w http.ResponseWriter, r *http.Request) {
 			h.Set("Cache-Control", "public, max-age=31536000, immutable")
 		},
 	}
-	proxyToAstro(rw, r)
+	astroProxyFunc(rw, r)
 }
 
 type responseWriterWithHeader struct {
@@ -238,53 +226,49 @@ func (r *responseWriterWithHeader) WriteHeader(status int) {
 }
 
 func serveFromCache(w http.ResponseWriter, _ *http.Request, cacheKey string, ttl time.Duration) bool {
-	cacheFile := filepath.Join(cacheDir, hashKey(cacheKey))
-	metaFile := cacheFile + ".meta"
-
-	// Check if cache exists and is not expired
-	info, err := os.Stat(cacheFile)
-	if err != nil {
+	cacheMu.Lock()
+	meta, data, purgeTime, ok := loadCacheEntry(cacheKey, ttl)
+	if !ok {
+		cacheMu.Unlock()
 		return false
 	}
 
-	if time.Since(info.ModTime()) > ttl {
-		return false
+	meta.Hits++
+	if err := writeCacheMeta(cacheKey, meta); err != nil {
+		log.Printf("Failed to update cache hits for %s: %v", cacheKey, err)
 	}
+	cacheMu.Unlock()
 
-	// Read metadata
-	metaData, err := os.ReadFile(metaFile)
-	if err != nil {
-		return false
-	}
-
-	var meta cacheMeta
-	if err := json.Unmarshal(metaData, &meta); err != nil {
-		return false
-	}
-
-	// Write headers
 	for k, v := range meta.Headers {
 		for _, vv := range v {
 			w.Header().Add(k, vv)
 		}
 	}
 	w.Header().Set("X-Cache-Status", "HIT")
+	w.Header().Set("X-Cache-Hits", intToString(meta.Hits))
+	if !purgeTime.IsZero() {
+		w.Header().Set("X-Cache-Last-Purged", purgeTime.UTC().Format(time.RFC3339))
+	}
 	w.WriteHeader(meta.Status)
-
-	// Write body
-	data, _ := os.ReadFile(cacheFile)
 	w.Write(data)
 	return true
 }
 
 func fetchAndCache(w http.ResponseWriter, r *http.Request, cacheKey string, _ time.Duration) {
+	purgeTime, err := readPurgeTime(cacheKey)
+	if err != nil {
+		log.Printf("Failed to read purge time for %s: %v", cacheKey, err)
+	}
+
 	// Create a custom response writer to capture the response
 	captured := &captureWriter{ResponseWriter: w}
-	proxyToAstro(captured, r)
-
-	// Set cache headers on actual response
 	w.Header().Set("Cache-Control", "public, s-maxage=2592000, max-age=0, must-revalidate")
 	w.Header().Set("X-Cache-Status", "MISS")
+	w.Header().Set("X-Cache-Hits", "0")
+	if !purgeTime.IsZero() {
+		w.Header().Set("X-Cache-Last-Purged", purgeTime.UTC().Format(time.RFC3339))
+	}
+	astroProxyFunc(captured, r)
 
 	// Save to cache
 	saveToCache(cacheKey, captured.status, captured.headers, captured.body.Bytes())
@@ -319,8 +303,10 @@ func (c *captureWriter) Write(p []byte) (int, error) {
 }
 
 func saveToCache(cacheKey string, status int, headers http.Header, body []byte) {
-	cacheFile := filepath.Join(cacheDir, hashKey(cacheKey))
-	metaFile := cacheFile + ".meta"
+	cacheMu.Lock()
+	defer cacheMu.Unlock()
+
+	cacheFile, _ := cachePaths(cacheKey)
 
 	// Save body
 	if err := os.WriteFile(cacheFile, body, 0644); err != nil {
@@ -332,9 +318,9 @@ func saveToCache(cacheKey string, status int, headers http.Header, body []byte) 
 	meta := cacheMeta{
 		Status:  status,
 		Headers: headers,
+		Hits:    0,
 	}
-	metaData, _ := json.Marshal(meta)
-	if err := os.WriteFile(metaFile, metaData, 0644); err != nil {
+	if err := writeCacheMeta(cacheKey, meta); err != nil {
 		log.Printf("Failed to write cache meta: %v", err)
 	}
 }
@@ -355,6 +341,102 @@ func hashKey(key string) string {
 	return hex.EncodeToString(hash[:])
 }
 
+func cachePaths(cacheKey string) (string, string) {
+	cacheFile := filepath.Join(cacheDir, hashKey(cacheKey))
+	return cacheFile, cacheFile + ".meta"
+}
+
+func purgePath(cacheKey string) string {
+	return filepath.Join(cacheDir, hashKey(cacheKey)+".purged")
+}
+
+func loadCacheEntry(cacheKey string, ttl time.Duration) (cacheMeta, []byte, time.Time, bool) {
+	cacheFile, metaFile := cachePaths(cacheKey)
+
+	info, err := os.Stat(cacheFile)
+	if err != nil {
+		return cacheMeta{}, nil, time.Time{}, false
+	}
+
+	if time.Since(info.ModTime()) > ttl {
+		return cacheMeta{}, nil, time.Time{}, false
+	}
+
+	metaData, err := os.ReadFile(metaFile)
+	if err != nil {
+		return cacheMeta{}, nil, time.Time{}, false
+	}
+
+	var meta cacheMeta
+	if err := json.Unmarshal(metaData, &meta); err != nil {
+		return cacheMeta{}, nil, time.Time{}, false
+	}
+
+	data, err := os.ReadFile(cacheFile)
+	if err != nil {
+		return cacheMeta{}, nil, time.Time{}, false
+	}
+
+	purgeTime, err := readPurgeTime(cacheKey)
+	if err != nil {
+		log.Printf("Failed to read purge time for %s: %v", cacheKey, err)
+	}
+
+	return meta, data, purgeTime, true
+}
+
+func writeCacheMeta(cacheKey string, meta cacheMeta) error {
+	_, metaFile := cachePaths(cacheKey)
+	metaData, err := json.Marshal(meta)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(metaFile, metaData, 0644)
+}
+
+func deleteCacheEntry(cacheKey string) {
+	cacheMu.Lock()
+	defer cacheMu.Unlock()
+
+	cacheFile, metaFile := cachePaths(cacheKey)
+	if err := os.Remove(cacheFile); err != nil && !os.IsNotExist(err) {
+		log.Printf("Failed to remove cache file %s: %v", cacheFile, err)
+	}
+	if err := os.Remove(metaFile); err != nil && !os.IsNotExist(err) {
+		log.Printf("Failed to remove meta file %s: %v", metaFile, err)
+	}
+}
+
+func recordPurge(cacheKey string) {
+	cacheMu.Lock()
+	defer cacheMu.Unlock()
+
+	if err := os.WriteFile(purgePath(cacheKey), []byte(time.Now().UTC().Format(time.RFC3339)), 0644); err != nil {
+		log.Printf("Failed to record purge time for %s: %v", cacheKey, err)
+	}
+}
+
+func readPurgeTime(cacheKey string) (time.Time, error) {
+	data, err := os.ReadFile(purgePath(cacheKey))
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return time.Time{}, nil
+		}
+		return time.Time{}, err
+	}
+
+	parsed, err := time.Parse(time.RFC3339, strings.TrimSpace(string(data)))
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	return parsed, nil
+}
+
+func intToString(v int64) string {
+	return strconv.FormatInt(v, 10)
+}
+
 func getEnv(key, defaultVal string) string {
 	if v := os.Getenv(key); v != "" {
 		return v
@@ -365,4 +447,5 @@ func getEnv(key, defaultVal string) string {
 type cacheMeta struct {
 	Status  int         `json:"status"`
 	Headers http.Header `json:"headers"`
+	Hits    int64       `json:"hits"`
 }

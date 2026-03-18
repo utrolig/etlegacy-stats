@@ -43,5 +43,7 @@ curl -X POST -H "Authorization: Bearer $TOKEN" \
 ## Response Headers
 
 - `X-Cache-Status: HIT|MISS` - Shows if served from proxy cache (HTML only)
+- `X-Cache-Hits: <integer>` - Number of times a cached HTML entry has been served from disk cache
+- `X-Cache-Last-Purged: <RFC3339 UTC timestamp>` - Last recorded purge time for a cached HTML entry; omitted until first purge
 - `Cache-Control: public, s-maxage=2592000, max-age=0, must-revalidate` - HTML pages
 - `Cache-Control: public, max-age=31536000, immutable` - Static assets
