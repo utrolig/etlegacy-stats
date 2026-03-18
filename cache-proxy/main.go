@@ -159,10 +159,8 @@ func handleProxy(w http.ResponseWriter, r *http.Request) {
 		cacheKey = "root"
 		ttl = 720 * time.Hour // 30 days
 	case strings.HasPrefix(r.URL.Path, "/matches/"):
-		// Extract GUID from path
-		parts := strings.Split(r.URL.Path, "/")
-		if len(parts) >= 3 {
-			cacheKey = "match:" + parts[2]
+		if matchCacheKey := getMatchCacheKey(r); matchCacheKey != "" {
+			cacheKey = matchCacheKey
 			ttl = 720 * time.Hour
 		}
 	case strings.HasPrefix(r.URL.Path, "/search/") || strings.HasPrefix(r.URL.Path, "/api/"):
@@ -339,6 +337,24 @@ func isStaticAsset(path string) bool {
 func hashKey(key string) string {
 	hash := sha256.Sum256([]byte(key))
 	return hex.EncodeToString(hash[:])
+}
+
+func getMatchCacheKey(r *http.Request) string {
+	parts := strings.Split(r.URL.Path, "/")
+	if len(parts) < 3 {
+		return ""
+	}
+
+	cacheKey := "match:" + parts[2]
+	params := r.URL.Query()
+	if mapName := params.Get("map"); mapName != "" {
+		cacheKey += "?map=" + mapName
+	}
+	if round := params.Get("round"); round != "" {
+		cacheKey += "&round=" + round
+	}
+
+	return cacheKey
 }
 
 func cachePaths(cacheKey string) (string, string) {

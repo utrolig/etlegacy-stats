@@ -99,6 +99,47 @@ func TestNonCachedRoutesDoNotEmitCacheEntryHeaders(t *testing.T) {
 	}
 }
 
+func TestMatchQueryVariantsUseDistinctCacheEntries(t *testing.T) {
+	proxy := newTestProxy(t)
+
+	base := proxy.request(t, "/matches/test-guid")
+	if got := base.Body.String(); got != "<html>/matches/test-guid</html>" {
+		t.Fatalf("unexpected base body %q", got)
+	}
+
+	mapVariant := proxy.request(t, "/matches/test-guid?map=etl_adlernest")
+	if got := mapVariant.Header().Get("X-Cache-Status"); got != "MISS" {
+		t.Fatalf("expected MISS for first map variant request, got %q", got)
+	}
+	if got := mapVariant.Body.String(); got != "<html>/matches/test-guid?map=etl_adlernest</html>" {
+		t.Fatalf("unexpected map variant body %q", got)
+	}
+
+	mapVariantHit := proxy.request(t, "/matches/test-guid?map=etl_adlernest")
+	if got := mapVariantHit.Header().Get("X-Cache-Status"); got != "HIT" {
+		t.Fatalf("expected HIT for cached map variant, got %q", got)
+	}
+	if got := mapVariantHit.Body.String(); got != "<html>/matches/test-guid?map=etl_adlernest</html>" {
+		t.Fatalf("unexpected cached map variant body %q", got)
+	}
+
+	roundVariant := proxy.request(t, "/matches/test-guid?map=etl_adlernest&round=2")
+	if got := roundVariant.Header().Get("X-Cache-Status"); got != "MISS" {
+		t.Fatalf("expected MISS for first round variant request, got %q", got)
+	}
+	if got := roundVariant.Body.String(); got != "<html>/matches/test-guid?map=etl_adlernest&round=2</html>" {
+		t.Fatalf("unexpected round variant body %q", got)
+	}
+
+	baseHit := proxy.request(t, "/matches/test-guid")
+	if got := baseHit.Header().Get("X-Cache-Status"); got != "HIT" {
+		t.Fatalf("expected HIT for cached base match, got %q", got)
+	}
+	if got := baseHit.Body.String(); got != "<html>/matches/test-guid</html>" {
+		t.Fatalf("unexpected cached base body %q", got)
+	}
+}
+
 type testProxy struct {
 }
 
@@ -107,7 +148,11 @@ func newTestProxy(t *testing.T) *testProxy {
 
 	astroProxyFunc = func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		io.WriteString(w, "<html>"+r.URL.Path+"</html>")
+		body := r.URL.Path
+		if r.URL.RawQuery != "" {
+			body += "?" + r.URL.RawQuery
+		}
+		io.WriteString(w, "<html>"+body+"</html>")
 	}
 	t.Cleanup(func() {
 		astroProxyFunc = proxyToAstro
