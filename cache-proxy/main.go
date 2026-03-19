@@ -81,17 +81,15 @@ func handlePurge(w http.ResponseWriter, r *http.Request) {
 	var cacheKey string
 	if path == "root" {
 		cacheKey = "root"
+		purgeCacheFamily("root")
 	} else {
 		cacheKey = "match:" + path
+		purgeCacheFamily(cacheKey)
 	}
-
-	recordPurge(cacheKey)
-	deleteCacheEntry(cacheKey)
 
 	// If purging a match, also purge root (match list contains this match)
 	if path != "root" {
-		recordPurge("root")
-		deleteCacheEntry("root")
+		purgeCacheFamily("root")
 		log.Printf("Also purged root (due to match purge)")
 	}
 
@@ -156,8 +154,10 @@ func handleProxy(w http.ResponseWriter, r *http.Request) {
 
 	switch {
 	case r.URL.Path == "/":
-		cacheKey = "root"
-		ttl = 720 * time.Hour // 30 days
+		if rootCacheKey := getRootCacheKey(r); rootCacheKey != "" {
+			cacheKey = rootCacheKey
+			ttl = 720 * time.Hour // 30 days
+		}
 	case strings.HasPrefix(r.URL.Path, "/matches/"):
 		if matchCacheKey := getMatchCacheKey(r); matchCacheKey != "" {
 			cacheKey = matchCacheKey
@@ -321,6 +321,9 @@ func saveToCache(cacheKey string, status int, headers http.Header, body []byte) 
 	if err := writeCacheMeta(cacheKey, meta); err != nil {
 		log.Printf("Failed to write cache meta: %v", err)
 	}
+	if err := registerCacheKeyLocked(cacheKey); err != nil {
+		log.Printf("Failed to register cache key %s: %v", cacheKey, err)
+	}
 }
 
 func isStaticAsset(path string) bool {
@@ -337,6 +340,19 @@ func isStaticAsset(path string) bool {
 func hashKey(key string) string {
 	hash := sha256.Sum256([]byte(key))
 	return hex.EncodeToString(hash[:])
+}
+
+func getRootCacheKey(r *http.Request) string {
+	if r.URL.Path != "/" {
+		return ""
+	}
+
+	cacheKey := "root"
+	if query := r.URL.Query().Encode(); query != "" {
+		cacheKey += "?" + query
+	}
+
+	return cacheKey
 }
 
 func getMatchCacheKey(r *http.Request) string {
@@ -364,6 +380,10 @@ func cachePaths(cacheKey string) (string, string) {
 
 func purgePath(cacheKey string) string {
 	return filepath.Join(cacheDir, hashKey(cacheKey)+".purged")
+}
+
+func cacheKeysPath() string {
+	return filepath.Join(cacheDir, "cache-keys.json")
 }
 
 func loadCacheEntry(cacheKey string, ttl time.Duration) (cacheMeta, []byte, time.Time, bool) {
@@ -414,6 +434,10 @@ func deleteCacheEntry(cacheKey string) {
 	cacheMu.Lock()
 	defer cacheMu.Unlock()
 
+	deleteCacheEntryLocked(cacheKey)
+}
+
+func deleteCacheEntryLocked(cacheKey string) {
 	cacheFile, metaFile := cachePaths(cacheKey)
 	if err := os.Remove(cacheFile); err != nil && !os.IsNotExist(err) {
 		log.Printf("Failed to remove cache file %s: %v", cacheFile, err)
@@ -421,12 +445,37 @@ func deleteCacheEntry(cacheKey string) {
 	if err := os.Remove(metaFile); err != nil && !os.IsNotExist(err) {
 		log.Printf("Failed to remove meta file %s: %v", metaFile, err)
 	}
+	if err := unregisterCacheKeyLocked(cacheKey); err != nil {
+		log.Printf("Failed to unregister cache key %s: %v", cacheKey, err)
+	}
+}
+
+func purgeCacheFamily(prefix string) {
+	cacheMu.Lock()
+	defer cacheMu.Unlock()
+
+	keys, err := listCacheKeysLocked()
+	if err != nil {
+		log.Printf("Failed to list cache keys for purge family %s: %v", prefix, err)
+	}
+
+	recordPurgeLocked(prefix)
+	for _, key := range keys {
+		if key == prefix || strings.HasPrefix(key, prefix+"?") {
+			recordPurgeLocked(key)
+			deleteCacheEntryLocked(key)
+		}
+	}
 }
 
 func recordPurge(cacheKey string) {
 	cacheMu.Lock()
 	defer cacheMu.Unlock()
 
+	recordPurgeLocked(cacheKey)
+}
+
+func recordPurgeLocked(cacheKey string) {
 	if err := os.WriteFile(purgePath(cacheKey), []byte(time.Now().UTC().Format(time.RFC3339)), 0644); err != nil {
 		log.Printf("Failed to record purge time for %s: %v", cacheKey, err)
 	}
@@ -435,10 +484,20 @@ func recordPurge(cacheKey string) {
 func readPurgeTime(cacheKey string) (time.Time, error) {
 	data, err := os.ReadFile(purgePath(cacheKey))
 	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
+		if !errors.Is(err, os.ErrNotExist) {
+			return time.Time{}, err
+		}
+		if rootFamilyKey := getRootFamilyKey(cacheKey); rootFamilyKey != "" && rootFamilyKey != cacheKey {
+			data, err = os.ReadFile(purgePath(rootFamilyKey))
+			if err != nil {
+				if errors.Is(err, os.ErrNotExist) {
+					return time.Time{}, nil
+				}
+				return time.Time{}, err
+			}
+		} else {
 			return time.Time{}, nil
 		}
-		return time.Time{}, err
 	}
 
 	parsed, err := time.Parse(time.RFC3339, strings.TrimSpace(string(data)))
@@ -447,6 +506,69 @@ func readPurgeTime(cacheKey string) (time.Time, error) {
 	}
 
 	return parsed, nil
+}
+
+func getRootFamilyKey(cacheKey string) string {
+	if cacheKey == "root" || strings.HasPrefix(cacheKey, "root?") {
+		return "root"
+	}
+	return ""
+}
+
+func registerCacheKeyLocked(cacheKey string) error {
+	keys, err := listCacheKeysLocked()
+	if err != nil {
+		return err
+	}
+
+	for _, key := range keys {
+		if key == cacheKey {
+			return nil
+		}
+	}
+
+	keys = append(keys, cacheKey)
+	return writeCacheKeysLocked(keys)
+}
+
+func unregisterCacheKeyLocked(cacheKey string) error {
+	keys, err := listCacheKeysLocked()
+	if err != nil {
+		return err
+	}
+
+	filtered := keys[:0]
+	for _, key := range keys {
+		if key != cacheKey {
+			filtered = append(filtered, key)
+		}
+	}
+
+	return writeCacheKeysLocked(filtered)
+}
+
+func listCacheKeysLocked() ([]string, error) {
+	data, err := os.ReadFile(cacheKeysPath())
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	var keys []string
+	if err := json.Unmarshal(data, &keys); err != nil {
+		return nil, err
+	}
+	return keys, nil
+}
+
+func writeCacheKeysLocked(keys []string) error {
+	data, err := json.Marshal(keys)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(cacheKeysPath(), data, 0644)
 }
 
 func intToString(v int64) string {
