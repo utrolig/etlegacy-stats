@@ -238,6 +238,10 @@ func serveFromCache(w http.ResponseWriter, _ *http.Request, cacheKey string, ttl
 	cacheMu.Unlock()
 
 	for k, v := range meta.Headers {
+		// Skip cache headers - only the proxy should cache HTML
+		if k == "Cache-Control" || k == "Expires" || k == "Pragma" {
+			continue
+		}
 		for _, vv := range v {
 			w.Header().Add(k, vv)
 		}
@@ -260,7 +264,6 @@ func fetchAndCache(w http.ResponseWriter, r *http.Request, cacheKey string, _ ti
 
 	// Create a custom response writer to capture the response
 	captured := &captureWriter{ResponseWriter: w}
-	w.Header().Set("Cache-Control", "public, s-maxage=2592000, max-age=0, must-revalidate")
 	w.Header().Set("X-Cache-Status", "MISS")
 	w.Header().Set("X-Cache-Hits", "0")
 	if !purgeTime.IsZero() {
