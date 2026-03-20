@@ -2,6 +2,7 @@ import { Show, type Component } from "solid-js";
 import type { Group } from "../util/stats-api";
 import { DateTime } from "luxon";
 import { getMatchSize } from "../util/stats";
+import { FiClock } from "solid-icons/fi";
 
 export type MatchListItemProps = {
   match: Group;
@@ -9,11 +10,17 @@ export type MatchListItemProps = {
 
 export const MatchListItem: Component<MatchListItemProps> = (props) => {
   return (
-    <li class="odd:bg-mud-900/20">
+    <li class="odd:bg-mud-900/20 relative">
       <a
         class="flex items-center border-b border-b-mud-700 p-4 gap-6"
         href={`/matches/${props.match.match_id}`}
       >
+        <div
+          class="absolute top-2 right-2 text-mud-400"
+          title={getAbsoluteTime(props.match)}
+        >
+          <FiClock size={16} />
+        </div>
         <div class="flex flex-col gap-1">
           <div class="flex flex-col">
             <div class="flex items-center">
@@ -60,4 +67,9 @@ function getDisplayTime(match: Group) {
   }
 
   return "Finished " + DateTime.fromSeconds(match.end_time).toRelative();
+}
+
+function getAbsoluteTime(match: Group) {
+  const time = match.end_time ?? match.start_time;
+  return DateTime.fromSeconds(time).toFormat("dd-MM-yyyy HH:mm");
 }
