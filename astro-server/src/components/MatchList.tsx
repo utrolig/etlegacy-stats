@@ -11,7 +11,7 @@ export type MatchListProps = {
 
 export const MatchList: Component<MatchListProps> = (props) => {
   return (
-    <ul class="list-none">
+    <ul class="list-none w-full p-0">
       <For each={props.matches}>
         {(match) => <MatchListItem match={match} />}
       </For>

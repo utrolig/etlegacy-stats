@@ -8,10 +8,10 @@ export type SearchBarProps = {
 export const SearchBar: Component<SearchBarProps> = (props) => {
   return (
     <form
-      class="flex items-center bg-mud-800 py-2 gap-4 sticky top-0"
+      class="flex items-center bg-mud-800 py-2 px-4 gap-4 sticky top-0"
       method="get"
     >
-      <div class="flex items-center gap-2 w-full">
+      <div class="relative flex items-center gap-2 w-full">
         <input
           class="bg-mud-900/40 text-mud-200 p-2 pr-12 rounded-md w-full outline-none focus:ring-2 focus:ring-mud-500"
           autocomplete="off"

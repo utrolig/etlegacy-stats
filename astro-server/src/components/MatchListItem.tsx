@@ -21,19 +21,19 @@ export const MatchListItem: Component<MatchListItemProps> = (props) => {
         >
           <FiClock size={16} />
         </div>
-        <div class="flex flex-col gap-1">
-          <div class="flex flex-col">
-            <div class="flex items-center">
+        <div class="flex flex-col gap-1 min-w-0">
+          <div class="flex flex-col min-w-0">
+            <div class="flex items-center overflow-hidden">
               <Show when={props.match.winner === "alpha"}>
-                <span class="w-6">🏆</span>
+                <span class="w-6 shrink-0">🏆</span>
               </Show>
-              {props.match.alpha_team.join(" - ")}
+              <span class="truncate">{props.match.alpha_team.join(" - ")}</span>
             </div>
-            <div class="flex items-center">
+            <div class="flex items-center overflow-hidden">
               <Show when={props.match.winner === "beta"}>
-                <span class="w-6">🏆</span>
+                <span class="w-6 shrink-0">🏆</span>
               </Show>
-              {props.match.beta_team.join(" - ")}
+              <span class="truncate">{props.match.beta_team.join(" - ")}</span>
             </div>
           </div>
           <div class="flex flex-col text-sm">

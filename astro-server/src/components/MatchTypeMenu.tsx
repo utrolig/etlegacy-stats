@@ -1,5 +1,6 @@
 import clsx from "clsx";
 import { type Component } from "solid-js";
+import { FiSearch } from "solid-icons/fi";
 
 export type MatchTypeMenuProps = {
   currentUrl: string;
@@ -24,7 +25,7 @@ export const MatchTypeMenu: Component<MatchTypeMenuProps> = (props) => {
   };
 
   return (
-    <div class="flex items-center sticky top-0 bg-mud-800">
+    <div class="flex items-center sticky top-0 bg-mud-800 z-10">
       <a
         class={clsx(
           "py-4 px-8 border-b-2 border-orange-400",
@@ -54,7 +55,7 @@ export const MatchTypeMenu: Component<MatchTypeMenuProps> = (props) => {
       </a>
       <a
         class={clsx(
-          "py-4 px-8 border-b-2 border-orange-400",
+          "hidden md:block py-4 px-8 border-b-2 border-orange-400",
           props.size === 2 ? "border-orange-400" : "border-transparent",
         )}
         href={getSizeLink(2)}
@@ -69,7 +70,8 @@ export const MatchTypeMenu: Component<MatchTypeMenuProps> = (props) => {
         )}
         href="/search"
       >
-        Search
+        <span class="hidden md:inline">Search</span>
+        <FiSearch class="md:hidden" />
       </a>
     </div>
   );
