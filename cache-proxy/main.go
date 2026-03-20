@@ -49,6 +49,7 @@ func main() {
 
 	// Main router
 	http.HandleFunc("/cache/purge/", handlePurge)
+	http.HandleFunc("/cache/nuke", handleNukeCache)
 	http.HandleFunc("/anal/", handleAnalytics)
 	http.HandleFunc("/", handleProxy)
 
@@ -56,6 +57,48 @@ func main() {
 	log.Printf("Cache proxy starting on :%s", port)
 	log.Printf("Astro upstream: %s", astroUpstream)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
+}
+
+func handleNukeCache(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Auth check
+	auth := r.Header.Get("Authorization")
+	if auth != "Bearer "+purgeToken && r.RemoteAddr != "127.0.0.1" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	// Get all cache keys and delete them
+	cacheMu.Lock()
+	keys, err := listCacheKeysLocked()
+	if err != nil {
+		cacheMu.Unlock()
+		log.Printf("Failed to list cache keys for nuke: %v", err)
+		http.Error(w, "Failed to list cache", http.StatusInternalServerError)
+		return
+	}
+
+	// Clear all entries
+	for _, key := range keys {
+		deleteCacheEntryLocked(key)
+	}
+
+	// Clear the keys list
+	if err := writeCacheKeysLocked([]string{}); err != nil {
+		log.Printf("Failed to clear cache keys file: %v", err)
+	}
+	cacheMu.Unlock()
+
+	log.Printf("Nuked %d cache entries", len(keys))
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success": true,
+		"purged":  len(keys),
+	})
 }
 
 func handlePurge(w http.ResponseWriter, r *http.Request) {
