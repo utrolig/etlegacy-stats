@@ -6,8 +6,8 @@ cd "$(dirname "$0")/../astro-server"
 docker build -t etlegacy-astro:latest .
 
 echo ""
-echo "=== Building cache proxy ==="
-cd "$(dirname "$0")/../cache-proxy"
+echo "=== Building nginx proxy ==="
+cd "$(dirname "$0")/../nginx-proxy"
 docker build -t etlegacy-proxy:latest .
 
 echo ""

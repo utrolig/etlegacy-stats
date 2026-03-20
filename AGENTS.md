@@ -25,10 +25,9 @@ This repository contains an ET: Legacy match statistics viewer built with Astro 
 │   ├── public/             # Public static assets
 │   ├── scripts/            # Build/utility scripts
 │   └── api-cache/          # Local API cache for development
-├── cache-proxy/            # Go reverse proxy with disk caching
-│   ├── main.go             # Proxy implementation
+├── nginx-proxy/            # Nginx reverse proxy
 │   ├── Dockerfile          # Proxy container build
-│   └── README.md           # Proxy documentation
+│   └── nginx.conf          # Nginx configuration
 ├── dev/                    # Local development scripts
 │   ├── build.sh            # Build both Docker images
 │   ├── up.sh               # Start local dev environment
@@ -89,14 +88,13 @@ The application deploys as two separate services:
    - Builds and runs as standalone server on port 4321
    - Requires `API_TOKEN` environment variable for player Discord name lookups
 
-2. **Cache Proxy** (`cache-proxy/Dockerfile`)
-   - Custom Go reverse proxy with file-based disk caching
-   - Simple cache keys: `root`, `match:{guid}`, `static:{path}`
-   - Serves cached responses with 720h TTL for match pages
-   - On-demand purge via `POST /cache/purge/{guid}`
-   - Requires environment variables:
+2. **Nginx Proxy** (`nginx-proxy/Dockerfile`)
+   - Simple nginx reverse proxy
+   - Proxies all requests to Astro upstream
+   - Rewrites `/anal/*` analytics URLs to `app.lythia.dev`
+   - Adds immutable cache headers for static assets (js/css/images/fonts)
+   - Requires environment variable:
      - `ASTRO_UPSTREAM`: URL to Astro service (e.g., `http://etlegacy-stats-astro:4321`)
-     - `CACHE_PURGE_TOKEN`: Bearer token for cache purge API
 
 ## Technology Stack
 
@@ -183,10 +181,9 @@ Match stats are processed in `src/util/stats.ts`:
 API_TOKEN=          # Bearer token for player Discord name lookups
 ```
 
-### Caddy/Deployment (root `.env`)
+### Deployment (root `.env`)
 ```bash
 ASTRO_UPSTREAM=http://etlegacy-stats-astro:4321
-CACHE_PURGE_TOKEN=replace-me
 ```
 
 ## Testing
@@ -253,7 +250,7 @@ Custom theme defined in `tailwind.config.mjs`:
 2. **Dev Caching**: Delete `api-cache/` to force fresh API data in development
 3. **Round Stats**: Second round stats are calculated as deltas from first round
 4. **Team Assignment**: Teams are determined from first round; standins are detected by teammate analysis
-5. **Cache Purging**: Production cache purging requires valid `CACHE_PURGE_TOKEN`
+
 6. **Image Format**: Map and class images must be AVIF; weapon icons must be SVG
 
 ## Useful Commands Summary
