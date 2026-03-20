@@ -44,6 +44,7 @@ const matches = await statsApi.fetchGroups({ page, size });
       matches={matches.items}
       size={size}
       currentUrl={Astro.url.toString()}
+      client:load
     />
     <MatchPagination
       page={page}

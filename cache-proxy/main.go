@@ -42,6 +42,11 @@ func main() {
 		log.Fatalf("Failed to create cache dir: %v", err)
 	}
 
+	// Clear all files in cache directory on boot
+	if err := clearCacheDir(); err != nil {
+		log.Printf("Warning: failed to clear cache dir: %v", err)
+	}
+
 	// Analytics client with timeout
 	analyticsClient = &http.Client{
 		Timeout: 10 * time.Second,
@@ -57,6 +62,25 @@ func main() {
 	log.Printf("Cache proxy starting on :%s", port)
 	log.Printf("Astro upstream: %s", astroUpstream)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
+}
+
+func clearCacheDir() error {
+	entries, err := os.ReadDir(cacheDir)
+	if err != nil {
+		return err
+	}
+
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			path := filepath.Join(cacheDir, entry.Name())
+			if err := os.Remove(path); err != nil {
+				log.Printf("Failed to remove cache file %s: %v", path, err)
+			}
+		}
+	}
+
+	log.Printf("Cleared cache directory on boot")
+	return nil
 }
 
 func handleNukeCache(w http.ResponseWriter, r *http.Request) {
