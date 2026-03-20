@@ -1,29 +1,30 @@
-#!/bin/bash
+#!/bin/sh
 
 # Prompt for base URL with default
-read -p "Base URL [https://etlstats.stiba.lol]: " baseUrl
+printf "Base URL [https://etlstats.stiba.lol]: "
+read -r baseUrl
 baseUrl=${baseUrl:-https://etlstats.stiba.lol}
 
-# Prompt for purge token (hidden input)
-read -s -p "Purge token: " purgeToken
-echo
+# Prompt for purge token (visible input, portable)
+printf "Purge token: "
+read -r purgeToken
 
 # Make the request
-echo "Nuking cache..."
+printf "Nuking cache...\n"
 response=$(curl -s -w "\n%{http_code}" -X POST \
   -H "Authorization: Bearer ${purgeToken}" \
   "${baseUrl}/cache/nuke")
 
 # Extract status code and body
-httpCode=$(echo "$response" | tail -n1)
-body=$(echo "$response" | sed '$d')
+httpCode=$(printf '%s' "$response" | tail -n1)
+body=$(printf '%s' "$response" | sed '$d')
 
 # Show result
 if [ "$httpCode" = "200" ]; then
-  echo "Success! Response:"
-  echo "$body"
+  printf "Success! Response:\n"
+  printf '%s\n' "$body"
 else
-  echo "Failed with HTTP $httpCode"
-  echo "$body"
+  printf "Failed with HTTP %s\n" "$httpCode"
+  printf '%s\n' "$body"
   exit 1
 fi
