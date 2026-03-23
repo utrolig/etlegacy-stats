@@ -1,4 +1,12 @@
 import urlJoin from "url-join";
+import type {
+  GameClass,
+  Group,
+  GroupDetails,
+  GroupRound,
+  Obituary,
+  RawPlayerStats,
+} from "./stats-types";
 
 const BASE_URL = "https://api.etl.lol/api/v2/stats/etl";
 
@@ -147,134 +155,17 @@ async function getJson<T>(...args: Parameters<typeof fetch>) {
 
 export type Team = "alpha" | "beta";
 
-export type Group = {
-  match_id: number;
-  channel_name: string;
-  state: "waiting_report" | "finished" | "cancelled" | "unknown match";
-  size: number;
-  start_time: number;
-  end_time: number;
-  maps: string[];
-  alpha_team: string[];
-  beta_team: string[];
-  ranks_average: number;
-  server: {
-    ip: string;
-    port: number;
-    pw: string;
-    instance: string;
-  };
-  winner: Team;
-};
-
-export type Obituary = {
-  timestamp: number;
-  target: string;
-  victimRespawnTime: number;
-  attacker: string;
-  meansOfDeath: number;
-  attackerRespawnTime: number;
-};
-
 export type Message = {
   message: string;
   timestamp: number;
   guid: string;
-  command: "say_buddy" | "say" | "say_team" | "vsay" | "vsay_team";
+  command: "say" | "say_team" | "vsay" | "vsay_team";
 };
-
-export type GroupRound = {
-  round_filename: string;
-  round_data: {
-    round_info: {
-      defenderteam: number;
-      servername: string;
-      matchID: string;
-      round: number;
-      nextTimeLimit: string;
-      timelimit: string;
-      mapname: string;
-      obituaries?: Obituary[];
-      config: string;
-      winnerteam: number;
-      messages: Message[];
-      damageStats: {
-        attacker: string;
-        target: string;
-        damageFlags: number;
-        damage: number;
-        timestamp: number;
-        hitRegion: string;
-        meansOfDeath: number;
-      }[];
-    };
-    player_stats: Record<
-      string,
-      {
-        name: string;
-        rounds: string;
-        obj_destroyed?: {
-          [timestamp: string]: string;
-        };
-        obj_planted?: {
-          [timestamp: string]: string;
-        };
-        shoves_given?: {
-          [timestamp: string]: string;
-        };
-        distance_travelled_meters?: number;
-        distance_travelled_spawn?: number;
-        distance_travelled_spawn_avg?: number;
-        class_switches?: {
-          timestamp: number;
-          toClass: GameClass;
-          fromClass?: GameClass;
-        }[];
-        weaponStats: string[];
-        stance_stats_seconds?: {
-          in_prone: number;
-          in_crouch: number;
-          in_lean: number;
-          in_mg: number;
-          in_binoculars: number;
-        };
-        team: string;
-        guid: string;
-      }
-    >;
-  };
-};
-
-export type RawPlayerStats = GroupRound["round_data"]["player_stats"][string];
 
 export type Player = {
   id: string;
   nick: string;
-};
-
-export type GroupDetails = {
-  match: {
-    match_id: string;
-    channel_id: string | null;
-    channel_name: string | null;
-    state: "waiting_report" | "finished" | "cancelled";
-    size: number;
-    alpha_team: Player[];
-    beta_team: Player[];
-    ranks_start: Record<string, number> | null;
-    ranks_end: Record<string, number> | null;
-    start_time: number;
-    end_time: number;
-    maps: string[];
-    server: {
-      ip: string;
-      port: number;
-      pw: string | null;
-      instance: string;
-    };
-    winner: Team | null;
-    rounds: GroupRound[];
-  };
+  country?: string;
 };
 
 export type PlayerInfoDict = Record<string, PlayerInfo>;
@@ -286,9 +177,11 @@ export type PlayerInfo = {
   date_added: string;
 };
 
-export type GameClass =
-  | "medic"
-  | "fieldop"
-  | "engineer"
-  | "soldier"
-  | "covertops";
+export type {
+  GameClass,
+  Group,
+  GroupDetails,
+  GroupRound,
+  Obituary,
+  RawPlayerStats,
+};

@@ -5,9 +5,13 @@ import type {
   GroupDetails,
   GroupRound,
   Message,
-  Obituary,
   RawPlayerStats,
 } from "./stats-api";
+import type {
+  NewGroupRound,
+  OldPlayerStat,
+  SpawnEvent,
+} from "./stats-types";
 
 export type MatchPlayer = {
   id: string;
@@ -72,6 +76,178 @@ export type MapStats = {
   roundTimes: string[];
   stats: PlayerStats[];
 };
+
+type NormalizedObituary = {
+  timestamp: number;
+  target: string;
+  victimRespawnTime: number;
+  attacker: string;
+  meansOfDeath: number;
+  attackerRespawnTime: number;
+};
+
+function isNewRound(round: GroupRound): round is NewGroupRound {
+  return "gamelog" in round.round_data;
+}
+
+function isOldPlayerStats(stats: RawPlayerStats): stats is OldPlayerStat {
+  return "class_switches" in stats;
+}
+
+function normalizeMessageCommand(
+  command: string,
+): Message["command"] | undefined {
+  switch (command) {
+    case "say":
+      return "say";
+    case "say_team":
+    case "say_teamNL":
+    case "say_buddy":
+    case "say_buddyNL":
+      return "say_team";
+    case "vsay":
+      return "vsay";
+    case "vsay_team":
+    case "vsay_buddy":
+      return "vsay_team";
+    default:
+      return undefined;
+  }
+}
+
+function getRoundMessages(round: GroupRound): Message[] {
+  if (!isNewRound(round)) {
+    return round.round_data.round_info.messages.flatMap((message) => {
+      const command = normalizeMessageCommand(message.command);
+
+      if (!command) {
+        return [];
+      }
+
+      return [{ ...message, command } satisfies Message];
+    });
+  }
+
+  return (round.round_data.gamelog ?? []).flatMap((event) => {
+    if (event.group !== "player" || event.label !== "message") {
+      return [];
+    }
+
+    const command = normalizeMessageCommand(event.command);
+
+    if (!command) {
+      return [];
+    }
+
+    return [
+      {
+        command,
+        guid: event.player,
+        message: event.message,
+        timestamp: event.unixtime,
+      } satisfies Message,
+    ];
+  });
+}
+
+function getRoundSpawnEvents(round: NewGroupRound): SpawnEvent[] {
+  return (round.round_data.gamelog ?? []).filter(
+    (event): event is SpawnEvent =>
+      event.group === "player" && event.label === "spawn",
+  );
+}
+
+function getNextSpawnSeconds(
+  spawnEvents: SpawnEvent[],
+  player: string,
+  leveltime: number,
+): number {
+  const nextSpawn = spawnEvents.find(
+    (event) => event.player === player && event.leveltime > leveltime,
+  );
+
+  if (!nextSpawn) {
+    return 0;
+  }
+
+  return Math.max(0, (nextSpawn.leveltime - leveltime) / 1000);
+}
+
+function getRoundObituaries(round: GroupRound): NormalizedObituary[] {
+  if (!isNewRound(round)) {
+    return round.round_data.round_info.obituaries ?? [];
+  }
+
+  const spawnEvents = getRoundSpawnEvents(round);
+
+  return (round.round_data.gamelog ?? []).flatMap((event) => {
+    if (event.group !== "player") {
+      return [];
+    }
+
+    if (event.label === "kill") {
+      return [
+        {
+          attacker: event.killer,
+          target: event.victim,
+          attackerRespawnTime: event.killer_reinf,
+          victimRespawnTime: event.victim_reinf,
+          meansOfDeath: event.weapon,
+          timestamp: event.unixtime,
+        } satisfies NormalizedObituary,
+      ];
+    }
+
+    if (event.label === "suicide") {
+      const victimRespawnTime = getNextSpawnSeconds(
+        spawnEvents,
+        event.player,
+        event.leveltime,
+      );
+
+      return [
+        {
+          attacker: event.player,
+          target: event.player,
+          attackerRespawnTime: victimRespawnTime,
+          victimRespawnTime,
+          meansOfDeath: event.weapon,
+          timestamp: event.unixtime,
+        } satisfies NormalizedObituary,
+      ];
+    }
+
+    return [];
+  });
+}
+
+function getNewRoundClasses(
+  round: NewGroupRound,
+  playerId: string,
+): GameClass[] {
+  const gamelog = round.round_data.gamelog ?? [];
+  const classes = new Set<GameClass>();
+
+  for (const event of gamelog) {
+    if (event.group !== "player" || !("player" in event)) {
+      continue;
+    }
+
+    if (event.player !== playerId) {
+      continue;
+    }
+
+    if (event.label === "class_change" && event.class !== "unknown") {
+      classes.add(event.class);
+    }
+
+    if (event.label === "spawn" && event.class !== "unknown") {
+      classes.add(event.class);
+    }
+  }
+
+  return [...classes].sort((a, b) => a.localeCompare(b));
+}
 
 function getPlayerTeam(guid: string, teams: TeamList): Team | null {
   if (teams.alpha.find((alphaGuid) => alphaGuid.id === guid)) {
@@ -341,7 +517,7 @@ export function getMatchStats(info: GroupDetails): MatchStats {
         roundTime: round.round_data.round_info.nextTimeLimit,
         map: round.round_data.round_info.mapname,
         roundNumber,
-        messages: round.round_data.round_info.messages,
+        messages: getRoundMessages(round),
         stats: Object.entries(round.round_data.player_stats).map(
           ([longId, ps]) => {
             let playerStats = convertPlayerStats(ps.weaponStats);
@@ -349,9 +525,10 @@ export function getMatchStats(info: GroupDetails): MatchStats {
 
             let metaStats = convertMetaStats(
               longId,
+              round,
               ps,
               playerStats,
-              round.round_data.round_info.obituaries ?? [],
+              getRoundObituaries(round),
             );
 
             if (round.round_data.round_info.round === 2) {
@@ -386,12 +563,14 @@ export function getMatchStats(info: GroupDetails): MatchStats {
                   );
                   metaStats = convertMetaStats(
                     longId,
+                    prevRound,
                     prevRoundRawPlayerStats,
                     prevRoundPlayerStats,
-                    prevRound.round_data.round_info.obituaries ?? [],
+                    getRoundObituaries(prevRound),
+                    round,
                     ps,
                     playerStats,
-                    round.round_data.round_info.obituaries ?? [],
+                    getRoundObituaries(round),
                   );
                 }
               }
@@ -746,17 +925,41 @@ function convertWeaponStats(
 }
 
 function getClassesPlayed(
+  playerId: string,
+  firstRoundInfo: GroupRound,
   firstRound: RawPlayerStats,
+  secondRoundInfo?: GroupRound,
   secondRound?: RawPlayerStats,
 ): GameClass[] {
-  if (!secondRound) {
+  if (!secondRound || !secondRoundInfo) {
+    if (isNewRound(firstRoundInfo)) {
+      return getNewRoundClasses(firstRoundInfo, playerId);
+    }
+
     return [
-      ...new Set([...(firstRound.class_switches?.map((s) => s.toClass) ?? [])]),
+      ...new Set([
+        ...(isOldPlayerStats(firstRound)
+          ? firstRound.class_switches?.map((s) => s.toClass) ?? []
+          : []),
+      ]),
     ].sort((a, b) => a.localeCompare(b));
   }
 
-  const firstClasses = firstRound.class_switches?.map((s) => s.toClass) ?? [];
-  const secondClasses = secondRound.class_switches?.map((s) => s.toClass) ?? [];
+  if (isNewRound(firstRoundInfo) || isNewRound(secondRoundInfo)) {
+    return [
+      ...new Set([
+        ...getNewRoundClasses(firstRoundInfo as NewGroupRound, playerId),
+        ...getNewRoundClasses(secondRoundInfo as NewGroupRound, playerId),
+      ]),
+    ].sort((a, b) => a.localeCompare(b));
+  }
+
+  const firstClasses = isOldPlayerStats(firstRound)
+    ? firstRound.class_switches?.map((s) => s.toClass) ?? []
+    : [];
+  const secondClasses = isOldPlayerStats(secondRound)
+    ? secondRound.class_switches?.map((s) => s.toClass) ?? []
+    : [];
 
   return [...new Set([...firstClasses, ...secondClasses])].sort((a, b) =>
     a.localeCompare(b),
@@ -803,14 +1006,22 @@ const EARLY_SELFKILL_PENALTY = 0.4;
 
 function convertMetaStats(
   playerId: string,
+  firstRoundInfo: GroupRound,
   firstRound: RawPlayerStats,
   firstRoundPlayerStats: PlayerStats,
-  firstRoundObituaries: Obituary[],
+  firstRoundObituaries: NormalizedObituary[],
+  secondRoundInfo?: GroupRound,
   secondRound?: RawPlayerStats,
   secondRoundPlayerStats?: PlayerStats,
-  secondRoundObituaries?: Obituary[],
+  secondRoundObituaries?: NormalizedObituary[],
 ): MetaStats {
-  const classesPlayed = getClassesPlayed(firstRound, secondRound);
+  const classesPlayed = getClassesPlayed(
+    playerId,
+    firstRoundInfo,
+    firstRound,
+    secondRoundInfo,
+    secondRound,
+  );
 
   if (!secondRound || !secondRoundPlayerStats || !secondRoundObituaries) {
     const customRating = getCustomRating(
@@ -825,10 +1036,13 @@ function convertMetaStats(
       classesPlayed,
       customRating,
       secondsSpentCrouching: firstRound.stance_stats_seconds?.in_crouch ?? 0,
-      secondsSpentLeaning: firstRound.stance_stats_seconds?.in_prone ?? 0,
+      secondsSpentLeaning: firstRound.stance_stats_seconds?.in_lean ?? 0,
       secondsSpentProne: firstRound.stance_stats_seconds?.in_prone ?? 0,
       secondsSpentInBinoculars:
-        firstRound.stance_stats_seconds?.in_binoculars ?? 0,
+        (isOldPlayerStats(firstRound) &&
+        firstRound.stance_stats_seconds?.in_binoculars
+          ? firstRound.stance_stats_seconds.in_binoculars
+          : 0),
       secondsSpentInMg: firstRound.stance_stats_seconds?.in_mg ?? 0,
     };
   }
@@ -864,8 +1078,12 @@ function convertMetaStats(
     (firstRound.stance_stats_seconds?.in_prone ?? 0) +
     (secondRound.stance_stats_seconds?.in_prone ?? 0);
   const secondsSpentInBinoculars =
-    (firstRound.stance_stats_seconds?.in_binoculars ?? 0) +
-    (secondRound.stance_stats_seconds?.in_binoculars ?? 0);
+    (isOldPlayerStats(firstRound) && firstRound.stance_stats_seconds
+      ? firstRound.stance_stats_seconds.in_binoculars
+      : 0) +
+    (isOldPlayerStats(secondRound) && secondRound.stance_stats_seconds
+      ? secondRound.stance_stats_seconds.in_binoculars
+      : 0);
   const secondsSpentInMg =
     (firstRound.stance_stats_seconds?.in_mg ?? 0) +
     (secondRound.stance_stats_seconds?.in_mg ?? 0);
@@ -1130,7 +1348,7 @@ export function getHeadshotPercentage(stats: Stats) {
 export function getCustomRating(
   playerId: string,
   playerStats: PlayerStats,
-  obituaries: Obituary[],
+  obituaries: NormalizedObituary[],
 ) {
   const allValidObituaries = obituaries.filter(
     (obituary) => obituary.attacker !== obituary.target,
