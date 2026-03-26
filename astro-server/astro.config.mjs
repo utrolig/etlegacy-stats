@@ -11,9 +11,4 @@ export default defineConfig({
     mode: "standalone",
   }),
   output: "server",
-  vite: {
-    server: {
-      host: "0.0.0.0",
-    },
-  }
 });
