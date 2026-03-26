@@ -55,16 +55,6 @@ export const MatchTypeMenu: Component<MatchTypeMenuProps> = (props) => {
       </a>
       <a
         class={clsx(
-          "hidden md:block py-4 px-8 border-b-2 border-orange-400",
-          props.size === 2 ? "border-orange-400" : "border-transparent",
-        )}
-        href={getSizeLink(2)}
-      >
-        1v1
-      </a>
-
-      <a
-        class={clsx(
           "py-4 px-8 border-b-2 border-orange-400 ml-auto",
           props.search ? "border-orange-400" : "border-transparent",
         )}
