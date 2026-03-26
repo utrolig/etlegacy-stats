@@ -18,7 +18,7 @@ export const SearchBar: Component<SearchBarProps> = (props) => {
           value={props.value}
           type="text"
           name="q"
-          placeholder="Search..."
+          placeholder="uyop+webe"
         />
         <button class="absolute right-4" type="submit">
           <FiSearch />
