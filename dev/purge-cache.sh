@@ -11,7 +11,7 @@ fi
 
 BASE_URL="${BASE_URL:-http://localhost:8080}"
 PURGE_TOKEN="${PURGE_TOKEN:-${CACHE_PURGE_TOKEN:-}}"
-PURGE_ENDPOINT="${BASE_URL%/}/internal/cache/purge"
+PURGE_ENDPOINT="${BASE_URL%/}/cache"
 
 if [ -z "${PURGE_TOKEN}" ]; then
   printf 'PURGE_TOKEN/CACHE_PURGE_TOKEN is not set.\n' >&2
@@ -20,11 +20,9 @@ fi
 
 purge_root() {
   curl -fsS \
-    -X POST \
-    -H "Content-Type: application/json" \
+    -X DELETE \
     -H "Authorization: Bearer ${PURGE_TOKEN}" \
-    -d '{"scope":"match-list"}' \
-    "${PURGE_ENDPOINT}"
+    "${PURGE_ENDPOINT}/"
   printf '\n'
 }
 
@@ -32,11 +30,9 @@ purge_match() {
   match_id="$1"
 
   curl -fsS \
-    -X POST \
-    -H "Content-Type: application/json" \
+    -X DELETE \
     -H "Authorization: Bearer ${PURGE_TOKEN}" \
-    -d "{\"scope\":\"match\",\"matchId\":\"${match_id}\"}" \
-    "${PURGE_ENDPOINT}"
+    "${PURGE_ENDPOINT}/${match_id}"
   printf '\n'
 }
 

@@ -51,7 +51,7 @@ const host = process.env.HOST ?? "0.0.0.0";
 const port = Number(process.env.PORT ?? "4321");
 
 const cacheTtls = {
-  matchListFreshMs: getDurationMs(process.env.CACHE_LIST_TTL_SECONDS, 60_000),
+  matchListFreshMs: getDurationMs(process.env.CACHE_LIST_TTL_SECONDS, 7_200_000),
   matchListStaleMs: getDurationMs(
     process.env.CACHE_LIST_STALE_TTL_SECONDS,
     600_000,
@@ -101,6 +101,11 @@ const hopByHopHeaders = new Set<string>([
   "upgrade",
 ]);
 
+const proxyResponseHeadersToStrip = new Set<string>([
+  "content-encoding",
+  "content-length",
+]);
+
 const inflightRegenerations = new Map<string, Promise<CacheEntry>>();
 const astroApp = await loadAstroApp();
 
@@ -130,8 +135,8 @@ if (process.env.NO_LISTEN !== "1") {
 async function routeRequest(req: IncomingMessage, res: ServerResponse) {
   const requestUrl = getRequestUrl(req);
 
-  if (requestUrl.pathname === "/internal/cache/purge") {
-    await handlePurgeRequest(req, res);
+  if (requestUrl.pathname === "/cache/" || requestUrl.pathname.startsWith("/cache/")) {
+    await handlePurgeRequest(req, res, requestUrl);
     return;
   }
 
@@ -334,8 +339,12 @@ function writeCachedResponse(
   res.end(entry.body);
 }
 
-async function handlePurgeRequest(req: IncomingMessage, res: ServerResponse) {
-  if (req.method !== "POST") {
+async function handlePurgeRequest(
+  req: IncomingMessage,
+  res: ServerResponse,
+  requestUrl: URL,
+) {
+  if (req.method !== "DELETE") {
     res.writeHead(405, {
       "cache-control": "no-store",
       "content-type": "application/json; charset=utf-8",
@@ -360,8 +369,17 @@ async function handlePurgeRequest(req: IncomingMessage, res: ServerResponse) {
     return;
   }
 
-  const body = await readJsonBody(req);
-  const deleted = await purgeCache(body);
+  const scope = getPurgeScope(requestUrl.pathname);
+  if (!scope) {
+    res.writeHead(404, {
+      "cache-control": "no-store",
+      "content-type": "application/json; charset=utf-8",
+    });
+    res.end(JSON.stringify({ error: "Not Found" }));
+    return;
+  }
+
+  const deleted = await purgeCache(scope);
 
   res.writeHead(200, {
     "cache-control": "no-store",
@@ -370,7 +388,7 @@ async function handlePurgeRequest(req: IncomingMessage, res: ServerResponse) {
   res.end(JSON.stringify({ deleted }));
 }
 
-async function purgeCache(body: PurgePayload | null) {
+async function purgeCache(body: PurgePayload) {
   const files = await readdir(cacheDir);
   const matchingFiles: string[] = [];
 
@@ -428,6 +446,7 @@ async function proxyRequest(
     }
   }
 
+  headers.set("accept-encoding", "identity");
   headers.set("host", url.host);
   headers.set("x-forwarded-proto", "https");
 
@@ -443,9 +462,14 @@ async function proxyRequest(
 
   const response = await fetch(url, requestInit);
 
-  await writeResponseWithHeaders(response, res, {
-    "X-Cache": "BYPASS",
-  });
+  await writeResponseWithHeaders(
+    response,
+    res,
+    {
+      "X-Cache": "BYPASS",
+    },
+    proxyResponseHeadersToStrip,
+  );
 }
 
 async function serveStaticAsset(
@@ -521,19 +545,6 @@ async function recordCacheHit(filePath: string, entry: CacheEntry) {
   return updatedEntry;
 }
 
-async function readJsonBody(req: IncomingMessage) {
-  const chunks: Buffer[] = [];
-  for await (const chunk of req) {
-    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-  }
-
-  if (chunks.length === 0) {
-    return null;
-  }
-
-  return JSON.parse(Buffer.concat(chunks).toString("utf-8")) as PurgePayload;
-}
-
 function getCacheFilePath(key: string) {
   return path.join(cacheDir, `${createHash("sha256").update(key).digest("hex")}.json`);
 }
@@ -562,6 +573,22 @@ function getCacheConfig(pathname: string): CacheConfig {
     matchId: match[1],
     routeType: "match",
     staleMs: cacheTtls.matchStaleMs,
+  };
+}
+
+function getPurgeScope(pathname: string): PurgePayload | null {
+  if (pathname === "/cache/" || pathname === "/cache") {
+    return { scope: "match-list" };
+  }
+
+  const match = pathname.match(/^\/cache\/([^/]+)\/?$/);
+  if (!match) {
+    return null;
+  }
+
+  return {
+    matchId: decodeURIComponent(match[1]),
+    scope: "match",
   };
 }
 
@@ -650,8 +677,12 @@ async function writeResponseWithHeaders(
   response: Response,
   res: ServerResponse,
   extraHeaders: Record<string, string>,
+  headersToStrip: Set<string> = new Set(),
 ) {
   const headers = new Headers(response.headers);
+  for (const headerName of headersToStrip) {
+    headers.delete(headerName);
+  }
   for (const [name, value] of Object.entries(extraHeaders)) {
     headers.set(name, value);
   }
