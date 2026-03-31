@@ -13,7 +13,9 @@ type CacheEntry = {
   createdAt: number;
   expiresAt: number;
   headers: [string, string][];
+  hitCount: number;
   key: string;
+  lastRegeneratedAt: number;
   matchId: string | null;
   pathname: string;
   persisted: boolean;
@@ -166,13 +168,15 @@ async function serveCachedPage(
   const cachedEntry = await readCacheEntry(cacheFilePath);
 
   if (cachedEntry && cachedEntry.expiresAt > Date.now()) {
-    writeCachedResponse(res, cachedEntry, req.method === "HEAD", "HIT");
+    const updatedEntry = await recordCacheHit(cacheFilePath, cachedEntry);
+    writeCachedResponse(res, updatedEntry, req.method === "HEAD", "HIT");
     return;
   }
 
   if (cachedEntry && cachedEntry.staleUntil > Date.now()) {
     void regenerateInBackground(key, cacheFilePath, req, requestUrl, cacheConfig);
-    writeCachedResponse(res, cachedEntry, req.method === "HEAD", "STALE");
+    const updatedEntry = await recordCacheHit(cacheFilePath, cachedEntry);
+    writeCachedResponse(res, updatedEntry, req.method === "HEAD", "STALE");
     return;
   }
 
@@ -188,7 +192,8 @@ async function serveCachedPage(
   } catch (error) {
     if (cachedEntry) {
       console.error("Serving stale cache after regeneration failure", error);
-      writeCachedResponse(res, cachedEntry, req.method === "HEAD", "STALE");
+      const updatedEntry = await recordCacheHit(cacheFilePath, cachedEntry);
+      writeCachedResponse(res, updatedEntry, req.method === "HEAD", "STALE");
       return;
     }
 
@@ -293,7 +298,9 @@ function responseToCacheEntry(
     createdAt: now,
     expiresAt: now + cacheConfig.freshMs,
     headers,
+    hitCount: 0,
     key: getCacheKey(requestUrl),
+    lastRegeneratedAt: now,
     matchId: cacheConfig.matchId,
     pathname: requestUrl.pathname,
     persisted,
@@ -314,6 +321,10 @@ function writeCachedResponse(
   headers["Cache-Control"] = "no-store";
   headers["Content-Length"] = String(Buffer.byteLength(entry.body));
   headers["X-Cache"] = cacheStatus;
+  headers["X-Cache-Hits"] = String(entry.hitCount);
+  headers["X-Cache-Last-Regenerated"] = new Date(
+    entry.lastRegeneratedAt,
+  ).toISOString();
 
   res.writeHead(entry.status, entry.statusText, headers);
   if (headOnly) {
@@ -479,10 +490,28 @@ async function serveStaticAsset(
 async function readCacheEntry(filePath: string) {
   try {
     const raw = await readFile(filePath, "utf-8");
-    return JSON.parse(raw) as CacheEntry;
+    const parsed = JSON.parse(raw) as Partial<CacheEntry>;
+    return {
+      ...parsed,
+      hitCount: parsed.hitCount ?? 0,
+      lastRegeneratedAt: parsed.lastRegeneratedAt ?? parsed.createdAt ?? Date.now(),
+    } as CacheEntry;
   } catch {
     return null;
   }
+}
+
+async function recordCacheHit(filePath: string, entry: CacheEntry) {
+  const updatedEntry: CacheEntry = {
+    ...entry,
+    hitCount: entry.hitCount + 1,
+  };
+
+  if (entry.persisted) {
+    await writeFile(filePath, JSON.stringify(updatedEntry), "utf-8");
+  }
+
+  return updatedEntry;
 }
 
 async function readJsonBody(req: IncomingMessage) {
