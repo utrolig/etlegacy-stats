@@ -344,7 +344,14 @@ async function handlePurgeRequest(req: IncomingMessage, res: ServerResponse) {
     return;
   }
 
-  if (!purgeToken || req.headers["x-cache-purge-token"] !== purgeToken) {
+  const authorizationHeader = req.headers.authorization;
+  const bearerToken =
+    typeof authorizationHeader === "string" &&
+    authorizationHeader.startsWith("Bearer ")
+      ? authorizationHeader.slice("Bearer ".length)
+      : null;
+
+  if (!purgeToken || bearerToken !== purgeToken) {
     res.writeHead(401, {
       "cache-control": "no-store",
       "content-type": "application/json; charset=utf-8",

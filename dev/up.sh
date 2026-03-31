@@ -1,16 +1,24 @@
 #!/bin/sh
+set -eu
 
-# Create network if it doesn't exist
-docker network inspect etlegacy-dev >/dev/null 2>&1 || docker network create etlegacy-dev
+SCRIPT_DIR="$(CDPATH= cd -- "$(dirname "$0")" && pwd)"
+ASTRO_ENV_FILE="${SCRIPT_DIR}/../astro-server/.env"
+
+if [ -f "${ASTRO_ENV_FILE}" ]; then
+  # shellcheck disable=SC1090
+  . "${ASTRO_ENV_FILE}"
+fi
+
+API_TOKEN="${API_TOKEN:-test-token}"
+CACHE_PURGE_TOKEN="${CACHE_PURGE_TOKEN:-dev-cache-token}"
 
 echo "=== Starting Astro app on port 4321 ==="
 docker run -d \
   --rm \
   --name etlegacy-astro \
-  --network etlegacy-dev \
   -p 8080:4321 \
-  -e API_TOKEN=test-token \
-  -e CACHE_PURGE_TOKEN=dev-cache-token \
+  -e API_TOKEN="${API_TOKEN}" \
+  -e CACHE_PURGE_TOKEN="${CACHE_PURGE_TOKEN}" \
   -v etlegacy-astro-cache:/var/cache/etlegacy-stats \
   etlegacy-astro:latest
 
