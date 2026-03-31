@@ -29,7 +29,6 @@ type CacheConfig = {
   freshMs: number;
   matchId: string | null;
   routeType: CacheRouteType;
-  staleMs: number;
 };
 
 type PurgePayload =
@@ -52,15 +51,7 @@ const port = Number(process.env.PORT ?? "4321");
 
 const cacheTtls = {
   matchListFreshMs: getDurationMs(process.env.CACHE_LIST_TTL_SECONDS, 7_200_000),
-  matchListStaleMs: getDurationMs(
-    process.env.CACHE_LIST_STALE_TTL_SECONDS,
-    600_000,
-  ),
   matchFreshMs: getDurationMs(process.env.CACHE_MATCH_TTL_SECONDS, 86_400_000),
-  matchStaleMs: getDurationMs(
-    process.env.CACHE_MATCH_STALE_TTL_SECONDS,
-    2_592_000_000,
-  ),
 };
 
 const analyticsTargets = new Map<string, string>([
@@ -178,13 +169,6 @@ async function serveCachedPage(
     return;
   }
 
-  if (cachedEntry && cachedEntry.staleUntil > Date.now()) {
-    void regenerateInBackground(key, cacheFilePath, req, requestUrl, cacheConfig);
-    const updatedEntry = await recordCacheHit(cacheFilePath, cachedEntry);
-    writeCachedResponse(res, updatedEntry, req.method === "HEAD", "STALE");
-    return;
-  }
-
   try {
     const freshEntry = await regenerateCacheEntry(
       key,
@@ -195,32 +179,7 @@ async function serveCachedPage(
     );
     writeCachedResponse(res, freshEntry, req.method === "HEAD", "MISS");
   } catch (error) {
-    if (cachedEntry) {
-      console.error("Serving stale cache after regeneration failure", error);
-      const updatedEntry = await recordCacheHit(cacheFilePath, cachedEntry);
-      writeCachedResponse(res, updatedEntry, req.method === "HEAD", "STALE");
-      return;
-    }
-
     throw error;
-  }
-}
-
-async function regenerateInBackground(
-  key: string,
-  cacheFilePath: string,
-  req: IncomingMessage,
-  requestUrl: URL,
-  cacheConfig: CacheConfig,
-) {
-  if (inflightRegenerations.has(key)) {
-    return;
-  }
-
-  try {
-    await regenerateCacheEntry(key, cacheFilePath, req, requestUrl, cacheConfig);
-  } catch (error) {
-    console.error(`Background regeneration failed for ${requestUrl.pathname}`, error);
   }
 }
 
@@ -310,7 +269,7 @@ function responseToCacheEntry(
     pathname: requestUrl.pathname,
     persisted,
     routeType: cacheConfig.routeType,
-    staleUntil: now + cacheConfig.freshMs + cacheConfig.staleMs,
+    staleUntil: now + cacheConfig.freshMs,
     status: response.status,
     statusText: response.statusText,
   };
@@ -559,7 +518,6 @@ function getCacheConfig(pathname: string): CacheConfig {
       freshMs: cacheTtls.matchListFreshMs,
       matchId: null,
       routeType: "match-list",
-      staleMs: cacheTtls.matchListStaleMs,
     };
   }
 
@@ -572,7 +530,6 @@ function getCacheConfig(pathname: string): CacheConfig {
     freshMs: cacheTtls.matchFreshMs,
     matchId: match[1],
     routeType: "match",
-    staleMs: cacheTtls.matchStaleMs,
   };
 }
 

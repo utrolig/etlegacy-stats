@@ -29,7 +29,6 @@ Static assets under `/_astro/*` are served with long-lived immutable cache heade
 HTML cache behavior:
 - `/` is cached for 2 hours by default
 - `/matches/:matchId` is cached with a longer TTL
-- stale entries can still be served while the server regenerates them
 - cache metadata is exposed in response headers:
   - `X-Cache`
   - `X-Cache-Hits`
