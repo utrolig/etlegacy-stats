@@ -13,6 +13,7 @@ export const MatchListItem: Component<MatchListItemProps> = (props) => {
     <li class="odd:bg-mud-900/20 relative">
       <a
         class="flex items-center border-b border-b-mud-700 p-4 gap-6"
+        data-astro-prefetch
         href={`/matches/${props.match.match_id}`}
       >
         <div

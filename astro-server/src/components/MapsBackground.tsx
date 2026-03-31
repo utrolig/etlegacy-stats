@@ -50,6 +50,7 @@ export const MapsBackground: Component<MapsBackgroundProps> = (props) => {
             src={image.src}
             style={getImageStyle(idx())}
             decoding="async"
+            fetchpriority="high"
           />
         )}
       </For>

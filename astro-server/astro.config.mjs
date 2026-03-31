@@ -11,6 +11,9 @@ export default defineConfig({
     mode: "middleware",
   }),
   output: "server",
+  prefetch: {
+    defaultStrategy: "hover",
+  },
   vite: {
     server: {
       allowedHosts: ["debian.lan"],
