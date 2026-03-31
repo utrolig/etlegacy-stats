@@ -283,7 +283,7 @@ function writeCachedResponse(
 ) {
   const headers = Object.fromEntries(entry.headers);
   headers["Cache-Control"] =
-    entry.routeType === "match" ? "private, max-age=60" : "no-store";
+    entry.routeType === "match" ? "private, no-cache" : "no-store";
   headers["Content-Length"] = String(Buffer.byteLength(entry.body));
   headers["X-Cache"] = cacheStatus;
   headers["X-Cache-Hits"] = String(entry.hitCount);
