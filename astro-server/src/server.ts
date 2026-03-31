@@ -126,7 +126,11 @@ if (process.env.NO_LISTEN !== "1") {
 async function routeRequest(req: IncomingMessage, res: ServerResponse) {
   const requestUrl = getRequestUrl(req);
 
-  if (requestUrl.pathname === "/cache/" || requestUrl.pathname.startsWith("/cache/")) {
+  if (
+    requestUrl.pathname === "/cache" ||
+    requestUrl.pathname === "/cache/" ||
+    requestUrl.pathname.startsWith("/cache/")
+  ) {
     await handlePurgeRequest(req, res, requestUrl);
     return;
   }
