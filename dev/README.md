@@ -5,10 +5,10 @@ Scripts for local testing with Docker.
 ## Quick Start
 
 ```bash
-# Build both images
+# Build the app image
 ./build.sh
 
-# Start services
+# Start the app
 ./up.sh
 
 # Test it
@@ -18,25 +18,21 @@ open http://localhost:8080
 ./down.sh
 ```
 
-## Services
+## Service
 
 | Service | URL | Description |
 |---------|-----|-------------|
-| Nginx Proxy | http://localhost:8080 | Main entry point, proxies to Astro |
-| Astro App | http://localhost:4321 (internal) | The actual app |
+| Astro App | http://localhost:8080 | App server with HTML cache, static asset handling, and analytics rewrites |
 
 ## Environment
 
 The `up.sh` script sets:
-- `ASTRO_UPSTREAM=http://etlegacy-astro:4321`
 - `API_TOKEN=test-token` (for Astro)
+- `CACHE_PURGE_TOKEN=dev-cache-token`
 
 ## Logs
 
 ```bash
-# View proxy logs
-docker logs -f etlegacy-proxy
-
-# View Astro logs
+# View app logs
 docker logs -f etlegacy-astro
 ```

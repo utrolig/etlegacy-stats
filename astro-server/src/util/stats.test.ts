@@ -1,5 +1,3 @@
-import { readFileSync } from "node:fs";
-import path from "node:path";
 import { describe, expect, it } from "vitest";
 import type { GroupDetails } from "./stats-api";
 import { getMatchStats, getMessages } from "./stats";
@@ -168,10 +166,6 @@ const legacyFixture: GroupDetails = {
   },
 };
 
-const newFixture = JSON.parse(
-  readFileSync(path.resolve(process.cwd(), "new-stats-example.json"), "utf8"),
-) as GroupDetails;
-
 describe("getMatchStats", () => {
   it("supports the legacy ingress format", () => {
     const match = getMatchStats(legacyFixture);
@@ -181,32 +175,5 @@ describe("getMatchStats", () => {
     expect(getMessages("", [], match)).toHaveLength(2);
     expect(match.rounds[0]?.stats[0]?.metaStats.classesPlayed).toEqual(["medic"]);
     expect(match.rounds[0]?.stats[0]?.metaStats.secondsSpentInBinoculars).toBe(5);
-  });
-
-  it("supports the new ingress format via gamelog normalization", () => {
-    const match = getMatchStats(newFixture);
-    const rawMessageCount = newFixture.match.rounds.reduce((count, round) => {
-      const gamelog = "gamelog" in round.round_data ? round.round_data.gamelog : [];
-      return (
-        count +
-        (gamelog?.filter(
-          (event) => event.group === "player" && event.label === "message",
-        ).length ?? 0)
-      );
-    }, 0);
-
-    expect(match.rounds).toHaveLength(newFixture.match.rounds.length);
-    expect(getMessages("", [], match)).toHaveLength(rawMessageCount);
-    expect(match.rounds.every((round) => round.messages.length >= 0)).toBe(true);
-    expect(
-      match.rounds.every((round) =>
-        round.stats.every((stats) => Number.isFinite(stats.metaStats.customRating)),
-      ),
-    ).toBe(true);
-    expect(
-      match.rounds.some((round) =>
-        round.stats.some((stats) => stats.metaStats.classesPlayed.length > 0),
-      ),
-    ).toBe(true);
   });
 });

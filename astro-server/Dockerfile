@@ -11,7 +11,7 @@ RUN npm run build
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 ENV PORT=4321
+ENV CACHE_DIR=/var/cache/etlegacy-stats
 EXPOSE 4321
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
-CMD ["node", "dist/server/entry.mjs"]
-
+CMD ["node", "dist-runtime/server.js"]

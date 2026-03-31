@@ -8,7 +8,7 @@ import solidJs from "@astrojs/solid-js";
 export default defineConfig({
   integrations: [tailwind(), solidJs()],
   adapter: node({
-    mode: "standalone",
+    mode: "middleware",
   }),
   output: "server",
   vite: {
