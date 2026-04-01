@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
-import type { GroupDetails } from "./stats-api";
-import { getMatchStats, getMessages } from "./stats";
+import type { GroupDetails, PlayerInfoDict } from "./stats-api";
+import {
+  applyDiscordUtroAdjustments,
+  getMatchStats,
+  getMessages,
+} from "./stats";
 
 function createWeaponStats({
   mask,
@@ -175,5 +179,38 @@ describe("getMatchStats", () => {
     expect(getMessages("", [], match)).toHaveLength(2);
     expect(match.rounds[0]?.stats[0]?.metaStats.classesPlayed).toEqual(["medic"]);
     expect(match.rounds[0]?.stats[0]?.metaStats.secondsSpentInBinoculars).toBe(5);
+  });
+
+  it("applies UTRO adjustments for specific Discord player names", () => {
+    const match = getMatchStats(legacyFixture);
+    const playerInfoDict: PlayerInfoDict = {
+      AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA: {
+        guid: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        discord_id: "1",
+        discord_nick: "mayan",
+        date_added: "2026-04-01",
+      },
+      BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB: {
+        guid: "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        discord_id: "2",
+        discord_nick: "Vi3ri",
+        date_added: "2026-04-01",
+      },
+    };
+
+    const adjustedMatch = applyDiscordUtroAdjustments(match, playerInfoDict);
+    const mayanStats = adjustedMatch.rounds[0]?.stats.find(
+      (stats) => stats.longId === "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    );
+    const vi3riStats = adjustedMatch.rounds[0]?.stats.find(
+      (stats) => stats.longId === "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+    );
+
+    expect(mayanStats?.metaStats.customRating).toBeCloseTo(
+      match.rounds[0]!.stats[0]!.metaStats.customRating - 0.35,
+    );
+    expect(vi3riStats?.metaStats.customRating).toBeCloseTo(
+      match.rounds[0]!.stats[1]!.metaStats.customRating + 0.35,
+    );
   });
 });

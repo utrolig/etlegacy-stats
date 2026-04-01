@@ -2,6 +2,7 @@ import { createMemo, createSignal, type Component } from "solid-js";
 import type { GroupDetails, PlayerInfoDict } from "../util/stats-api";
 import { MatchHeader } from "./MatchHeader";
 import {
+  applyDiscordUtroAdjustments,
   getMapStats,
   getMatchStats,
   getMessages,
@@ -26,7 +27,10 @@ export const MatchPageWrapper: Component<MatchPageWrapperProps> = (props) => {
   const [preferDiscordNames, setPreferDiscordNames] = createSignal(false);
 
   const match = createMemo(() => {
-    return getMatchStats(props.matchDetails);
+    return applyDiscordUtroAdjustments(
+      getMatchStats(props.matchDetails),
+      props.playerInfoDict,
+    );
   });
 
   const allStats = createMemo(() => {
