@@ -5,7 +5,6 @@ import type {
   GroupDetails,
   GroupRound,
   Message,
-  PlayerInfoDict,
   RawPlayerStats,
 } from "./stats-api";
 import type {
@@ -278,11 +277,6 @@ export type MatchStats = {
   }[];
 };
 
-const DISCORD_UTRO_ADJUSTMENTS: Record<string, number> = {
-  mayan: -0.35,
-  Vi3ri: 0.35,
-};
-
 export function getMapStats(
   map: string,
   rounds: number[],
@@ -321,36 +315,6 @@ export function getMapStats(
   );
 
   return Object.values(playersMap);
-}
-
-export function applyDiscordUtroAdjustments(
-  matchStats: MatchStats,
-  playerInfoDict: PlayerInfoDict,
-): MatchStats {
-  return {
-    ...matchStats,
-    rounds: matchStats.rounds.map((round) => ({
-      ...round,
-      stats: round.stats.map((playerStats) => {
-        const discordNick = playerInfoDict[playerStats.longId]?.discord_nick;
-        const adjustment = discordNick
-          ? DISCORD_UTRO_ADJUSTMENTS[discordNick]
-          : undefined;
-
-        if (adjustment === undefined) {
-          return playerStats;
-        }
-
-        return {
-          ...playerStats,
-          metaStats: {
-            ...playerStats.metaStats,
-            customRating: playerStats.metaStats.customRating + adjustment,
-          },
-        };
-      }),
-    })),
-  };
 }
 
 function addPlayerStats(
