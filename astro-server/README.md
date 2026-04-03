@@ -29,6 +29,8 @@ Static assets under `/_astro/*` are served with long-lived immutable cache heade
 HTML cache behavior:
 - `/` is cached for 2 hours by default
 - `/matches/:matchId` is cached with a longer TTL
+- the on-disk HTML cache is capped at 10 GiB by default
+- when the cache exceeds the cap, the server evicts the oldest cached match pages first
 - cache metadata is exposed in response headers:
   - `X-Cache`
   - `X-Cache-Hits`
@@ -52,6 +54,7 @@ Important variables:
 - `API_TOKEN`: bearer token for Discord/player lookups
 - `CACHE_PURGE_TOKEN`: bearer token required to purge cached HTML
 - `CACHE_DIR`: filesystem path for cached HTML
+- `CACHE_MAX_SIZE_BYTES`: max on-disk HTML cache size in bytes (defaults to 10737418240)
 
 ## Purging
 

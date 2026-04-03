@@ -53,6 +53,11 @@ const cacheTtls = {
   matchListFreshMs: getDurationMs(process.env.CACHE_LIST_TTL_SECONDS, 7_200_000),
   matchFreshMs: getDurationMs(process.env.CACHE_MATCH_TTL_SECONDS, 86_400_000),
 };
+const defaultCacheMaxSizeBytes = 10 * 1024 * 1024 * 1024;
+const cacheMaxSizeBytes = getSizeBytes(
+  process.env.CACHE_MAX_SIZE_BYTES,
+  defaultCacheMaxSizeBytes,
+);
 
 const analyticsTargets = new Map<string, string>([
   ["/anal/a/script.js", "https://app.lythia.dev/collect/analytics/script.js"],
@@ -101,6 +106,7 @@ const inflightRegenerations = new Map<string, Promise<CacheEntry>>();
 const astroApp = await loadAstroApp();
 
 await mkdir(cacheDir, { recursive: true });
+await enforceCacheSizeLimit();
 
 const server = createServer(async (req, res) => {
   try {
@@ -209,6 +215,7 @@ async function regenerateCacheEntry(
 
     const entry = responseToCacheEntry(response, body, requestUrl, cacheConfig, true);
     await writeFile(cacheFilePath, JSON.stringify(entry), "utf-8");
+    await enforceCacheSizeLimit();
     return entry;
   })();
 
@@ -384,6 +391,70 @@ async function purgeCache(body: PurgePayload) {
 
   await Promise.all(matchingFiles.map((filePath) => rm(filePath, { force: true })));
   return matchingFiles.length;
+}
+
+type CacheFileInfo = {
+  createdAt: number;
+  filePath: string;
+  routeType: CacheRouteType;
+  size: number;
+};
+
+async function enforceCacheSizeLimit() {
+  const cacheFiles = await getPersistedCacheFiles();
+  let totalSize = cacheFiles.reduce((sum, file) => sum + file.size, 0);
+
+  if (totalSize <= cacheMaxSizeBytes) {
+    return;
+  }
+
+  const evictionOrder = [
+    ...cacheFiles
+      .filter((file) => file.routeType === "match")
+      .sort((a, b) => a.createdAt - b.createdAt),
+    ...cacheFiles
+      .filter((file) => file.routeType !== "match")
+      .sort((a, b) => a.createdAt - b.createdAt),
+  ];
+
+  for (const file of evictionOrder) {
+    await rm(file.filePath, { force: true });
+    totalSize -= file.size;
+
+    if (totalSize <= cacheMaxSizeBytes) {
+      return;
+    }
+  }
+}
+
+async function getPersistedCacheFiles() {
+  const files = await readdir(cacheDir);
+  const cacheFiles: CacheFileInfo[] = [];
+
+  for (const file of files) {
+    if (!file.endsWith(".json")) {
+      continue;
+    }
+
+    const filePath = path.join(cacheDir, file);
+    const [entry, fileStats] = await Promise.all([
+      readCacheEntry(filePath),
+      stat(filePath).catch(() => null),
+    ]);
+
+    if (!entry?.persisted || !fileStats?.isFile()) {
+      continue;
+    }
+
+    cacheFiles.push({
+      createdAt: entry.createdAt,
+      filePath,
+      routeType: entry.routeType,
+      size: fileStats.size,
+    });
+  }
+
+  return cacheFiles;
 }
 
 async function proxyRequest(
@@ -593,6 +664,14 @@ function getDurationMs(rawValue: string | undefined, defaultValue: number) {
     return defaultValue;
   }
   return parsed * 1000;
+}
+
+function getSizeBytes(rawValue: string | undefined, defaultValue: number) {
+  const parsed = Number(rawValue);
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    return defaultValue;
+  }
+  return Math.floor(parsed);
 }
 
 async function loadAstroApp() {
