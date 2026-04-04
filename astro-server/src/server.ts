@@ -169,8 +169,8 @@ async function serveCachedPage(
   requestUrl: URL,
 ) {
   const key = getCacheKey(requestUrl);
-  const cacheFilePath = getCacheFilePath(key);
   const cacheConfig = getCacheConfig(requestUrl.pathname);
+  const cacheFilePath = getCacheFilePath(key, cacheConfig);
   const cachedEntry = await readCacheEntry(cacheFilePath);
 
   if (cachedEntry && cachedEntry.expiresAt > Date.now()) {
@@ -361,31 +361,17 @@ async function handlePurgeRequest(
 
 async function purgeCache(body: PurgePayload) {
   const files = await readdir(cacheDir);
+
   const matchingFiles: string[] = [];
 
   for (const file of files) {
-    if (!file.endsWith(".json")) {
+    if (body?.scope === "match-list" && file.startsWith("list-")) {
+      matchingFiles.push(path.join(cacheDir, file));
       continue;
     }
 
-    const filePath = path.join(cacheDir, file);
-    const entry = await readCacheEntry(filePath);
-
-    if (!entry?.persisted) {
-      continue;
-    }
-
-    if (body?.scope === "match-list" && entry.routeType === "match-list") {
-      matchingFiles.push(filePath);
-      continue;
-    }
-
-    if (
-      body?.scope === "match" &&
-      entry.routeType === "match" &&
-      entry.matchId === body.matchId
-    ) {
-      matchingFiles.push(filePath);
+    if (body?.scope === "match" && file.startsWith(`match-${body.matchId}-`)) {
+      matchingFiles.push(path.join(cacheDir, file));
     }
   }
 
@@ -580,8 +566,12 @@ async function recordCacheHit(filePath: string, entry: CacheEntry) {
   return updatedEntry;
 }
 
-function getCacheFilePath(key: string) {
-  return path.join(cacheDir, `${createHash("sha256").update(key).digest("hex")}.json`);
+function getCacheFilePath(key: string, cacheConfig: CacheConfig) {
+  const hash = createHash("sha256").update(key).digest("hex").slice(0, 16);
+  if (cacheConfig.routeType === "match-list") {
+    return path.join(cacheDir, `list-${hash}.json`);
+  }
+  return path.join(cacheDir, `match-${cacheConfig.matchId}-${hash}.json`);
 }
 
 function getCacheKey(requestUrl: URL) {
