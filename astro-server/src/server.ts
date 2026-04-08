@@ -103,6 +103,7 @@ const proxyResponseHeadersToStrip = new Set<string>([
 ]);
 
 const inflightRegenerations = new Map<string, Promise<CacheEntry>>();
+let approximateCacheSizeBytes = 0;
 const astroApp = await loadAstroApp();
 
 await mkdir(cacheDir, { recursive: true });
@@ -174,23 +175,26 @@ async function serveCachedPage(
   const cachedEntry = await readCacheEntry(cacheFilePath);
 
   if (cachedEntry && cachedEntry.expiresAt > Date.now()) {
-    const updatedEntry = await recordCacheHit(cacheFilePath, cachedEntry);
+    const updatedEntry = recordCacheHit(cachedEntry);
+    void persistCacheHit(cacheFilePath, updatedEntry);
     writeCachedResponse(res, updatedEntry, req.method === "HEAD", "HIT");
     return;
   }
 
-  try {
-    const freshEntry = await regenerateCacheEntry(
-      key,
-      cacheFilePath,
-      req,
-      requestUrl,
-      cacheConfig,
-    );
-    writeCachedResponse(res, freshEntry, req.method === "HEAD", "MISS");
-  } catch (error) {
-    throw error;
+  if (cachedEntry) {
+    writeCachedResponse(res, cachedEntry, req.method === "HEAD", "STALE");
+    void regenerateCacheEntry(key, cacheFilePath, req, requestUrl, cacheConfig);
+    return;
   }
+
+  const freshEntry = await regenerateCacheEntry(
+    key,
+    cacheFilePath,
+    req,
+    requestUrl,
+    cacheConfig,
+  );
+  writeCachedResponse(res, freshEntry, req.method === "HEAD", "MISS");
 }
 
 async function regenerateCacheEntry(
@@ -214,8 +218,13 @@ async function regenerateCacheEntry(
     }
 
     const entry = responseToCacheEntry(response, body, requestUrl, cacheConfig, true);
-    await writeFile(cacheFilePath, JSON.stringify(entry), "utf-8");
-    await enforceCacheSizeLimit();
+    const serialized = JSON.stringify(entry);
+    await writeFile(cacheFilePath, serialized, "utf-8");
+    approximateCacheSizeBytes += serialized.length;
+    if (approximateCacheSizeBytes >= cacheMaxSizeBytes * 0.9) {
+      const freed = await enforceCacheSizeLimit();
+      approximateCacheSizeBytes = Math.max(0, approximateCacheSizeBytes - freed);
+    }
     return entry;
   })();
 
@@ -280,7 +289,7 @@ function responseToCacheEntry(
     pathname: requestUrl.pathname,
     persisted,
     routeType: cacheConfig.routeType,
-    staleUntil: now + cacheConfig.freshMs,
+    staleUntil: now + cacheConfig.freshMs + 10 * 60 * 1000,
     status: response.status,
     statusText: response.statusText,
   };
@@ -294,7 +303,7 @@ function writeCachedResponse(
 ) {
   const headers = Object.fromEntries(entry.headers);
   headers["Cache-Control"] =
-    entry.routeType === "match" ? "private, no-cache" : "no-store";
+    entry.routeType === "match" ? "private, max-age=60" : "no-store";
   headers["Content-Length"] = String(Buffer.byteLength(entry.body));
   headers["X-Cache"] = cacheStatus;
   headers["X-Cache-Hits"] = String(entry.hitCount);
@@ -386,12 +395,13 @@ type CacheFileInfo = {
   size: number;
 };
 
-async function enforceCacheSizeLimit() {
+async function enforceCacheSizeLimit(): Promise<number> {
   const cacheFiles = await getPersistedCacheFiles();
   let totalSize = cacheFiles.reduce((sum, file) => sum + file.size, 0);
+  approximateCacheSizeBytes = totalSize;
 
   if (totalSize <= cacheMaxSizeBytes) {
-    return;
+    return 0;
   }
 
   const evictionOrder = [
@@ -403,14 +413,18 @@ async function enforceCacheSizeLimit() {
       .sort((a, b) => a.createdAt - b.createdAt),
   ];
 
+  let freed = 0;
   for (const file of evictionOrder) {
     await rm(file.filePath, { force: true });
     totalSize -= file.size;
+    freed += file.size;
 
     if (totalSize <= cacheMaxSizeBytes) {
-      return;
+      return freed;
     }
   }
+
+  return freed;
 }
 
 async function getPersistedCacheFiles() {
@@ -553,17 +567,14 @@ async function readCacheEntry(filePath: string) {
   }
 }
 
-async function recordCacheHit(filePath: string, entry: CacheEntry) {
-  const updatedEntry: CacheEntry = {
-    ...entry,
-    hitCount: entry.hitCount + 1,
-  };
+function recordCacheHit(entry: CacheEntry): CacheEntry {
+  return { ...entry, hitCount: entry.hitCount + 1 };
+}
 
+async function persistCacheHit(filePath: string, entry: CacheEntry) {
   if (entry.persisted) {
-    await writeFile(filePath, JSON.stringify(updatedEntry), "utf-8");
+    await writeFile(filePath, JSON.stringify(entry), "utf-8");
   }
-
-  return updatedEntry;
 }
 
 function getCacheFilePath(key: string, cacheConfig: CacheConfig) {

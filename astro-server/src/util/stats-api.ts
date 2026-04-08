@@ -141,8 +141,11 @@ async function getJsonOrDefault<T>(
   }
 }
 
-async function getJson<T>(...args: Parameters<typeof fetch>) {
-  const response = await fetch(...args);
+async function getJson<T>(input: RequestInfo | URL, init?: RequestInit) {
+  const response = await fetch(input, {
+    ...init,
+    signal: AbortSignal.timeout(10_000),
+  });
 
   if (!response.ok) {
     // eslint-disable-next-line no-console
