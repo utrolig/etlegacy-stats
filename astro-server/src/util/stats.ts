@@ -275,6 +275,7 @@ export type MatchStats = {
     roundTime: string;
     messages: Message[];
   }[];
+  mapWinners: Record<string, "alpha" | "beta" | null>;
 };
 
 export function getMapStats(
@@ -594,11 +595,52 @@ export function getMatchStats(info: GroupDetails): MatchStats {
     [] as MatchStats["rounds"],
   );
 
+  const mapWinners = maps.reduce(
+    (acc, map) => {
+      const mapRounds = match.rounds.filter(
+        (r) => r.round_data.round_info.mapname === map,
+      );
+      const round2 = mapRounds.find(
+        (r) => r.round_data.round_info.round === 2,
+      );
+
+      if (round2) {
+        const { winnerteam, timelimit, nextTimeLimit } =
+          round2.round_data.round_info;
+        const prevRound = mapRounds.find(
+          (r) => r.round_data.round_info.round === 1,
+        );
+
+        const isFullhold =
+          timelimit === nextTimeLimit &&
+          timelimit === prevRound?.round_data.round_info.timelimit;
+
+        if (!isFullhold) {
+          const players = Object.values(round2.round_data.player_stats);
+          const winnerPlayer = players.find(
+            (p) => Number(p.team) === winnerteam,
+          );
+          acc[map] = winnerPlayer
+            ? getPlayerTeamFromGlobal(winnerPlayer.guid)
+            : null;
+        } else {
+          acc[map] = null;
+        }
+      } else {
+        acc[map] = null;
+      }
+
+      return acc;
+    },
+    {} as Record<string, "alpha" | "beta" | null>,
+  );
+
   return {
     score,
     maps,
     teams,
     rounds,
+    mapWinners,
   };
 }
 

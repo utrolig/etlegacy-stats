@@ -1,4 +1,5 @@
 import { createMemo, For, Show, type Component } from "solid-js";
+import clsx from "clsx";
 import {
   playersByKeyAndDir,
   type SortDirection,
@@ -34,7 +35,13 @@ export const TeamTable: Component<TeamTableProps> = (props) => {
   return (
     <div class="flex flex-col big:px-6 overflow-hidden">
       <div class="flex items-center justify-between pl-5 pb-4">
-        <h1 class="big:text-xl capitalize font-semibold text-orange-50">
+        <h1 class="big:text-xl capitalize font-semibold text-orange-50 flex items-center gap-1.5">
+          <div
+            class={clsx(
+              "w-2 h-2 rounded-full shrink-0",
+              props.team === "alpha" ? "bg-blue-300" : "bg-red-300",
+            )}
+          />
           {props.team}
         </h1>
         <Show when={props.showExtraMenu}>

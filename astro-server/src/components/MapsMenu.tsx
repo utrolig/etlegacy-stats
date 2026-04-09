@@ -118,14 +118,26 @@ export const MapsMenu: Component<MapsMenuProps> = (props) => {
               class="big:text-xl flex flex-col gap-1 group font-semibold"
               href={`/matches/${props.matchId}${getRoundQueryParams(map)}`}
             >
-              <p
-                class={clsx(
-                  "group-data-[active=false]:group-hover:text-mud-200",
-                  props.activeMap === map ? "text-orange-50" : "text-mud-300",
-                )}
-              >
-                {map}
-              </p>
+              <div class="flex items-center gap-1.5">
+                <div
+                  class={clsx(
+                    "w-2 h-2 rounded-full shrink-0",
+                    props.match.mapWinners[map] === "alpha"
+                      ? "bg-blue-300"
+                      : props.match.mapWinners[map] === "beta"
+                        ? "bg-red-300"
+                        : "bg-mud-500",
+                  )}
+                />
+                <p
+                  class={clsx(
+                    "group-data-[active=false]:group-hover:text-mud-200",
+                    props.activeMap === map ? "text-orange-50" : "text-mud-300",
+                  )}
+                >
+                  {map}
+                </p>
+              </div>
             </a>
             <div class="flex items-center gap-2">
               {getMapTimes(props.match, map).map((time, idx, arr) => (
