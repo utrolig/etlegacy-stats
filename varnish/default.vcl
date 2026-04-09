@@ -11,6 +11,11 @@ backend astro {
 }
 
 sub vcl_recv {
+    # Health check — respond immediately without hitting the backend
+    if (req.url == "/_health") {
+        return (synth(200, "OK"));
+    }
+
     # Handle PURGE requests — open to any IP but require a Bearer token.
     # Set the PURGE_TOKEN environment variable on the Varnish container.
     if (req.method == "PURGE") {

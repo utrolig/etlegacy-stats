@@ -19,6 +19,10 @@ const HOP_BY_HOP = new Set([
 ]);
 
 export const onRequest = defineMiddleware(async (context, next) => {
+  if (context.url.pathname === "/_health") {
+    return new Response("OK", { status: 200 });
+  }
+
   const target = analyticsRoutes.get(context.url.pathname);
   if (!target) return next();
 
