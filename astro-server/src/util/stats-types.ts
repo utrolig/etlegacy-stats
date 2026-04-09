@@ -58,7 +58,8 @@ export type Group = {
     pw: string;
     instance: string;
   };
-  winner: "alpha" | "beta";
+  winner: "alpha" | "beta" | null;
+  match_score?: string;
 };
 
 export type Message = {

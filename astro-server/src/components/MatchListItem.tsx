@@ -24,15 +24,15 @@ export const MatchListItem: Component<MatchListItemProps> = (props) => {
         </div>
         <div class="flex flex-col gap-1 min-w-0">
           <div class="flex flex-col min-w-0">
-            <div class="flex items-center overflow-hidden">
-              <Show when={props.match.winner === "alpha"}>
-                <span class="w-6 shrink-0">🏆</span>
+            <div class="flex items-center gap-2 overflow-hidden">
+              <Show when={props.match.match_score !== undefined}>
+                <p>{props.match.match_score?.split("-")[0]}</p>
               </Show>
               <span class="truncate">{props.match.alpha_team.join(" - ")}</span>
             </div>
-            <div class="flex items-center overflow-hidden">
-              <Show when={props.match.winner === "beta"}>
-                <span class="w-6 shrink-0">🏆</span>
+            <div class="flex items-center gap-2 overflow-hidden">
+              <Show when={props.match.match_score !== undefined}>
+                <p>{props.match.match_score?.split("-")[1]}</p>
               </Show>
               <span class="truncate">{props.match.beta_team.join(" - ")}</span>
             </div>
