@@ -1,27 +1,23 @@
 vcl 4.1;
 
 import std;
-import dynamic;
 
-sub vcl_init {
-    new astro = dynamic.director(
-        port = "4321",
-        connect_timeout = 5s,
-        first_byte_timeout = 30s,
-        between_bytes_timeout = 10s,
-        probe = {
-            .url = "/";
-            .interval = 2s;
-            .timeout = 3s;
-            .window = 3;
-            .threshold = 2;
-        }
-    );
+backend astro {
+    .host = "etlegacy-astro";
+    .port = "4321";
+    .connect_timeout = 5s;
+    .first_byte_timeout = 30s;
+    .between_bytes_timeout = 10s;
+    .probe = {
+        .url = "/";
+        .interval = 2s;
+        .timeout = 3s;
+        .window = 3;
+        .threshold = 2;
+    }
 }
 
 sub vcl_recv {
-    set req.backend_hint = astro.backend("etlegacy-astro");
-
     # Handle PURGE requests — open to any IP but require a Bearer token.
     # Set the PURGE_TOKEN environment variable on the Varnish container.
     if (req.method == "PURGE") {

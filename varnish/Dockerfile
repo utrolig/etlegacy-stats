@@ -1,10 +1,12 @@
 FROM varnish:7.5
 
 USER root
-RUN apt-get update && apt-get install -y libvmod-dynamic && rm -rf /var/lib/apt/lists/*
+COPY start.sh /usr/local/bin/varnish-start.sh
+RUN chmod +x /usr/local/bin/varnish-start.sh
 USER varnish
 
 COPY default.vcl /etc/varnish/default.vcl
 
-# 256MB in-memory cache. Adjust via VARNISH_SIZE env var in Coolify if needed.
 ENV VARNISH_SIZE=256m
+
+ENTRYPOINT ["/usr/local/bin/varnish-start.sh"]
