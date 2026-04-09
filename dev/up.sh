@@ -21,6 +21,8 @@ docker run -d \
   --name etlegacy-astro \
   --network etlegacy-net \
   -e API_TOKEN="${API_TOKEN}" \
+  -e VARNISH_URL="http://etlegacy-varnish" \
+  -e PURGE_TOKEN="${PURGE_TOKEN}" \
   etlegacy-astro:latest
 
 echo "=== Starting Varnish on port 8080 ==="

@@ -17,6 +17,10 @@ sub vcl_recv {
         if (req.http.Authorization != {"Bearer "} + std.getenv("PURGE_TOKEN")) {
             return (synth(401, "Unauthorized"));
         }
+        if (req.url == "/__purge-all") {
+            ban("req.url ~ .");
+            return (synth(200, "Banned all"));
+        }
         return (purge);
     }
 

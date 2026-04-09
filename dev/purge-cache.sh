@@ -2,12 +2,16 @@
 set -eu
 
 # VARNISH_URL should point at the Varnish container (default: localhost:80)
-VARNISH_URL="${VARNISH_URL:-http://localhost:80}"
+VARNISH_URL="${VARNISH_URL:-http://localhost:8080}"
 
-if [ -z "${PURGE_TOKEN:-}" ]; then
-  printf 'PURGE_TOKEN is not set.\n' >&2
-  exit 1
-fi
+PURGE_TOKEN="${PURGE_TOKEN:-dev-purge-token}"
+
+purge_all() {
+  curl -fsS -X PURGE \
+    -H "Authorization: Bearer ${PURGE_TOKEN}" \
+    "${VARNISH_URL}/__purge-all" > /dev/null
+  printf '\n'
+}
 
 purge_root() {
   curl -fsS -X PURGE \
@@ -28,6 +32,7 @@ purge_match() {
 printf 'Select purge action:\n'
 printf '1) Purge root /\n'
 printf '2) Purge specific match\n'
+printf '3) Purge entire cache\n'
 printf '> '
 read -r selection
 
@@ -45,6 +50,9 @@ case "${selection}" in
     fi
 
     purge_match "${match_id}"
+    ;;
+  3)
+    purge_all
     ;;
   *)
     printf 'Invalid selection.\n' >&2
