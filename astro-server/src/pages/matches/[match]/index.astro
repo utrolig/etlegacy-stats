@@ -38,7 +38,8 @@ const playerInfoDict = playerDiscordNames.reduce((acc, player) => {
     client:visible
     round={parseRoundsQuery(roundsQuery ?? "0")}
     map={mapQuery ?? undefined}
-    matchDetails={matchDetails}
+    matchStats={matchStats}
+    matchId={matchDetails.match.match_id}
     playerInfoDict={playerInfoDict}
   />
 </MatchDetailsLayout>

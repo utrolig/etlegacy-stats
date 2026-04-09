@@ -1,11 +1,11 @@
 import { createMemo, createSignal, type Component } from "solid-js";
-import type { GroupDetails, PlayerInfoDict } from "../util/stats-api";
+import type { PlayerInfoDict } from "../util/stats-api";
 import { MatchHeader } from "./MatchHeader";
 import {
   getMapStats,
-  getMatchStats,
   getMessages,
   getPlayers,
+  type MatchStats,
 } from "../util/stats";
 import { MapsMenu } from "./MapsMenu";
 import { StatsTable } from "./StatsTable";
@@ -14,7 +14,8 @@ import { getAllSillyAwards, getAllWeaponAwards } from "../util/awards";
 import { Messages } from "./Messages";
 
 export type MatchPageWrapperProps = {
-  matchDetails: GroupDetails;
+  matchStats: MatchStats;
+  matchId: string;
   map?: string;
   round?: number;
   playerInfoDict: PlayerInfoDict;
@@ -25,18 +26,14 @@ export const MatchPageWrapper: Component<MatchPageWrapperProps> = (props) => {
   const [round, setRound] = createSignal<number>(props.round || 0);
   const [preferDiscordNames, setPreferDiscordNames] = createSignal(false);
 
-  const match = createMemo(() => {
-    return getMatchStats(props.matchDetails);
-  });
-
   const allStats = createMemo(() => {
     const rounds = round() ? [round()] : [];
-    const stats = getMapStats(map(), rounds, match());
+    const stats = getMapStats(map(), rounds, props.matchStats);
     return stats;
   });
 
   const sillyAwards = createMemo(() => {
-    return getAllSillyAwards(allStats(), props.matchDetails.match.match_id);
+    return getAllSillyAwards(allStats(), props.matchId);
   });
 
   const weaponAwards = createMemo(() => {
@@ -45,18 +42,18 @@ export const MatchPageWrapper: Component<MatchPageWrapperProps> = (props) => {
 
   const messages = createMemo(() => {
     const rounds = round() ? [round()] : [];
-    return getMessages(map(), rounds, match());
+    return getMessages(map(), rounds, props.matchStats);
   });
 
   const players = createMemo(() => {
     const rounds = round() ? [round()] : [];
-    const players = getPlayers(map(), rounds, match());
+    const players = getPlayers(map(), rounds, props.matchStats);
     return players;
   });
 
   return (
     <>
-      <MatchHeader activeMap={map()} match={match()} />
+      <MatchHeader activeMap={map()} match={props.matchStats} />
       <MapsMenu
         onMapClicked={(map) => {
           setMap(map);
@@ -72,8 +69,8 @@ export const MatchPageWrapper: Component<MatchPageWrapperProps> = (props) => {
         }}
         activeRound={round()}
         activeMap={map()}
-        matchId={props.matchDetails.match.match_id}
-        match={match()}
+        matchId={props.matchId}
+        match={props.matchStats}
       />
       <StatsTable
         onPreferDiscordNamesChange={setPreferDiscordNames}
