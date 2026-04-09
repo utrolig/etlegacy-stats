@@ -4,14 +4,23 @@ set -eu
 # VARNISH_URL should point at the Varnish container (default: localhost:80)
 VARNISH_URL="${VARNISH_URL:-http://localhost:80}"
 
+if [ -z "${PURGE_TOKEN:-}" ]; then
+  printf 'PURGE_TOKEN is not set.\n' >&2
+  exit 1
+fi
+
 purge_root() {
-  curl -fsS -X PURGE "${VARNISH_URL}/"
+  curl -fsS -X PURGE \
+    -H "Authorization: Bearer ${PURGE_TOKEN}" \
+    "${VARNISH_URL}/"
   printf '\n'
 }
 
 purge_match() {
   match_id="$1"
-  curl -fsS -X PURGE "${VARNISH_URL}/matches/${match_id}"
+  curl -fsS -X PURGE \
+    -H "Authorization: Bearer ${PURGE_TOKEN}" \
+    "${VARNISH_URL}/matches/${match_id}"
   printf '\n'
   purge_root
 }

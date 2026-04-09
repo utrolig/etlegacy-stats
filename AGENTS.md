@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This repository contains an ET: Legacy match statistics viewer built with Astro 5 and SolidJS. It fetches match data from the ETL API (`api.etl.lol`) and displays match listings, detailed stats, player comparisons, and awards. The deployment uses a two-tier architecture with Caddy as a reverse proxy/cache and Astro as the application server.
+This repository contains an ET: Legacy match statistics viewer built with Astro 5 and SolidJS. It fetches match data from the ETL API (`api.etl.lol`) and displays match listings, detailed stats, player comparisons, and awards.
 
 ## Project Structure
 
@@ -10,6 +10,7 @@ This repository contains an ET: Legacy match statistics viewer built with Astro 
 /home/stiba/Repos/etlegacy-stats/
 ├── astro-server/           # Main Astro 5 application
 │   ├── src/
+│   │   ├── middleware.ts                # Analytics proxy (/anal/* → app.lythia.dev)
 │   │   ├── pages/          # Astro routes (file-based routing)
 │   │   │   ├── index.astro              # Match list page
 │   │   │   ├── search.astro             # Search functionality
@@ -25,13 +26,14 @@ This repository contains an ET: Legacy match statistics viewer built with Astro 
 │   ├── public/             # Public static assets
 │   ├── scripts/            # Build/utility scripts
 │   └── api-cache/          # Local API cache for development
-├── nginx-proxy/            # Nginx reverse proxy
-│   ├── Dockerfile          # Proxy container build
-│   └── nginx.conf          # Nginx configuration
+├── varnish/                # Varnish cache
+│   ├── Dockerfile
+│   └── default.vcl         # Caching rules, grace mode, PURGE endpoint
 ├── dev/                    # Local development scripts
 │   ├── build.sh            # Build both Docker images
 │   ├── up.sh               # Start local dev environment
-│   └── down.sh             # Stop local dev environment
+│   ├── down.sh             # Stop local dev environment
+│   └── purge-cache.sh      # Manually purge Varnish cache entries
 └── AGENTS.md               # This file
 ```
 
@@ -61,15 +63,15 @@ npm ci                   # Install exact dependencies from package-lock.json
 
 ## Local Development with Docker
 
-Test the full stack locally with the cache proxy:
+Test the full stack locally with Varnish in front:
 
 ```bash
 cd /home/stiba/Repos/etlegacy-stats/dev
 
-# Build both Docker images
+# Build both Docker images (Astro + Varnish)
 ./build.sh
 
-# Start services (proxy on :8080, Astro internal on :4321)
+# Start services (Varnish on :8080, Astro internal only)
 ./up.sh
 
 # Test
@@ -77,24 +79,48 @@ open http://localhost:8080
 
 # Stop services
 ./down.sh
+
+# Purge cache manually (requires PURGE_TOKEN env var)
+PURGE_TOKEN=dev-purge-token ./purge-cache.sh
 ```
 
 ## Deployment Architecture
 
-The application deploys as two separate services:
+Two containers deployed separately (e.g. in Coolify), connected via a shared private network:
 
 1. **Astro Application** (`astro-server/Dockerfile`)
    - Node.js LTS slim base image
-   - Builds and runs as standalone server on port 4321
-   - Requires `API_TOKEN` environment variable for player Discord name lookups
+   - Runs as standalone server on port 4321 (internal only, not publicly exposed)
+   - Analytics proxying handled in `src/middleware.ts` (`/anal/*` → `app.lythia.dev`)
+   - Environment variables:
+     - `API_TOKEN` — Bearer token for player Discord name lookups
 
-2. **Nginx Proxy** (`nginx-proxy/Dockerfile`)
-   - Simple nginx reverse proxy
-   - Proxies all requests to Astro upstream
-   - Rewrites `/anal/*` analytics URLs to `app.lythia.dev`
-   - Adds immutable cache headers for static assets (js/css/images/fonts)
-   - Requires environment variable:
-     - `ASTRO_UPSTREAM`: URL to Astro service (e.g., `http://etlegacy-stats-astro:4321`)
+2. **Varnish Cache** (`varnish/Dockerfile`)
+   - Listens on port 80, receives all public traffic
+   - Caches match list (`/`) for 2h and match pages (`/matches/*`) for 24h
+   - Grace mode: serves stale content while refreshing in background (no blocking on cache miss)
+   - `PURGE` requests accepted from any IP with a valid `Authorization: Bearer <token>` header
+   - `X-Cache: HIT/MISS` and `X-Cache-Hits` headers on all responses
+   - Environment variables:
+     - `PURGE_TOKEN` — token required to authorize cache purge requests
+     - `VARNISH_SIZE` — in-memory cache size (default: `256m`)
+
+The Varnish container must be able to reach the Astro container by hostname `etlegacy-astro` (the backend name in `default.vcl`). Name the Astro service accordingly in your deployment platform.
+
+## Cache Purge
+
+To invalidate cached pages (e.g. after new match data is published):
+
+```bash
+# Purge a specific match and the root page
+VARNISH_URL=https://your-varnish-host PURGE_TOKEN=secret ./dev/purge-cache.sh
+```
+
+Or with curl directly:
+```bash
+curl -X PURGE -H "Authorization: Bearer <token>" https://your-varnish-host/matches/123
+curl -X PURGE -H "Authorization: Bearer <token>" https://your-varnish-host/
+```
 
 ## Technology Stack
 
@@ -103,6 +129,7 @@ The application deploys as two separate services:
 - **Styling**: Tailwind CSS 3.4 with custom theme
 - **UI Components**: Kobalte Core (headless UI primitives)
 - **Language**: TypeScript 5.7 (strict mode)
+- **Caching**: Varnish 7.5
 - **Testing**: Vitest 2.1
 - **Formatting**: Prettier with prettier-plugin-astro
 - **Icons**: solid-icons
@@ -176,14 +203,15 @@ Match stats are processed in `src/util/stats.ts`:
 
 ## Environment Variables
 
-### Astro Server (`astro-server/.env`)
+### Astro container
 ```bash
-API_TOKEN=          # Bearer token for player Discord name lookups
+API_TOKEN=       # Bearer token for player Discord name lookups
 ```
 
-### Deployment (root `.env`)
+### Varnish container
 ```bash
-ASTRO_UPSTREAM=http://etlegacy-stats-astro:4321
+PURGE_TOKEN=     # Token required to authorize PURGE requests
+VARNISH_SIZE=    # In-memory cache size, e.g. 256m (default: 256m)
 ```
 
 ## Testing
@@ -250,7 +278,7 @@ Custom theme defined in `tailwind.config.mjs`:
 2. **Dev Caching**: Delete `api-cache/` to force fresh API data in development
 3. **Round Stats**: Second round stats are calculated as deltas from first round
 4. **Team Assignment**: Teams are determined from first round; standins are detected by teammate analysis
-
+5. **Varnish backend hostname**: The Astro service must be reachable as `etlegacy-astro` from Varnish — match the service name in your deployment platform to this
 6. **Image Format**: Map and class images must be AVIF; weapon icons must be SVG
 
 ## Useful Commands Summary

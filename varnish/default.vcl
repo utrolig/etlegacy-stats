@@ -10,20 +10,12 @@ backend astro {
     .between_bytes_timeout = 10s;
 }
 
-# IPs allowed to send PURGE requests.
-# Add your Coolify internal network CIDR here if purging from outside the container.
-acl purge_acl {
-    "localhost";
-    "127.0.0.1";
-    "::1";
-    "etlegacy-astro";
-}
-
 sub vcl_recv {
-    # Handle PURGE requests
+    # Handle PURGE requests — open to any IP but require a Bearer token.
+    # Set the PURGE_TOKEN environment variable on the Varnish container.
     if (req.method == "PURGE") {
-        if (!client.ip ~ purge_acl) {
-            return (synth(405, "Not allowed"));
+        if (req.http.Authorization != {"Bearer "} + std.getenv("PURGE_TOKEN")) {
+            return (synth(401, "Unauthorized"));
         }
         return (purge);
     }

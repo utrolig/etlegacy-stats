@@ -10,6 +10,7 @@ if [ -f "${ASTRO_ENV_FILE}" ]; then
 fi
 
 API_TOKEN="${API_TOKEN:-test-token}"
+PURGE_TOKEN="${PURGE_TOKEN:-dev-purge-token}"
 
 # Shared network so Varnish can reach Astro by container name
 docker network create etlegacy-net 2>/dev/null || true
@@ -28,6 +29,7 @@ docker run -d \
   --name etlegacy-varnish \
   --network etlegacy-net \
   -p 8080:80 \
+  -e PURGE_TOKEN="${PURGE_TOKEN}" \
   etlegacy-varnish:latest
 
 echo ""
