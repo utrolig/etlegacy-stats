@@ -1,4 +1,4 @@
-import { Show, type Component } from "solid-js";
+import { type Component } from "solid-js";
 import type { Group } from "../util/stats-api";
 import { DateTime } from "luxon";
 import { getMatchSize } from "../util/stats";
@@ -23,19 +23,19 @@ export const MatchListItem: Component<MatchListItemProps> = (props) => {
           <FiClock size={16} />
         </div>
         <div class="flex flex-col gap-1 min-w-0">
-          <div class="flex flex-col min-w-0">
-            <div class="flex items-center gap-2 overflow-hidden">
-              <Show when={props.match.match_score !== undefined}>
-                <p>{props.match.match_score?.split("-")[0]}</p>
-              </Show>
-              <span class="truncate">{props.match.alpha_team.join(" - ")}</span>
-            </div>
-            <div class="flex items-center gap-2 overflow-hidden">
-              <Show when={props.match.match_score !== undefined}>
-                <p>{props.match.match_score?.split("-")[1]}</p>
-              </Show>
-              <span class="truncate">{props.match.beta_team.join(" - ")}</span>
-            </div>
+          <div class={`grid min-w-0 ${props.match.match_score ? "grid-cols-[auto_1fr] gap-x-2" : "grid-cols-1"}`}>
+            {props.match.match_score && (
+              <span class={`text-right ${getScoreColor(props.match.match_score, "alpha")}`}>
+                {props.match.match_score.split("-")[0]}
+              </span>
+            )}
+            <span class="truncate">{props.match.alpha_team.join(" - ")}</span>
+            {props.match.match_score && (
+              <span class={`text-right ${getScoreColor(props.match.match_score, "beta")}`}>
+                {props.match.match_score.split("-")[1]}
+              </span>
+            )}
+            <span class="truncate">{props.match.beta_team.join(" - ")}</span>
           </div>
           <div class="flex flex-col text-sm">
             <p class="text-mud-200">{props.match.maps.join(", ")}</p>
@@ -53,6 +53,14 @@ export const MatchListItem: Component<MatchListItemProps> = (props) => {
     </li>
   );
 };
+
+function getScoreColor(matchScore: string | undefined, team: "alpha" | "beta") {
+  if (!matchScore) return "text-mud-400";
+  const [alpha, beta] = matchScore.split("-").map(Number);
+  if (alpha === beta) return "text-mud-400";
+  const teamWon = team === "alpha" ? alpha > beta : beta > alpha;
+  return teamWon ? "text-green-400" : "text-red-400";
+}
 
 function getChannelState(match: Group) {
   if (!match.channel_name) {
