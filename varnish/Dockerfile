@@ -1,6 +1,8 @@
 FROM varnish:7.5
 
+USER root
 RUN apt-get update && apt-get install -y libvmod-dynamic && rm -rf /var/lib/apt/lists/*
+USER varnish
 
 COPY default.vcl /etc/varnish/default.vcl
 
