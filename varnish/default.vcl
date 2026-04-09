@@ -1,13 +1,18 @@
 vcl 4.1;
 
 import std;
+import dynamic;
 
-backend astro {
-    .host = "etlegacy-astro";
-    .port = "4321";
-    .connect_timeout = 5s;
-    .first_byte_timeout = 30s;
-    .between_bytes_timeout = 10s;
+backend default none;
+
+sub vcl_init {
+    new d = dynamic.director(
+        port = "4321",
+        ttl = 1s,
+        connect_timeout = 5s,
+        first_byte_timeout = 30s,
+        between_bytes_timeout = 10s
+    );
 }
 
 sub vcl_recv {
@@ -15,6 +20,10 @@ sub vcl_recv {
     if (req.url == "/_health") {
         return (synth(200, "OK"));
     }
+
+    # Resolve backend dynamically — re-resolves DNS every 1s so new container IPs
+    # are picked up automatically after a rolling redeploy.
+    set req.backend_hint = d.backend("etlegacy-astro");
 
     # Handle PURGE requests — open to any IP but require a Bearer token.
     # Set the PURGE_TOKEN environment variable on the Varnish container.

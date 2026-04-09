@@ -1,4 +1,4 @@
-FROM varnish:7.5
+FROM varnish:7.6
 
 USER root
 RUN apt-get update -y && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
