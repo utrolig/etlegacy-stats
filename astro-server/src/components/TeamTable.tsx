@@ -23,6 +23,7 @@ export type TeamTableProps = {
   showExtraMenu?: boolean;
   preferDiscordNames: boolean;
   onPreferDiscordNamesChanged: (value: boolean) => void;
+  scrollContainerRef?: (el: HTMLDivElement) => void;
 };
 
 export const TeamTable: Component<TeamTableProps> = (props) => {
@@ -54,7 +55,7 @@ export const TeamTable: Component<TeamTableProps> = (props) => {
           </div>
         </Show>
       </div>
-      <div class="flex flex-col overflow-x-auto">
+      <div class="flex flex-col overflow-x-auto" ref={props.scrollContainerRef}>
         <TableHeader
           sortKey={props.sortKey}
           sortDirection={props.sortDir}
