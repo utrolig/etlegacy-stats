@@ -4,12 +4,12 @@ import { FiSearch } from "solid-icons/fi";
 
 export type MatchTypeMenuProps = {
   currentUrl: string;
-  size?: number;
+  size?: number | string;
   search?: boolean;
 };
 
 export const MatchTypeMenu: Component<MatchTypeMenuProps> = (props) => {
-  const getSizeLink = (size?: number) => {
+  const getSizeLink = (size?: number | string) => {
     const url = new URL(props.currentUrl);
     const sp = new URLSearchParams(url.search);
 
@@ -29,15 +29,6 @@ export const MatchTypeMenu: Component<MatchTypeMenuProps> = (props) => {
       <a
         class={clsx(
           "py-4 px-8 border-b-2 border-orange-400",
-          !props.size ? "border-orange-400" : "border-transparent",
-        )}
-        href={getSizeLink()}
-      >
-        All
-      </a>
-      <a
-        class={clsx(
-          "py-4 px-8 border-b-2 border-orange-400",
           props.size === 12 ? "border-orange-400" : "border-transparent",
         )}
         href={getSizeLink(12)}
@@ -52,6 +43,15 @@ export const MatchTypeMenu: Component<MatchTypeMenuProps> = (props) => {
         href={getSizeLink(6)}
       >
         3v3
+      </a>
+      <a
+        class={clsx(
+          "py-4 px-8 border-b-2 border-orange-400",
+          props.size === "other" ? "border-orange-400" : "border-transparent",
+        )}
+        href={getSizeLink("other")}
+      >
+        Other
       </a>
       <a
         class={clsx(

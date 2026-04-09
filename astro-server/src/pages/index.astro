@@ -24,7 +24,15 @@ function getSize() {
     return undefined;
   }
 
+  if (size === "other") {
+    return "other";
+  }
+
   return Number(size);
+}
+
+if (!Astro.url.searchParams.has("size") && !Astro.url.searchParams.has("page")) {
+  return Astro.redirect("/?size=12&page=1");
 }
 
 const page = getPage();

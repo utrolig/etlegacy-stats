@@ -34,7 +34,7 @@ export const statsApi = {
     });
     return data;
   },
-  async fetchGroups({ page = 1, size }: { page: number; size?: number }) {
+  async fetchGroups({ page = 1, size }: { page: number; size?: number | string }) {
     const sp = new URLSearchParams();
 
     sp.append("page_size", "50");
