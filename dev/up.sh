@@ -10,20 +10,28 @@ if [ -f "${ASTRO_ENV_FILE}" ]; then
 fi
 
 API_TOKEN="${API_TOKEN:-test-token}"
-CACHE_PURGE_TOKEN="${CACHE_PURGE_TOKEN:-dev-cache-token}"
 
-echo "=== Starting Astro app on port 4321 ==="
+# Shared network so Varnish can reach Astro by container name
+docker network create etlegacy-net 2>/dev/null || true
+
+echo "=== Starting Astro app ==="
 docker run -d \
   --rm \
   --name etlegacy-astro \
-  -p 8080:4321 \
+  --network etlegacy-net \
   -e API_TOKEN="${API_TOKEN}" \
-  -e CACHE_PURGE_TOKEN="${CACHE_PURGE_TOKEN}" \
-  -v etlegacy-astro-cache:/var/cache/etlegacy-stats \
   etlegacy-astro:latest
+
+echo "=== Starting Varnish on port 8080 ==="
+docker run -d \
+  --rm \
+  --name etlegacy-varnish \
+  --network etlegacy-net \
+  -p 8080:80 \
+  etlegacy-varnish:latest
 
 echo ""
 echo "=== Services started ==="
-echo "App: http://localhost:8080"
+echo "App (via Varnish): http://localhost:8080"
 echo ""
 echo "Run ./down.sh to stop"

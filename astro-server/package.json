@@ -5,8 +5,8 @@
   "scripts": {
     "convert-images": "tsx ./scripts/convertImages.ts",
     "dev": "astro dev --host 0.0.0.0",
-    "build": "astro build && tsc -p tsconfig.server.json",
-    "start": "node dist-runtime/server.js",
+    "build": "astro build",
+    "start": "node ./dist/server/entry.mjs",
     "preview": "astro preview",
     "astro": "astro",
     "format": "prettier --write .",

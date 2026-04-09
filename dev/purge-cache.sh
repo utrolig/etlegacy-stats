@@ -1,39 +1,19 @@
 #!/bin/sh
 set -eu
 
-SCRIPT_DIR="$(CDPATH= cd -- "$(dirname "$0")" && pwd)"
-ASTRO_ENV_FILE="${SCRIPT_DIR}/../astro-server/.env"
-
-if [ -f "${ASTRO_ENV_FILE}" ]; then
-  # shellcheck disable=SC1090
-  . "${ASTRO_ENV_FILE}"
-fi
-
-BASE_URL="${BASE_URL:-http://localhost:8080}"
-PURGE_TOKEN="${PURGE_TOKEN:-${CACHE_PURGE_TOKEN:-}}"
-PURGE_ENDPOINT="${BASE_URL%/}/cache"
-
-if [ -z "${PURGE_TOKEN}" ]; then
-  printf 'PURGE_TOKEN/CACHE_PURGE_TOKEN is not set.\n' >&2
-  exit 1
-fi
+# VARNISH_URL should point at the Varnish container (default: localhost:80)
+VARNISH_URL="${VARNISH_URL:-http://localhost:80}"
 
 purge_root() {
-  curl -fsS \
-    -X DELETE \
-    -H "Authorization: Bearer ${PURGE_TOKEN}" \
-    "${PURGE_ENDPOINT}/"
+  curl -fsS -X PURGE "${VARNISH_URL}/"
   printf '\n'
 }
 
 purge_match() {
   match_id="$1"
-
-  curl -fsS \
-    -X DELETE \
-    -H "Authorization: Bearer ${PURGE_TOKEN}" \
-    "${PURGE_ENDPOINT}/${match_id}"
+  curl -fsS -X PURGE "${VARNISH_URL}/matches/${match_id}"
   printf '\n'
+  purge_root
 }
 
 printf 'Select purge action:\n'
@@ -56,7 +36,6 @@ case "${selection}" in
     fi
 
     purge_match "${match_id}"
-    purge_root
     ;;
   *)
     printf 'Invalid selection.\n' >&2
