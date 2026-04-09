@@ -31,7 +31,6 @@ docker run -d \
   --name etlegacy-varnish \
   --network etlegacy-net \
   -p 8080:80 \
-  --cap-add IPC_LOCK \
   -e PURGE_TOKEN="${PURGE_TOKEN}" \
   etlegacy-varnish:latest
 
