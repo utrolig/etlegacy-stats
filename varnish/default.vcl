@@ -59,7 +59,13 @@ sub vcl_backend_response {
         set beresp.ttl = 24h;
         set beresp.grace = 10m;
     }
-    # Everything else (search, static assets, etc.): don't cache
+    # Astro's built assets have content-hash filenames — safe to cache long-term.
+    # Grace ensures they're available during backend sick window (e.g. deploys).
+    else if (bereq.url ~ "^/_astro/") {
+        set beresp.ttl = 365d;
+        set beresp.grace = 10m;
+    }
+    # Everything else (search, etc.): don't cache
     else {
         set beresp.ttl = 0s;
         set beresp.uncacheable = true;
