@@ -26,6 +26,8 @@ const playerInfoDict = playerDiscordNames.reduce((acc, player) => {
   acc[player.guid] = player;
   return acc;
 }, {} as PlayerInfoDict);
+
+const preferDiscordNames = Astro.cookies.get("preferDiscordNames")?.value === "true";
 ---
 
 <MatchDetailsLayout
@@ -41,5 +43,6 @@ const playerInfoDict = playerDiscordNames.reduce((acc, player) => {
     matchStats={matchStats}
     matchId={matchDetails.match.match_id}
     playerInfoDict={playerInfoDict}
+    preferDiscordNames={preferDiscordNames}
   />
 </MatchDetailsLayout>

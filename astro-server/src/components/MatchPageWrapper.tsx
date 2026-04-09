@@ -19,12 +19,18 @@ export type MatchPageWrapperProps = {
   map?: string;
   round?: number;
   playerInfoDict: PlayerInfoDict;
+  preferDiscordNames?: boolean;
 };
 
 export const MatchPageWrapper: Component<MatchPageWrapperProps> = (props) => {
   const [map, setMap] = createSignal<string>(props.map || "");
   const [round, setRound] = createSignal<number>(props.round || 0);
-  const [preferDiscordNames, setPreferDiscordNames] = createSignal(false);
+  const COOKIE_KEY = "preferDiscordNames";
+  const [preferDiscordNames, setPreferDiscordNames] = createSignal(props.preferDiscordNames ?? false);
+  const setAndPersistPreferDiscordNames = (value: boolean) => {
+    document.cookie = `${COOKIE_KEY}=${value}; path=/; max-age=${60 * 60 * 24 * 365}`;
+    setPreferDiscordNames(value);
+  };
 
   const allStats = createMemo(() => {
     const rounds = round() ? [round()] : [];
@@ -73,7 +79,7 @@ export const MatchPageWrapper: Component<MatchPageWrapperProps> = (props) => {
         match={props.matchStats}
       />
       <StatsTable
-        onPreferDiscordNamesChange={setPreferDiscordNames}
+        onPreferDiscordNamesChange={setAndPersistPreferDiscordNames}
         preferDiscordNames={preferDiscordNames()}
         playerInfoDict={props.playerInfoDict}
         stats={allStats()}
