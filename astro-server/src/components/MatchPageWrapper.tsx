@@ -28,7 +28,8 @@ export const MatchPageWrapper: Component<MatchPageWrapperProps> = (props) => {
   const COOKIE_KEY = "preferDiscordNames";
   const [preferDiscordNames, setPreferDiscordNames] = createSignal(props.preferDiscordNames ?? false);
   const setAndPersistPreferDiscordNames = (value: boolean) => {
-    document.cookie = `${COOKIE_KEY}=${value}; path=/; max-age=${60 * 60 * 24 * 365}`;
+    const secure = location.protocol === "https:" ? "; Secure" : "";
+    document.cookie = `${COOKIE_KEY}=${value}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax${secure}`;
     setPreferDiscordNames(value);
   };
 
