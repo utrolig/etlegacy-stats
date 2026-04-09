@@ -2,4 +2,4 @@ allowBuilds:
   esbuild: true
   sharp: true
 
-minimumReleaseAge: 10080
+minimumReleaseAge: 6000
