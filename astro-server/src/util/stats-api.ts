@@ -22,6 +22,7 @@ export type PaginatedResponse<T> = {
 
 export const statsApi = {
   async fetchUsersByGuid(guids: string[], apiToken: string) {
+    if (guids.length === 0) return [];
     const url = urlJoin(
       BASE_URL,
       `/players/by-guid?${guids.map((guid) => `guid=${guid}`).join("&")}`,
