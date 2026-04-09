@@ -8,13 +8,6 @@ backend astro {
     .connect_timeout = 5s;
     .first_byte_timeout = 30s;
     .between_bytes_timeout = 10s;
-    .probe = {
-        .url = "/";
-        .interval = 2s;
-        .timeout = 3s;
-        .window = 3;
-        .threshold = 2;
-    }
 }
 
 sub vcl_recv {
