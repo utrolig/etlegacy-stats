@@ -48,11 +48,24 @@ sub vcl_recv {
         return (pass);
     }
 
-    # Strip cookies and auth headers so Varnish treats responses as cacheable
-    unset req.http.Cookie;
+    # Strip all cookies except preferDiscordNames, then normalize it to just
+    # "true" or unset — Varnish will create two separate cache entries via vcl_hash.
+    if (req.http.Cookie ~ "preferDiscordNames=true") {
+        set req.http.Cookie = "preferDiscordNames=true";
+    } else {
+        unset req.http.Cookie;
+    }
     unset req.http.Authorization;
 
     return (hash);
+}
+
+sub vcl_hash {
+    hash_data(req.url);
+    if (req.http.Cookie ~ "preferDiscordNames=true") {
+        hash_data("preferDiscordNames=true");
+    }
+    return (lookup);
 }
 
 sub vcl_backend_response {
