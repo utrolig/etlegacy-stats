@@ -1518,7 +1518,7 @@ const MOD_WEAPON_IDS: Record<number, string> = {
   13: WEAPON_NAMES["FG 42"],
   14: WEAPON_NAMES["FG 42"],
   15: WEAPON_NAMES.Panzer,
-  16: WEAPON_NAMES["G.Launchr"],
+  16: WEAPON_NAMES.Grenade,
   17: WEAPON_NAMES["F.Thrower"],
   18: WEAPON_NAMES.Grenade,
   19: WEAPON_NAMES.Mortar,
