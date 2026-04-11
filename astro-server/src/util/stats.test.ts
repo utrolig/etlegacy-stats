@@ -261,11 +261,11 @@ describe("getMatchStats", () => {
 
     const match = getMatchStats(legacyDamageFixture);
     const alphaStats = match.rounds[0]!.stats.find((stats) => stats.id === "AAAAAAAA");
-    const panzerStats = alphaStats?.weaponStats.find((weapon) => weapon.name === "Panzer");
+    const mp40Stats = alphaStats?.weaponStats.find((weapon) => weapon.name === "MP 40");
 
-    expect(panzerStats?.damage).toBe(140);
-    expect(panzerStats?.kills).toBe(0);
-    expect(panzerStats?.shots).toBe(0);
+    expect(mp40Stats?.damage).toBe(140);
+    expect(mp40Stats?.kills).toBe(0);
+    expect(mp40Stats?.shots).toBe(0);
   });
 
   it("adds new per-weapon damage, filters invalid events, and aggregates across rounds", () => {
@@ -707,18 +707,18 @@ describe("getMatchStats", () => {
 
     const match = getMatchStats(newFixture);
     const alphaRoundOne = match.rounds[0]!.stats.find((stats) => stats.id === "AAAAAAAA");
-    const bazookaRoundOne = alphaRoundOne?.weaponStats.find(
-      (weapon) => weapon.name === "Bazooka",
+    const thompsonRoundOne = alphaRoundOne?.weaponStats.find(
+      (weapon) => weapon.name === "Thompson",
     );
     const aggregatedAlpha = getMapStats("", [], match).find(
       (stats) => stats.id === "AAAAAAAA",
     );
-    const aggregatedBazooka = aggregatedAlpha?.weaponStats.find(
-      (weapon) => weapon.name === "Bazooka",
+    const aggregatedThompson = aggregatedAlpha?.weaponStats.find(
+      (weapon) => weapon.name === "Thompson",
     );
 
-    expect(bazookaRoundOne?.damage).toBe(40);
-    expect(aggregatedBazooka?.damage).toBe(60);
-    expect(aggregatedBazooka?.kills).toBe(0);
+    expect(thompsonRoundOne?.damage).toBe(40);
+    expect(aggregatedThompson?.damage).toBe(60);
+    expect(aggregatedThompson?.kills).toBe(0);
   });
 });

@@ -253,7 +253,7 @@ function getRoundTeamsByCanonicalGuid(round: GroupRound) {
 }
 
 function getWeaponNameById(weaponId: number): string | undefined {
-  return WEAPON_IDS[weaponId]?.name;
+  return MOD_WEAPON_IDS[weaponId];
 }
 
 function getEmptyWeaponStats(name: string, damage = 0): WeaponStats {
@@ -1501,6 +1501,53 @@ export const WEAPON_NAMES = {
   "Scp.K43": "Scp.K43",
   "MP 34": "MP 34",
   Syringe: "Syringe",
+} as const;
+
+const MOD_WEAPON_IDS: Record<number, string> = {
+  2: WEAPON_NAMES.Browning,
+  3: WEAPON_NAMES["MG 42 Gun"],
+  4: WEAPON_NAMES.Grenade,
+  5: WEAPON_NAMES.Knife,
+  6: WEAPON_NAMES.Luger,
+  7: WEAPON_NAMES.Colt,
+  8: WEAPON_NAMES["MP 40"],
+  9: WEAPON_NAMES.Thompson,
+  10: WEAPON_NAMES.Sten,
+  11: WEAPON_NAMES.Garand,
+  12: WEAPON_NAMES.Luger,
+  13: WEAPON_NAMES["FG 42"],
+  14: WEAPON_NAMES["FG 42"],
+  15: WEAPON_NAMES.Panzer,
+  16: WEAPON_NAMES["G.Launchr"],
+  17: WEAPON_NAMES["F.Thrower"],
+  18: WEAPON_NAMES.Grenade,
+  19: WEAPON_NAMES.Mortar,
+  20: WEAPON_NAMES.Mortar,
+  22: WEAPON_NAMES.Dynamite,
+  23: WEAPON_NAMES.Airstrike,
+  24: WEAPON_NAMES.Syringe,
+  26: WEAPON_NAMES.Artillery,
+  37: WEAPON_NAMES.Garand,
+  38: WEAPON_NAMES["K43 Rifle"],
+  39: WEAPON_NAMES["G.Launchr"],
+  40: WEAPON_NAMES["G.Launchr"],
+  41: WEAPON_NAMES.Landmine,
+  42: WEAPON_NAMES.Satchel,
+  44: WEAPON_NAMES["MG 42 Gun"],
+  45: WEAPON_NAMES.Colt,
+  46: WEAPON_NAMES["Scp.Garand"],
+  50: WEAPON_NAMES["K43 Rifle"],
+  51: WEAPON_NAMES["Scp.K43"],
+  52: WEAPON_NAMES.Mortar,
+  53: WEAPON_NAMES.Colt,
+  54: WEAPON_NAMES.Luger,
+  55: WEAPON_NAMES.Colt,
+  56: WEAPON_NAMES.Luger,
+  61: WEAPON_NAMES["Ka-Bar"],
+  62: WEAPON_NAMES.Browning,
+  63: WEAPON_NAMES.Mortar,
+  64: WEAPON_NAMES.Bazooka,
+  66: WEAPON_NAMES["MP 34"],
 } as const;
 
 export function getKills(stats: Stats) {
