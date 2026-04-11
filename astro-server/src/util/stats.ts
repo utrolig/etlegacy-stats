@@ -8,7 +8,9 @@ import type {
   RawPlayerStats,
 } from "./stats-api";
 import type {
+  DamageEvent,
   NewGroupRound,
+  OldDamageStat,
   OldPlayerStat,
   SpawnEvent,
 } from "./stats-types";
@@ -21,6 +23,7 @@ export type MatchPlayer = {
 export type WeaponStats = {
   hits: number;
   shots: number;
+  damage: number;
   kills: number;
   deaths: number;
   headshots: number | null;
@@ -85,6 +88,8 @@ type NormalizedObituary = {
   meansOfDeath: number;
   attackerRespawnTime: number;
 };
+
+const LEGACY_DAMAGE_EVENT_CAP = 140;
 
 function isNewRound(round: GroupRound): round is NewGroupRound {
   return "gamelog" in round.round_data;
@@ -221,6 +226,173 @@ function getRoundObituaries(round: GroupRound): NormalizedObituary[] {
   });
 }
 
+function normalizeGuid(guid: string): string {
+  return guid.replace(/-/g, "").toUpperCase();
+}
+
+function getCanonicalGuidMap(round: GroupRound) {
+  const canonicalGuidMap = new Map<string, string>();
+
+  for (const [longId, playerStats] of Object.entries(round.round_data.player_stats)) {
+    const canonicalGuid = normalizeGuid(longId);
+    canonicalGuidMap.set(canonicalGuid, canonicalGuid);
+    canonicalGuidMap.set(normalizeGuid(playerStats.guid), canonicalGuid);
+  }
+
+  return canonicalGuidMap;
+}
+
+function getRoundTeamsByCanonicalGuid(round: GroupRound) {
+  const teamsByGuid = new Map<string, Team>();
+
+  for (const [longId, playerStats] of Object.entries(round.round_data.player_stats)) {
+    teamsByGuid.set(normalizeGuid(longId), getTeam(playerStats.team));
+  }
+
+  return teamsByGuid;
+}
+
+function getWeaponNameById(weaponId: number): string | undefined {
+  return MOD_WEAPON_IDS[weaponId];
+}
+
+function getEmptyWeaponStats(name: string, damage = 0): WeaponStats {
+  const weaponId = WEAPON_NAMES_IDS[name as keyof typeof WEAPON_NAMES_IDS];
+  const hasHeadshots = weaponId !== undefined ? WEAPON_IDS[weaponId]?.hasHeadshots : false;
+
+  return {
+    name,
+    hits: 0,
+    shots: 0,
+    damage,
+    kills: 0,
+    deaths: 0,
+    headshots: hasHeadshots ? 0 : null,
+    acc: null,
+  };
+}
+
+function addDamageForWeapon(
+  acc: Record<string, Record<string, number>>,
+  canonicalGuid: string,
+  weaponName: string,
+  damage: number,
+) {
+  const playerDamage = (acc[canonicalGuid] ??= {});
+  playerDamage[weaponName] = (playerDamage[weaponName] ?? 0) + damage;
+}
+
+function getNewRoundDamage(
+  event: DamageEvent,
+): number {
+  if (!event.victim || !event.victim_health || event.victim_health <= 0) {
+    return 0;
+  }
+
+  if (event.victim_stance?.is_downed) {
+    return 0;
+  }
+
+  return Math.max(0, Math.min(event.damage, event.victim_health));
+}
+
+function getRoundWeaponDamageStats(round: GroupRound) {
+  const canonicalGuidMap = getCanonicalGuidMap(round);
+  const teamsByGuid = getRoundTeamsByCanonicalGuid(round);
+  const damageByPlayer = {} as Record<string, Record<string, number>>;
+
+  const addDamageEvent = (
+    attacker: string | undefined,
+    victim: string | undefined,
+    weaponId: number,
+    damage: number,
+  ) => {
+    if (!attacker || !victim || damage <= 0) {
+      return;
+    }
+
+    const canonicalAttacker = canonicalGuidMap.get(normalizeGuid(attacker));
+    const canonicalVictim = canonicalGuidMap.get(normalizeGuid(victim));
+
+    if (!canonicalAttacker || !canonicalVictim || canonicalAttacker === canonicalVictim) {
+      return;
+    }
+
+    if (teamsByGuid.get(canonicalAttacker) === teamsByGuid.get(canonicalVictim)) {
+      return;
+    }
+
+    const weaponName = getWeaponNameById(weaponId);
+
+    if (!weaponName) {
+      return;
+    }
+
+    addDamageForWeapon(damageByPlayer, canonicalAttacker, weaponName, damage);
+  };
+
+  if (!isNewRound(round)) {
+    for (const entry of round.round_data.round_info.damageStats ?? []) {
+      addDamageEvent(
+        entry.attacker,
+        entry.target,
+        entry.meansOfDeath,
+        Math.max(0, Math.min(entry.damage, LEGACY_DAMAGE_EVENT_CAP)),
+      );
+    }
+
+    return damageByPlayer;
+  }
+
+  for (const event of round.round_data.gamelog ?? []) {
+    if (event.group !== "player" || event.label !== "damage") {
+      continue;
+    }
+
+    if (!event.killer || event.killer === "WORLD") {
+      continue;
+    }
+
+    addDamageEvent(
+      event.killer,
+      event.victim,
+      event.weapon,
+      getNewRoundDamage(event),
+    );
+  }
+
+  return damageByPlayer;
+}
+
+function withWeaponDamage(
+  weaponStats: WeaponStats[],
+  weaponDamage: Record<string, number> | undefined,
+): WeaponStats[] {
+  if (!weaponDamage) {
+    return weaponStats;
+  }
+
+  const weaponStatsByName = weaponStats.reduce(
+    (acc, weapon) => {
+      acc[weapon.name] = {
+        ...weapon,
+        damage: weaponDamage[weapon.name] ?? 0,
+      };
+
+      return acc;
+    },
+    {} as Record<string, WeaponStats>,
+  );
+
+  for (const [weaponName, damage] of Object.entries(weaponDamage)) {
+    if (!weaponStatsByName[weaponName]) {
+      weaponStatsByName[weaponName] = getEmptyWeaponStats(weaponName, damage);
+    }
+  }
+
+  return Object.values(weaponStatsByName);
+}
+
 function getNewRoundClasses(
   round: NewGroupRound,
   playerId: string,
@@ -349,6 +521,7 @@ function addWeaponStats(
         const shots = wpn.shots + entry.shots;
         const kills = wpn.kills + entry.kills;
         const deaths = wpn.deaths + entry.deaths;
+        const damage = wpn.damage + entry.damage;
         const headshots =
           wpn.headshots !== null && entry.headshots !== null
             ? wpn.headshots + entry.headshots
@@ -359,6 +532,7 @@ function addWeaponStats(
           name: entry.name,
           hits,
           shots,
+          damage,
           kills,
           deaths,
           headshots,
@@ -519,75 +693,83 @@ export function getMatchStats(info: GroupDetails): MatchStats {
         map: round.round_data.round_info.mapname,
         roundNumber,
         messages: getRoundMessages(round),
-        stats: Object.entries(round.round_data.player_stats).map(
-          ([longId, ps]) => {
-            let playerStats = convertPlayerStats(ps.weaponStats);
-            let weaponStats = convertWeaponStats(ps.weaponStats);
+        stats: (() => {
+          const roundWeaponDamageStats = getRoundWeaponDamageStats(round);
 
-            let metaStats = convertMetaStats(
-              longId,
-              round,
-              ps,
-              playerStats,
-              getRoundObituaries(round),
-            );
+          return Object.entries(round.round_data.player_stats).map(
+            ([longId, ps]) => {
+              const canonicalGuid = normalizeGuid(longId);
+              let playerStats = convertPlayerStats(ps.weaponStats);
+              let weaponStats = withWeaponDamage(
+                convertWeaponStats(ps.weaponStats),
+                roundWeaponDamageStats[canonicalGuid],
+              );
 
-            if (round.round_data.round_info.round === 2) {
-              const prevRound = allRounds[idx - 1];
+              let metaStats = convertMetaStats(
+                longId,
+                round,
+                ps,
+                playerStats,
+                getRoundObituaries(round),
+              );
 
-              // Check if previous round exists before processing delta stats
-              if (!prevRound) {
-                // No round 1 data exists, use aggregate stats as-is
-                // Stats are already converted above, no need to recalculate
-              } else {
-                const prevRoundRawPlayerStats = Object.values(
-                  prevRound.round_data.player_stats,
-                ).find((p) => p.guid === ps.guid);
+              if (round.round_data.round_info.round === 2) {
+                const prevRound = allRounds[idx - 1];
 
-                if (!prevRoundRawPlayerStats) {
-                  // Player is a standin (joined in round 2), use their aggregate stats as-is
+                // Check if previous round exists before processing delta stats
+                if (!prevRound) {
+                  // No round 1 data exists, use aggregate stats as-is
                   // Stats are already converted above, no need to recalculate
                 } else {
-                  // Player existed in round 1, calculate delta stats
-                  const prevRoundPlayerStats = { ...playerStats };
-                  const prevRoundRawWeaponStats = prevRoundRawPlayerStats.weaponStats;
+                  const prevRoundRawPlayerStats = Object.values(
+                    prevRound.round_data.player_stats,
+                  ).find((p) => p.guid === ps.guid);
 
-                  playerStats = convertPlayerStats(
-                    prevRoundRawWeaponStats,
-                    ps.weaponStats,
-                    prevRound,
-                    round,
-                  );
-                  weaponStats = convertWeaponStats(
-                    prevRoundRawWeaponStats,
-                    ps.weaponStats,
-                  );
-                  metaStats = convertMetaStats(
-                    longId,
-                    prevRound,
-                    prevRoundRawPlayerStats,
-                    prevRoundPlayerStats,
-                    getRoundObituaries(prevRound),
-                    round,
-                    ps,
-                    playerStats,
-                    getRoundObituaries(round),
-                  );
+                  if (!prevRoundRawPlayerStats) {
+                    // Player is a standin (joined in round 2), use their aggregate stats as-is
+                    // Stats are already converted above, no need to recalculate
+                  } else {
+                    // Player existed in round 1, calculate delta stats
+                    const prevRoundPlayerStats = { ...playerStats };
+                    const prevRoundRawWeaponStats = prevRoundRawPlayerStats.weaponStats;
+
+                    playerStats = convertPlayerStats(
+                      prevRoundRawWeaponStats,
+                      ps.weaponStats,
+                      prevRound,
+                      round,
+                    );
+                    weaponStats = withWeaponDamage(
+                      convertWeaponStats(prevRoundRawWeaponStats, ps.weaponStats),
+                      roundWeaponDamageStats[canonicalGuid],
+                    );
+                    metaStats = convertMetaStats(
+                      longId,
+                      prevRound,
+                      prevRoundRawPlayerStats,
+                      prevRoundPlayerStats,
+                      getRoundObituaries(prevRound),
+                      round,
+                      ps,
+                      playerStats,
+                      getRoundObituaries(round),
+                    );
+                  }
                 }
               }
-            }
 
-            return {
-              id: ps.guid,
-              longId,
-              name: ps.name,
-              team: getPlayerTeamFromGlobal(ps.guid),
-              playerStats,
-              weaponStats,
-              metaStats,
-            };
-          },
-        ),
+              return {
+                id: ps.guid,
+                longId,
+                name: ps.name,
+                team: getPlayerTeamFromGlobal(ps.guid),
+                playerStats,
+                weaponStats,
+                metaStats,
+              };
+            },
+          );
+        })(),
       });
 
       return acc;
@@ -874,6 +1056,7 @@ function convertFirstRoundWeaponStats(raw: string[]): WeaponStats[] {
       const weapon: WeaponStats = {
         hits: nums[argIndex++] as number,
         shots: nums[argIndex++] as number,
+        damage: 0,
         kills: nums[argIndex++] as number,
         deaths: nums[argIndex++] as number,
         headshots: nums[argIndex++] as number,
@@ -903,6 +1086,7 @@ function removePrevious(previous: WeaponStats) {
         const hits = current.hits - previous.hits;
         const kills = current.kills - previous.kills;
         const shots = current.shots - previous.shots;
+        const damage = current.damage - previous.damage;
         const deaths = current.deaths - previous.deaths;
         const headshots =
           previous.headshots !== null
@@ -916,6 +1100,7 @@ function removePrevious(previous: WeaponStats) {
           hits,
           kills,
           shots,
+          damage,
           deaths,
           headshots,
           acc,
@@ -1316,6 +1501,53 @@ export const WEAPON_NAMES = {
   "Scp.K43": "Scp.K43",
   "MP 34": "MP 34",
   Syringe: "Syringe",
+} as const;
+
+const MOD_WEAPON_IDS: Record<number, string> = {
+  2: WEAPON_NAMES.Browning,
+  3: WEAPON_NAMES["MG 42 Gun"],
+  4: WEAPON_NAMES.Grenade,
+  5: WEAPON_NAMES.Knife,
+  6: WEAPON_NAMES.Luger,
+  7: WEAPON_NAMES.Colt,
+  8: WEAPON_NAMES["MP 40"],
+  9: WEAPON_NAMES.Thompson,
+  10: WEAPON_NAMES.Sten,
+  11: WEAPON_NAMES.Garand,
+  12: WEAPON_NAMES.Luger,
+  13: WEAPON_NAMES["FG 42"],
+  14: WEAPON_NAMES["FG 42"],
+  15: WEAPON_NAMES.Panzer,
+  16: WEAPON_NAMES["G.Launchr"],
+  17: WEAPON_NAMES["F.Thrower"],
+  18: WEAPON_NAMES.Grenade,
+  19: WEAPON_NAMES.Mortar,
+  20: WEAPON_NAMES.Mortar,
+  22: WEAPON_NAMES.Dynamite,
+  23: WEAPON_NAMES.Airstrike,
+  24: WEAPON_NAMES.Syringe,
+  26: WEAPON_NAMES.Artillery,
+  37: WEAPON_NAMES.Garand,
+  38: WEAPON_NAMES["K43 Rifle"],
+  39: WEAPON_NAMES["G.Launchr"],
+  40: WEAPON_NAMES["G.Launchr"],
+  41: WEAPON_NAMES.Landmine,
+  42: WEAPON_NAMES.Satchel,
+  44: WEAPON_NAMES["MG 42 Gun"],
+  45: WEAPON_NAMES.Colt,
+  46: WEAPON_NAMES["Scp.Garand"],
+  50: WEAPON_NAMES["K43 Rifle"],
+  51: WEAPON_NAMES["Scp.K43"],
+  52: WEAPON_NAMES.Mortar,
+  53: WEAPON_NAMES.Colt,
+  54: WEAPON_NAMES.Luger,
+  55: WEAPON_NAMES.Colt,
+  56: WEAPON_NAMES.Luger,
+  61: WEAPON_NAMES["Ka-Bar"],
+  62: WEAPON_NAMES.Browning,
+  63: WEAPON_NAMES.Mortar,
+  64: WEAPON_NAMES.Bazooka,
+  66: WEAPON_NAMES["MP 34"],
 } as const;
 
 export function getKills(stats: Stats) {

@@ -37,6 +37,7 @@ export const PlayerDetailedStats: Component<PlayerDetailedStatsProps> = (
           <p class="text-right">Deaths</p>
           <p class="text-right">Headshots</p>
           <p class="text-right">HS%</p>
+          <p class="text-right">Damage</p>
         </div>
         <div class="flex flex-col">
           <For each={sortedWeaponStats()}>
@@ -62,6 +63,7 @@ export const PlayerDetailedStats: Component<PlayerDetailedStatsProps> = (
                 <p class="text-right">
                   {formatHeadshotPercentage(weapon.hits, weapon.headshots)}
                 </p>
+                <p class="text-right">{weapon.damage}</p>
               </div>
             )}
           </For>
