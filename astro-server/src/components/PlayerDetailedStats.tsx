@@ -33,6 +33,7 @@ export const PlayerDetailedStats: Component<PlayerDetailedStatsProps> = (
           <p class="pl-10">Weapon</p>
           <p class="text-right">Accuracy</p>
           <p class="text-right">Hits / Shots</p>
+          <p class="text-right">Damage</p>
           <p class="text-right">Kills</p>
           <p class="text-right">Deaths</p>
           <p class="text-right">Headshots</p>
@@ -56,6 +57,7 @@ export const PlayerDetailedStats: Component<PlayerDetailedStatsProps> = (
                 <p class="text-right">
                   {formatHitsShots(weapon.hits, weapon.shots)}
                 </p>
+                <p class="text-right">{weapon.damage}</p>
                 <p class="text-right">{weapon.kills}</p>
                 <p class="text-right">{weapon.deaths}</p>
                 <p class="text-right">{formatHeadshots(weapon.headshots)}</p>

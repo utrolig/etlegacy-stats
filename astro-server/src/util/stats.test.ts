@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { GroupDetails } from "./stats-api";
-import { getMatchStats, getMessages } from "./stats";
+import { getMapStats, getMatchStats, getMessages } from "./stats";
 
 function createWeaponStats({
   mask,
@@ -44,6 +44,36 @@ function createWeaponStats({
     String(xp),
   ];
 }
+
+function createPlayerStatsWithoutWeapons({
+  damageGiven,
+  damageReceived,
+  playtime,
+  xp,
+}: {
+  damageGiven: number;
+  damageReceived: number;
+  playtime: number;
+  xp: number;
+}) {
+  return [
+    "0",
+    String(damageGiven),
+    String(damageReceived),
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    String(playtime),
+    String(xp),
+  ];
+}
+
+const ALPHA_LONG = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+const BETA_LONG = "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB";
+const ALPHA_TEAMMATE_LONG = "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC";
 
 const legacyFixture: GroupDetails = {
   match: {
@@ -175,5 +205,520 @@ describe("getMatchStats", () => {
     expect(getMessages("", [], match)).toHaveLength(2);
     expect(match.rounds[0]?.stats[0]?.metaStats.classesPlayed).toEqual(["medic"]);
     expect(match.rounds[0]?.stats[0]?.metaStats.secondsSpentInBinoculars).toBe(5);
+  });
+
+  it("adds legacy per-weapon damage with GUID normalization and fallback capping", () => {
+    const legacyDamageFixture = {
+      match: {
+        ...legacyFixture.match,
+        rounds: [
+          {
+            ...legacyFixture.match.rounds[0]!,
+            round_data: {
+              ...legacyFixture.match.rounds[0]!.round_data,
+              round_info: {
+                ...legacyFixture.match.rounds[0]!.round_data.round_info,
+                damageStats: [
+                  {
+                    attacker: ALPHA_LONG,
+                    target: BETA_LONG,
+                    damageFlags: 64,
+                    damage: 160,
+                    timestamp: 1,
+                    hitRegion: "HR_NONE",
+                    meansOfDeath: 8,
+                  },
+                  {
+                    attacker: ALPHA_LONG,
+                    target: ALPHA_LONG,
+                    damageFlags: 64,
+                    damage: 50,
+                    timestamp: 2,
+                    hitRegion: "HR_NONE",
+                    meansOfDeath: 8,
+                  },
+                ],
+              },
+              player_stats: {
+                [ALPHA_LONG]: {
+                  ...legacyFixture.match.rounds[0]!.round_data.player_stats[
+                    ALPHA_LONG
+                  ]!,
+                  guid: "AAAAAAAA",
+                },
+                [BETA_LONG]: {
+                  ...legacyFixture.match.rounds[0]!.round_data.player_stats[
+                    BETA_LONG
+                  ]!,
+                  guid: "BBBBBBBB",
+                },
+              } as (typeof legacyFixture.match.rounds)[number]["round_data"]["player_stats"],
+            } as (typeof legacyFixture.match.rounds)[number]["round_data"],
+          },
+        ],
+      },
+    } as GroupDetails;
+
+    const match = getMatchStats(legacyDamageFixture);
+    const alphaStats = match.rounds[0]!.stats.find((stats) => stats.id === "AAAAAAAA");
+    const panzerStats = alphaStats?.weaponStats.find((weapon) => weapon.name === "Panzer");
+
+    expect(panzerStats?.damage).toBe(140);
+    expect(panzerStats?.kills).toBe(0);
+    expect(panzerStats?.shots).toBe(0);
+  });
+
+  it("adds new per-weapon damage, filters invalid events, and aggregates across rounds", () => {
+    const newFixture: GroupDetails = {
+      match: {
+        match_id: "new-1",
+        channel_id: null,
+        channel_name: "new",
+        state: "finished",
+        size: 9,
+        alpha_team: [
+          { id: "1", nick: "Alpha" },
+          { id: "3", nick: "Teammate" },
+        ],
+        beta_team: [{ id: "2", nick: "Beta" }],
+        ranks_start: null,
+        ranks_end: null,
+        start_time: 1000,
+        end_time: 1100,
+        maps: ["supply", "radar"],
+        server: {
+          ip: "127.0.0.1",
+          port: 27960,
+          pw: null,
+          instance: "test",
+        },
+        winner: "alpha",
+        rounds: [
+          {
+            round_filename: "new-round-1",
+            round_data: {
+              round_info: {
+                servername: "New Server",
+                config: "test",
+                mapname: "supply",
+                round: 1,
+                matchID: "new-match",
+                defenderteam: 1,
+                winnerteam: 1,
+                timelimit: "10:00",
+                nextTimeLimit: "8:00",
+                stats_version: "1",
+                mod_version: "1",
+                et_version: "1",
+                server_ip: "127.0.0.1",
+                server_port: "27960",
+                round_start: 0,
+                round_end: 1000,
+                round_start_unix: 1000,
+                round_end_unix: 1010,
+                original_match_id: "new-match",
+              },
+              gamelog: [
+                {
+                  group: "player",
+                  label: "damage",
+                  killer: ALPHA_LONG,
+                  victim: BETA_LONG,
+                  damage: 50,
+                  damage_flags: 64,
+                  weapon: 9,
+                  hit_region: "HR_NONE",
+                  killer_health: 140,
+                  killer_class: "medic",
+                  killer_pos: "0 0 0",
+                  killer_stance: {
+                    is_prone: false,
+                    is_crouch: false,
+                    is_mounted: false,
+                    is_leaning: false,
+                    is_carrying_obj: false,
+                    is_disguised: false,
+                    is_downed: false,
+                    is_sprint: false,
+                  },
+                  victim_health: 40,
+                  victim_class: "engineer",
+                  victim_pos: "1 1 1",
+                  victim_stance: {
+                    is_prone: false,
+                    is_crouch: false,
+                    is_mounted: false,
+                    is_leaning: false,
+                    is_carrying_obj: false,
+                    is_disguised: false,
+                    is_downed: false,
+                    is_sprint: false,
+                  },
+                  match_id: "new-match",
+                  round_id: 1,
+                  unixtime: 1,
+                  leveltime: 1,
+                },
+                {
+                  group: "player",
+                  label: "damage",
+                  killer: ALPHA_LONG,
+                  victim: ALPHA_TEAMMATE_LONG,
+                  damage: 30,
+                  damage_flags: 64,
+                  weapon: 9,
+                  hit_region: "HR_NONE",
+                  victim_health: 30,
+                  victim_stance: {
+                    is_prone: false,
+                    is_crouch: false,
+                    is_mounted: false,
+                    is_leaning: false,
+                    is_carrying_obj: false,
+                    is_disguised: false,
+                    is_downed: false,
+                    is_sprint: false,
+                  },
+                  match_id: "new-match",
+                  round_id: 1,
+                  unixtime: 2,
+                  leveltime: 2,
+                },
+                {
+                  group: "player",
+                  label: "damage",
+                  killer: ALPHA_LONG,
+                  victim: ALPHA_LONG,
+                  damage: 30,
+                  damage_flags: 64,
+                  weapon: 9,
+                  hit_region: "HR_NONE",
+                  victim_health: 30,
+                  victim_stance: {
+                    is_prone: false,
+                    is_crouch: false,
+                    is_mounted: false,
+                    is_leaning: false,
+                    is_carrying_obj: false,
+                    is_disguised: false,
+                    is_downed: false,
+                    is_sprint: false,
+                  },
+                  match_id: "new-match",
+                  round_id: 1,
+                  unixtime: 3,
+                  leveltime: 3,
+                },
+                {
+                  group: "player",
+                  label: "damage",
+                  killer: "WORLD",
+                  victim: BETA_LONG,
+                  damage: 30,
+                  damage_flags: 64,
+                  weapon: 9,
+                  hit_region: "HR_NONE",
+                  victim_health: 30,
+                  victim_stance: {
+                    is_prone: false,
+                    is_crouch: false,
+                    is_mounted: false,
+                    is_leaning: false,
+                    is_carrying_obj: false,
+                    is_disguised: false,
+                    is_downed: false,
+                    is_sprint: false,
+                  },
+                  match_id: "new-match",
+                  round_id: 1,
+                  unixtime: 4,
+                  leveltime: 4,
+                },
+                {
+                  group: "player",
+                  label: "damage",
+                  killer: ALPHA_LONG,
+                  victim: BETA_LONG,
+                  damage: 30,
+                  damage_flags: 64,
+                  weapon: 9,
+                  hit_region: "HR_NONE",
+                  victim_health: 0,
+                  victim_stance: {
+                    is_prone: false,
+                    is_crouch: false,
+                    is_mounted: false,
+                    is_leaning: false,
+                    is_carrying_obj: false,
+                    is_disguised: false,
+                    is_downed: false,
+                    is_sprint: false,
+                  },
+                  match_id: "new-match",
+                  round_id: 1,
+                  unixtime: 5,
+                  leveltime: 5,
+                },
+                {
+                  group: "player",
+                  label: "damage",
+                  killer: ALPHA_LONG,
+                  victim: BETA_LONG,
+                  damage: 30,
+                  damage_flags: 64,
+                  weapon: 9,
+                  hit_region: "HR_NONE",
+                  victim_health: 30,
+                  victim_stance: {
+                    is_prone: false,
+                    is_crouch: false,
+                    is_mounted: false,
+                    is_leaning: false,
+                    is_carrying_obj: false,
+                    is_disguised: false,
+                    is_downed: true,
+                    is_sprint: false,
+                  },
+                  match_id: "new-match",
+                  round_id: 1,
+                  unixtime: 6,
+                  leveltime: 6,
+                },
+                {
+                  group: "player",
+                  label: "damage",
+                  killer: ALPHA_LONG,
+                  damage: 30,
+                  damage_flags: 64,
+                  weapon: 9,
+                  hit_region: "HR_NONE",
+                  match_id: "new-match",
+                  round_id: 1,
+                  unixtime: 7,
+                  leveltime: 7,
+                },
+              ],
+              player_stats: {
+                [ALPHA_LONG]: {
+                  guid: "AAAAAAAA",
+                  name: "Alpha",
+                  rounds: "1",
+                  team: "1",
+                  weaponStats: createPlayerStatsWithoutWeapons({
+                    damageGiven: 40,
+                    damageReceived: 0,
+                    playtime: 90,
+                    xp: 10,
+                  }),
+                  stance_stats_seconds: {
+                    in_prone: 0,
+                    in_crouch: 0,
+                    in_mg: 0,
+                    in_lean: 0,
+                    in_objcarrier: 0,
+                    in_vehiclescort: 0,
+                    in_disguise: 0,
+                    in_sprint: 0,
+                    in_turtle: 0,
+                    is_downed: 0,
+                  },
+                },
+                [ALPHA_TEAMMATE_LONG]: {
+                  guid: "CCCCCCCC",
+                  name: "Teammate",
+                  rounds: "1",
+                  team: "1",
+                  weaponStats: createPlayerStatsWithoutWeapons({
+                    damageGiven: 0,
+                    damageReceived: 0,
+                    playtime: 90,
+                    xp: 5,
+                  }),
+                  stance_stats_seconds: {
+                    in_prone: 0,
+                    in_crouch: 0,
+                    in_mg: 0,
+                    in_lean: 0,
+                    in_objcarrier: 0,
+                    in_vehiclescort: 0,
+                    in_disguise: 0,
+                    in_sprint: 0,
+                    in_turtle: 0,
+                    is_downed: 0,
+                  },
+                },
+                [BETA_LONG]: {
+                  guid: "BBBBBBBB",
+                  name: "Beta",
+                  rounds: "1",
+                  team: "2",
+                  weaponStats: createPlayerStatsWithoutWeapons({
+                    damageGiven: 0,
+                    damageReceived: 40,
+                    playtime: 90,
+                    xp: 8,
+                  }),
+                  stance_stats_seconds: {
+                    in_prone: 0,
+                    in_crouch: 0,
+                    in_mg: 0,
+                    in_lean: 0,
+                    in_objcarrier: 0,
+                    in_vehiclescort: 0,
+                    in_disguise: 0,
+                    in_sprint: 0,
+                    in_turtle: 0,
+                    is_downed: 0,
+                  },
+                },
+              },
+            },
+          },
+          {
+            round_filename: "new-round-2",
+            round_data: {
+              round_info: {
+                servername: "New Server",
+                config: "test",
+                mapname: "radar",
+                round: 1,
+                matchID: "new-match",
+                defenderteam: 1,
+                winnerteam: 1,
+                timelimit: "10:00",
+                nextTimeLimit: "8:00",
+                stats_version: "1",
+                mod_version: "1",
+                et_version: "1",
+                server_ip: "127.0.0.1",
+                server_port: "27960",
+                round_start: 0,
+                round_end: 1000,
+                round_start_unix: 1000,
+                round_end_unix: 1010,
+                original_match_id: "new-match",
+              },
+              gamelog: [
+                {
+                  group: "player",
+                  label: "damage",
+                  killer: ALPHA_LONG,
+                  victim: BETA_LONG,
+                  damage: 20,
+                  damage_flags: 64,
+                  weapon: 9,
+                  hit_region: "HR_NONE",
+                  victim_health: 30,
+                  victim_stance: {
+                    is_prone: false,
+                    is_crouch: false,
+                    is_mounted: false,
+                    is_leaning: false,
+                    is_carrying_obj: false,
+                    is_disguised: false,
+                    is_downed: false,
+                    is_sprint: false,
+                  },
+                  match_id: "new-match",
+                  round_id: 1,
+                  unixtime: 8,
+                  leveltime: 8,
+                },
+              ],
+              player_stats: {
+                [ALPHA_LONG]: {
+                  guid: "AAAAAAAA",
+                  name: "Alpha",
+                  rounds: "1",
+                  team: "1",
+                  weaponStats: createPlayerStatsWithoutWeapons({
+                    damageGiven: 20,
+                    damageReceived: 0,
+                    playtime: 90,
+                    xp: 10,
+                  }),
+                  stance_stats_seconds: {
+                    in_prone: 0,
+                    in_crouch: 0,
+                    in_mg: 0,
+                    in_lean: 0,
+                    in_objcarrier: 0,
+                    in_vehiclescort: 0,
+                    in_disguise: 0,
+                    in_sprint: 0,
+                    in_turtle: 0,
+                    is_downed: 0,
+                  },
+                },
+                [ALPHA_TEAMMATE_LONG]: {
+                  guid: "CCCCCCCC",
+                  name: "Teammate",
+                  rounds: "1",
+                  team: "1",
+                  weaponStats: createPlayerStatsWithoutWeapons({
+                    damageGiven: 0,
+                    damageReceived: 0,
+                    playtime: 90,
+                    xp: 5,
+                  }),
+                  stance_stats_seconds: {
+                    in_prone: 0,
+                    in_crouch: 0,
+                    in_mg: 0,
+                    in_lean: 0,
+                    in_objcarrier: 0,
+                    in_vehiclescort: 0,
+                    in_disguise: 0,
+                    in_sprint: 0,
+                    in_turtle: 0,
+                    is_downed: 0,
+                  },
+                },
+                [BETA_LONG]: {
+                  guid: "BBBBBBBB",
+                  name: "Beta",
+                  rounds: "1",
+                  team: "2",
+                  weaponStats: createPlayerStatsWithoutWeapons({
+                    damageGiven: 0,
+                    damageReceived: 20,
+                    playtime: 90,
+                    xp: 8,
+                  }),
+                  stance_stats_seconds: {
+                    in_prone: 0,
+                    in_crouch: 0,
+                    in_mg: 0,
+                    in_lean: 0,
+                    in_objcarrier: 0,
+                    in_vehiclescort: 0,
+                    in_disguise: 0,
+                    in_sprint: 0,
+                    in_turtle: 0,
+                    is_downed: 0,
+                  },
+                },
+              },
+            },
+          },
+        ],
+      },
+    };
+
+    const match = getMatchStats(newFixture);
+    const alphaRoundOne = match.rounds[0]!.stats.find((stats) => stats.id === "AAAAAAAA");
+    const bazookaRoundOne = alphaRoundOne?.weaponStats.find(
+      (weapon) => weapon.name === "Bazooka",
+    );
+    const aggregatedAlpha = getMapStats("", [], match).find(
+      (stats) => stats.id === "AAAAAAAA",
+    );
+    const aggregatedBazooka = aggregatedAlpha?.weaponStats.find(
+      (weapon) => weapon.name === "Bazooka",
+    );
+
+    expect(bazookaRoundOne?.damage).toBe(40);
+    expect(aggregatedBazooka?.damage).toBe(60);
+    expect(aggregatedBazooka?.kills).toBe(0);
   });
 });
