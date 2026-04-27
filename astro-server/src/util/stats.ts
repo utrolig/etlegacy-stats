@@ -465,20 +465,26 @@ export function getMapStats(
         return round.map === map;
       });
 
+  const durationMap: Record<string, number> = {};
+
   const playersMap = filteredRounds.reduce(
     (acc, roundStats) => {
+      const roundDuration = convertTimeToMinutes(roundStats.roundTime);
       roundStats.stats.forEach((roundStat) => {
         const prevEntry = acc[roundStat.id];
 
         if (prevEntry?.id) {
+          const prevDuration = durationMap[roundStat.id] ?? 0;
           acc[roundStat.id] = {
             ...prevEntry,
-            playerStats: addPlayerStats(prevEntry, roundStat),
+            playerStats: addPlayerStats(prevEntry, roundStat, prevDuration, roundDuration),
             weaponStats: addWeaponStats(prevEntry, roundStat),
             metaStats: addMetaStats(prevEntry, roundStat),
           };
+          durationMap[roundStat.id] = prevDuration + roundDuration;
         } else {
           acc[roundStat.id] = roundStat;
+          durationMap[roundStat.id] = roundDuration;
         }
       });
 
@@ -493,11 +499,18 @@ export function getMapStats(
 function addPlayerStats(
   { playerStats: prev }: Stats,
   { playerStats: toAdd }: Stats,
+  prevDuration: number,
+  newDuration: number,
 ): PlayerStats {
+  const totalDuration = prevDuration + newDuration;
+  const playtime =
+    totalDuration > 0
+      ? (prev.playtime * prevDuration + toAdd.playtime * newDuration) / totalDuration
+      : (prev.playtime + toAdd.playtime) / 2;
   return {
     xp: prev.xp + toAdd.xp,
     gibs: prev.gibs + toAdd.gibs,
-    playtime: (prev.playtime + toAdd.playtime) / 2,
+    playtime,
     teamGibs: prev.teamGibs + toAdd.teamGibs,
     selfKills: prev.selfKills + toAdd.selfKills,
     teamKills: prev.teamKills + toAdd.teamKills,

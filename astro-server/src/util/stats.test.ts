@@ -721,4 +721,144 @@ describe("getMatchStats", () => {
     expect(aggregatedThompson?.damage).toBe(60);
     expect(aggregatedThompson?.kills).toBe(0);
   });
+
+  it("computes duration-weighted playtime average across rounds", () => {
+    // Two independent round-1 rounds on different maps with different durations.
+    // round:2 triggers cumulative-delta maths, so we use round:1 for both.
+    const unequalDurationFixture: GroupDetails = {
+      match: {
+        match_id: "weighted-1",
+        channel_id: null,
+        channel_name: "weighted",
+        state: "finished",
+        size: 6,
+        alpha_team: [{ id: "1", nick: "Alpha" }],
+        beta_team: [],
+        ranks_start: null,
+        ranks_end: null,
+        start_time: 1000,
+        end_time: 1100,
+        maps: ["supply", "radar"],
+        server: { ip: "127.0.0.1", port: 27960, pw: null, instance: "test" },
+        winner: "alpha",
+        rounds: [
+          {
+            round_filename: "weighted-round-1",
+            round_data: {
+              round_info: {
+                servername: "Server",
+                config: "test",
+                mapname: "supply",
+                round: 1,
+                matchID: "weighted-match",
+                defenderteam: 1,
+                winnerteam: 1,
+                timelimit: "3:00",
+                nextTimeLimit: "3:00",
+                stats_version: "1",
+                mod_version: "1",
+                et_version: "1",
+                server_ip: "127.0.0.1",
+                server_port: "27960",
+                round_start: 0,
+                round_end: 180,
+                round_start_unix: 1000,
+                round_end_unix: 1180,
+                original_match_id: "weighted-match",
+              },
+              gamelog: [],
+              player_stats: {
+                [ALPHA_LONG]: {
+                  guid: "AAAAAAAA",
+                  name: "Alpha",
+                  rounds: "1",
+                  team: "1",
+                  weaponStats: createPlayerStatsWithoutWeapons({
+                    damageGiven: 0,
+                    damageReceived: 0,
+                    playtime: 100,
+                    xp: 0,
+                  }),
+                  stance_stats_seconds: {
+                    in_prone: 0,
+                    in_crouch: 0,
+                    in_mg: 0,
+                    in_lean: 0,
+                    in_objcarrier: 0,
+                    in_vehiclescort: 0,
+                    in_disguise: 0,
+                    in_sprint: 0,
+                    in_turtle: 0,
+                    is_downed: 0,
+                  },
+                },
+              },
+            },
+          },
+          {
+            round_filename: "weighted-round-2",
+            round_data: {
+              round_info: {
+                servername: "Server",
+                config: "test",
+                mapname: "radar",
+                round: 1,
+                matchID: "weighted-match",
+                defenderteam: 1,
+                winnerteam: 1,
+                timelimit: "7:00",
+                nextTimeLimit: "7:00",
+                stats_version: "1",
+                mod_version: "1",
+                et_version: "1",
+                server_ip: "127.0.0.1",
+                server_port: "27960",
+                round_start: 0,
+                round_end: 420,
+                round_start_unix: 1180,
+                round_end_unix: 1600,
+                original_match_id: "weighted-match",
+              },
+              gamelog: [],
+              player_stats: {
+                [ALPHA_LONG]: {
+                  guid: "AAAAAAAA",
+                  name: "Alpha",
+                  rounds: "1",
+                  team: "1",
+                  weaponStats: createPlayerStatsWithoutWeapons({
+                    damageGiven: 0,
+                    damageReceived: 0,
+                    playtime: 0,
+                    xp: 0,
+                  }),
+                  stance_stats_seconds: {
+                    in_prone: 0,
+                    in_crouch: 0,
+                    in_mg: 0,
+                    in_lean: 0,
+                    in_objcarrier: 0,
+                    in_vehiclescort: 0,
+                    in_disguise: 0,
+                    in_sprint: 0,
+                    in_turtle: 0,
+                    is_downed: 0,
+                  },
+                },
+              },
+            },
+          },
+        ],
+      },
+    };
+
+    const match = getMatchStats(unequalDurationFixture);
+    const aggregated = getMapStats("", [], match).find(
+      (stats) => stats.id === "AAAAAAAA",
+    );
+
+    // 3-min round at 100% + 7-min round at 0% → (100*3 + 0*7) / 10 = 30
+    // Old broken formula: (100 + 0) / 2 = 50
+    expect(aggregated?.playerStats.playtime).toBe(30);
+  });
 });
